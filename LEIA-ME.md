@@ -1,0 +1,286 @@
+# enjoythevoid — manual do arquivo
+
+O site inteiro é alimentado por **um arquivo só: `posts.js`**.
+Tudo o que era repetitivo agora é deduzido: ano, numeração de catálogo,
+capa, miniaturas de seleção, tamanho do player, página completa.
+
+---
+
+## 1. O que é cada coisa
+
+```
+index.html        o arquivo (grade por ano). não precisa mexer.
+post.html         a página completa. UMA página serve TODOS os posts.
+posts.js       ←  VOCÊ EDITA SÓ ISTO pra publicar.
+posts/            os textos longos, um .md por post (opcional).
+media/            as imagens, uma pasta por post.
+assets/           css e javascript. não precisa mexer.
+ferramentas/      script que prepara as fotos (opcional).
+ver-local.bat     abre o site no seu PC antes de subir.
+```
+
+---
+
+## 2. Publicar um post
+
+Tem dois jeitos. Os dois terminam no mesmo lugar: um bloco de texto colado no `posts.js`.
+
+### Jeito fácil — formulário (`admin.html`)
+
+Dê dois cliques em `ver-local.bat` e acesse `localhost:8000/admin.html`.
+É uma tela parecida com um formulário de cadastro:
+
+1. Preenche título, data, local, tags.
+2. Escolhe **fotos** (arrasta as imagens — ele já mostra a prévia, dá pra
+   reordenar arrastando, a primeira vira a capa) ou **vídeo** (cola o link
+   do YouTube).
+3. Clica **gerar bloco do post**.
+4. Copia o bloco e cola dentro de `posts.js`, entre os colchetes `[ ]`.
+5. Se escolheu fotos: clica **baixar .zip** — ele já entrega redimensionado
+   (imagem grande + miniatura) dentro da pasta certa. Só extrair e arrastar
+   pra dentro de `media/`.
+6. Se marcou "página completa": baixa o modelo `.md` e escreve o texto nele.
+
+Isso roda **inteiramente no seu navegador** — nenhuma foto sai do seu PC
+nesse passo. Ele só te entrega os arquivos prontos; subir pro GitHub
+continua sendo o passo 5 deste guia.
+
+### Jeito mais fácil de todos — publicar direto pelo `admin.html`
+
+Depois de fazer o primeiro upload (passos 4 e 5 mais abaixo, uma vez só),
+o `admin.html` publica **sozinho**, sem zip, sem GitHub Desktop, sem colar
+nada na mão. Configura uma vez:
+
+1. Acessa **github.com/settings/personal-access-tokens/new**
+2. Dá um nome pro token, tipo `enjoythevoid-admin`
+3. Em **Repository access**, escolhe **Only select repositories** → marca
+   só o `enjoythevoid`
+4. Em **Permissions → Repository permissions**, procura **Contents** →
+   muda pra **Read and write**
+5. **Generate token** — copia o código que aparece (só aparece **uma vez**)
+6. No `admin.html`, abre o painel **conexão com o github** no topo, cola:
+   - usuário: seu usuário do GitHub
+   - repositório: `enjoythevoid`
+   - branch: `main`
+   - token: o código copiado
+7. Clica **salvar**, depois **testar conexão** — a bolinha fica verde
+   quando funciona
+
+Isso é feito **uma única vez**. Da próxima vez que abrir o `admin.html`,
+já está tudo conectado.
+
+**Publicar um post, depois disso:**
+
+1. Preenche o formulário (título, data, fotos ou vídeo)
+2. Clica **publicar no github**
+3. Acompanha o log — ele mostra cada passo (lendo, gravando, enviando
+   foto 1/3...) e no final entrega o link do post
+4. Espera 1–2 minutos e recarrega o site
+
+O token fica guardado só no seu navegador (`localStorage`), nunca é
+enviado a nenhum lugar além de falar direto com a API do GitHub. Se
+trocar de computador, gera outro token e configura de novo lá.
+
+> Se preferir não usar token nenhum, o botão **"só gerar o bloco (sem
+> publicar)"** continua funcionando exatamente como antes — gera o texto
+> e o zip das fotos pra você colar manualmente.
+
+---
+
+### Jeito manual — editar `posts.js` direto
+
+Pra quem já pegou o jeito, ou quer editar algo pontual sem abrir o
+formulário:
+
+#### a) Post de fotos
+
+1. Crie a pasta `media/nome-do-post/`
+2. Jogue as fotos dentro, nomeadas `01.jpg`, `02.jpg`, `03.jpg`…
+3. Abra `posts.js` e adicione:
+
+```js
+  {
+    slug: "praia-negra",
+    title: "PRAIA NEGRA",
+    date: "2026-07-14",
+    location: "Ubatuba",
+    tags: ["Photo", "Analog"],
+    photos: 5
+  },
+```
+
+Pronto. O post entra sozinho em **2026**, ganha o número de catálogo pela
+ordem cronológica, usa a `01.jpg` como capa e mostra a **tira de miniaturas
+de seleção** porque tem mais de uma foto.
+
+Se os nomes dos arquivos não seguirem a numeração, use a lista:
+`photos: ["capa.jpg", "detalhe.png", "verso.jpg"]`
+
+#### b) Post de vídeo
+
+```js
+  {
+    slug: "entregador",
+    title: "ENTREGADOR",
+    date: "2026-03-28",
+    location: "Rodovia dos Bandeirantes",
+    tags: ["Short Film", "AI"],
+    video: "https://youtu.be/K8xM2pQ7abc",
+    ratio: "16/9"
+  },
+```
+
+Cole o link do YouTube ou Vimeo **como ele aparece na barra do navegador** —
+o site converte pro player limpo (sem sugestões, sem branding) sozinho.
+A capa no grid vira o frame do próprio vídeo, automático.
+
+Para **Reels / vertical**, troque para `ratio: "9/16"`.
+
+#### c) Post com página completa
+
+Adicione `page: true` no post e crie o arquivo `posts/SLUG.md`:
+
+```markdown
+Primeiro parágrafo. Quebrar a linha no editor não quebra no site —
+o texto se junta sozinho.
+
+## um subtítulo
+
+Outro parágrafo, com *itálico*, **negrito** e [link](https://exemplo.com).
+
+![Legenda da foto](03.jpg)
+
+::grid 04.jpg | 05.jpg | 06.jpg
+
+::video https://youtu.be/K8xM2pQ7abc
+
+> uma citação
+
+---
+```
+
+Os nomes de imagem são curtos porque o site já sabe que estão em
+`media/SLUG/`. O link **ver post completo** aparece no visor só quando
+`page: true` existe.
+
+`::video LINK | vertical` deixa o player em formato Reels dentro do texto.
+
+### Campos disponíveis
+
+| campo | obrigatório | o que faz |
+|---|---|---|
+| `slug` | sim | nome curto, sem acento nem espaço. define a pasta e a URL |
+| `title` | sim | título exibido |
+| `date` | sim | `"AAAA-MM-DD"` — define o ano e a posição no arquivo |
+| `location` | não | texto livre |
+| `tags` | não | entram no menu `#`. use `"Article"` pra aparecer em *articles* |
+| `photos` | não | número (`5` = `01.jpg`…`05.jpg`) ou lista de nomes |
+| `ext` | não | extensão quando `photos` é número. padrão `jpg` |
+| `video` | não | link do YouTube/Vimeo. o campo existindo já marca o post como vídeo |
+| `ratio` | não | `"16/9"` (padrão) ou `"9/16"` |
+| `cover` | não | força uma capa específica no grid |
+| `page` | não | `true` se existe `posts/SLUG.md` |
+
+---
+
+## 3. Ver antes de subir
+
+Dê dois cliques em **`ver-local.bat`**. Ele abre `localhost:8000` no navegador.
+
+Isso é necessário porque as páginas completas leem arquivos `.md`, e o
+navegador bloqueia essa leitura quando o `index.html` é aberto direto do
+Explorer. (Precisa de Python instalado. Alternativa: extensão
+*Live Server* no VS Code.)
+
+---
+
+## 4. Subir no GitHub — primeira vez
+
+**4.1** Crie a conta em [github.com](https://github.com) e confirme o e-mail.
+
+**4.2** Clique em **+** (canto superior direito) → **New repository**.
+
+- **Repository name:** `enjoythevoid`
+- **Public** (obrigatório pro site funcionar de graça)
+- **Não** marque nada em "Initialize this repository"
+- **Create repository**
+
+> Se preferir o endereço curto `seuusuario.github.io` em vez de
+> `seuusuario.github.io/enjoythevoid`, dê ao repositório exatamente o
+> nome `seuusuario.github.io`. O resto é igual.
+
+**4.3** Na página que abrir, clique em **uploading an existing file**.
+
+**4.4** Abra a pasta do site no Explorer, selecione **tudo que está dentro
+dela** (não a pasta em si) e arraste pra janela do navegador. Espere subir.
+
+**4.5** Escreva `primeira versão` no campo de baixo → **Commit changes**.
+
+**4.6** Aba **Settings** → menu lateral **Pages**:
+
+- **Source:** `Deploy from a branch`
+- **Branch:** `main` · pasta `/ (root)` → **Save**
+
+**4.7** Espere 1–2 minutos e recarregue. O endereço aparece no topo:
+`https://seuusuario.github.io/enjoythevoid/`
+
+Está no ar.
+
+---
+
+## 5. Atualizar depois — o jeito prático
+
+Subir arquivo por arquivo pelo site do GitHub cansa rápido. Instale o
+**[GitHub Desktop](https://desktop.github.com)** (gratuito, tem interface,
+não precisa de terminal):
+
+1. **File → Clone repository** → escolha `enjoythevoid` → salve numa pasta do seu PC.
+2. Daqui pra frente você trabalha **nessa pasta local**: joga as fotos em
+   `media/`, edita o `posts.js`, escreve o `.md`.
+3. Abra o GitHub Desktop. Ele lista tudo que mudou sozinho.
+4. Escreva uma frase curta em *Summary* (ex.: `post praia negra`) →
+   **Commit to main** → **Push origin**.
+5. Em ~1 minuto o site está atualizado.
+
+Publicar um post vira: colar fotos, escrever 6 linhas, apertar dois botões.
+
+---
+
+## 6. Miniaturas (opcional, mas vale)
+
+Foto de câmera tem 8–20 MB. Vinte delas no grid deixam o site lento no 4G.
+
+O site já procura uma versão leve em `media/SLUG/thumbs/01.jpg` e, se não
+achar, usa a imagem original — ou seja, **funciona com ou sem**. Pra gerar:
+
+```
+pip install pillow
+python ferramentas/preparar-fotos.py "C:/caminho/da/pasta/com/as/fotos" praia-negra
+```
+
+O script pega as fotos na ordem, renomeia pra `01.jpg`, `02.jpg`…, reduz a
+grande pra 2000px, gera a miniatura de 600px, e imprime o bloco pronto pra
+colar no `posts.js`. Os originais não são tocados.
+
+---
+
+## 7. Regras que evitam dor de cabeça
+
+- **Nome de arquivo sem acento, sem espaço, tudo minúsculo.** O servidor do
+  GitHub diferencia maiúscula de minúscula — `Foto.JPG` e `foto.jpg` são
+  arquivos diferentes lá, mesmo que o Windows ache que são iguais.
+- Toda entrada no `posts.js` termina com **vírgula** depois da chave `}`.
+- Se o site sumir depois de uma edição, quase sempre é uma vírgula ou aspas
+  faltando no `posts.js`. Aperte **F12** no navegador, aba *Console*: a
+  mensagem em vermelho diz a linha.
+- Vídeo do YouTube precisa estar **público ou "não listado"**. Privado não
+  incorpora.
+- O arquivo `.nojekyll` é obrigatório, não apague.
+
+---
+
+## 8. Domínio próprio (quando quiser)
+
+Compre o domínio (Registro.br, Namecheap), aponte os DNS pro GitHub e
+coloque o endereço em **Settings → Pages → Custom domain**. O GitHub gera
+o certificado HTTPS sozinho. Dá pra fazer depois, sem refazer nada.

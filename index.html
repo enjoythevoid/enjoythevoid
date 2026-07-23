@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0a0908">
+<title>enjoythevoid — archive</title>
+<meta name="description" content="Arquivo de fotografia, curtas e motion — enjoythevoid.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="seg">
+    <a class="word" id="wordmark" role="button" tabindex="0">enjoythevoid</a>
+  </div>
+  <div class="seg nav-main">
+    <a role="button" tabindex="0" class="is-active" data-filter="all">all</a>
+    <a role="button" tabindex="0" data-filter="videos">videos</a>
+    <a role="button" tabindex="0" data-filter="photos">photos</a>
+    <a role="button" tabindex="0" id="navAbout">about</a>
+    <a role="button" tabindex="0" data-filter="articles">articles</a>
+    <div class="tags-menu">
+      <a role="button" tabindex="0" id="tagsToggle">#</a>
+      <div class="tags-dropdown" id="tagsDropdown"></div>
+    </div>
+  </div>
+  <div class="seg">
+    <button id="themeToggle">light / dark</button>
+  </div>
+</div>
+
+<!-- ===================== ÍNDICE ===================== -->
+<main id="indexView">
+  <div id="indexGroups"></div>
+</main>
+
+<!-- ===================== VISOR ===================== -->
+<div id="photoView" aria-hidden="true">
+  <div class="photo-stage">
+    <button class="photo-nav prev" id="prevBtn" aria-label="Anterior">←</button>
+    <div class="frame" id="photoFrame"><span class="ph">imagem</span></div>
+    <button class="photo-nav next" id="nextBtn" aria-label="Próxima">→</button>
+  </div>
+  <div class="filmstrip-row" id="filmstripRow">
+    <button class="fs-arrow fs-prev" id="fsPrev" hidden aria-label="Anterior">&lt;</button>
+    <div class="filmstrip" id="filmstrip"></div>
+    <button class="fs-arrow fs-next" id="fsNext" hidden aria-label="Próxima">&gt;</button>
+  </div>
+  <div class="photo-cap">
+    <div class="meta">
+      <span class="no" id="capNo">No.001</span>
+      <span class="ti" id="capTitle">—</span>
+      <span class="lo" id="capLoc">—</span>
+      <a class="post-link" id="postLink" href="#">
+        <span>ver post completo</span>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M2 8L8 2M8 2H3M8 2V7" stroke="currentColor" stroke-width="1.2"/>
+        </svg>
+      </a>
+    </div>
+    <div class="pos" id="capPos">01 / 12</div>
+  </div>
+</div>
+
+<!-- ===================== ABOUT ===================== -->
+<div id="aboutPanel" aria-hidden="true">
+  <div class="about-content">
+    <p class="eyebrow">about</p>
+    <p>Motion designer e video producer baseado em São Paulo. O arquivo aqui reúne
+    duas rotinas que normalmente não dividem espaço: a pós-produção de encomenda —
+    correção de legenda, animação de marca, entregas em formato Reels — e um
+    trabalho autoral feito de curtas gerados por IA, retratos e a fotografia
+    de rua que sobra no fim do dia.</p>
+    <p>Câmeras digitais e lentes M42 antigas convivem sem hierarquia. O critério
+    de entrada aqui é só um: se marcou, fica guardado.</p>
+    <p class="sign">enjoythevoid — <a href="#" id="backFromAbout">index (esc)</a></p>
+  </div>
+</div>
+
+<p class="keyhint" id="keyHint">← → navegar &nbsp;·&nbsp; esc voltar</p>
+
+<script src="posts.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

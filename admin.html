@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>enjoythevoid — criar post</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .admin-wrap{max-width:640px;margin:0 auto;padding:calc(var(--s6) + var(--s2)) var(--s4) var(--s6)}
+  .admin-wrap h1{font-family:'Archivo',sans-serif;font-weight:400;font-size:clamp(28px,5vw,44px);letter-spacing:-.03em;margin-bottom:6px}
+  .admin-sub{font-family:'Newsreader',serif;font-style:italic;color:var(--ink-dim);font-size:15px;margin-bottom:var(--s5)}
+
+  .field{margin-bottom:var(--s4)}
+  .field label{display:block;font-size:11px;letter-spacing:.08em;color:var(--ink-dim);margin-bottom:6px;text-transform:uppercase}
+  .field input[type=text],.field input[type=date],.field textarea{
+    width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);
+    font-family:'Space Mono',monospace;font-size:14px;padding:10px 12px;
+  }
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--ink-dim)}
+  .field .hint{font-size:11px;color:var(--ink-dim);margin-top:5px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
+
+  .typetabs{display:flex;gap:0;border:1px solid var(--line);width:max-content}
+  .typetabs button{
+    background:none;border:none;color:var(--ink-dim);font-family:'Space Mono',monospace;
+    font-size:12px;padding:9px 20px;cursor:pointer;transition:background .2s,color .2s;
+  }
+  .typetabs button.active{background:var(--ink);color:var(--bg)}
+
+  .dropzone{
+    border:1px dashed var(--line);padding:var(--s4);text-align:center;
+    color:var(--ink-dim);font-size:13px;cursor:pointer;transition:border-color .2s;
+  }
+  .dropzone.drag{border-color:var(--ink);color:var(--ink)}
+  .dropzone input{display:none}
+
+  #photoList{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:var(--s3)}
+  .pitem{position:relative;aspect-ratio:1;background:var(--thumb);cursor:grab}
+  .pitem img{width:100%;height:100%;object-fit:cover;display:block}
+  .pitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px}
+  .pitem .rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:12px;width:18px;height:18px;cursor:pointer}
+  .pitem.dragging{opacity:.35}
+
+  .toggle{display:flex;align-items:center;gap:10px;cursor:pointer}
+  .toggle input{width:16px;height:16px}
+
+  .btn{
+    background:var(--ink);color:var(--bg);border:none;
+    font-family:'Space Mono',monospace;font-size:13px;font-weight:700;
+    padding:12px 22px;cursor:pointer;letter-spacing:.03em;
+  }
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+  .btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+  .actions{display:flex;gap:10px;margin-top:var(--s5);flex-wrap:wrap}
+
+  .output{margin-top:var(--s5);display:none}
+  .output.show{display:block}
+  .output h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:10px}
+  .output pre{
+    background:var(--thumb);border:1px solid var(--line);padding:var(--s3);
+    font-size:12.5px;line-height:1.6;overflow-x:auto;white-space:pre-wrap;word-break:break-word;
+  }
+  .copybtn{margin-top:8px}
+  .steps{margin-top:var(--s3);font-size:13px;line-height:1.8;color:var(--ink-dim)}
+  .steps b{color:var(--ink)}
+  .warn{font-size:12px;color:var(--accent);margin-top:var(--s2)}
+  #status{font-size:12px;color:var(--ink-dim);margin-top:10px;min-height:16px}
+
+  /* ---------- painel de configuração / login ---------- */
+  .gh-panel{
+    border:1px solid var(--line);padding:var(--s3);margin-bottom:var(--s5);
+  }
+  .gh-panel summary{
+    cursor:pointer;font-size:12px;letter-spacing:.06em;color:var(--ink-dim);
+    list-style:none;display:flex;align-items:center;justify-content:space-between;
+  }
+  .gh-panel summary::-webkit-details-marker{display:none}
+  .gh-panel[open] summary{margin-bottom:var(--s3);border-bottom:1px solid var(--line);padding-bottom:var(--s3)}
+  .gh-dot{width:7px;height:7px;border-radius:50%;background:var(--ink-dim);display:inline-block;margin-right:6px}
+  .gh-dot.ok{background:#3a8a3a}
+  .gh-dot.err{background:var(--accent)}
+  .gh-status-text{font-size:11px;color:var(--ink-dim)}
+
+  .publish-bar{
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+    margin-top:var(--s5);padding-top:var(--s4);border-top:1px solid var(--line);
+  }
+  .btn.primary{background:var(--accent);color:#fff}
+
+  .log{
+    margin-top:var(--s3);font-family:'Space Mono',monospace;font-size:12px;
+    line-height:1.9;color:var(--ink-dim);
+  }
+  .log .ok{color:#3a8a3a}
+  .log .err{color:var(--accent)}
+  .log .now{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="seg"><a class="word" href="index.html">enjoythevoid</a></div>
+  <div class="seg nav-main"><a href="index.html">← arquivo</a></div>
+  <div class="seg"><button id="themeToggle">light / dark</button></div>
+</div>
+
+<main class="admin-wrap">
+  <h1>criar post</h1>
+  <p class="admin-sub">preenche aqui, cola no posts.js depois. nada disso publica sozinho.</p>
+
+  <details class="gh-panel" id="ghPanel">
+    <summary>
+      <span><span class="gh-dot" id="ghDot"></span>conexão com o github <span class="gh-status-text" id="ghStatusText">— não configurado</span></span>
+      <span>configurar ▾</span>
+    </summary>
+
+    <div class="field">
+      <label>usuário / organização do github</label>
+      <input type="text" id="ghOwner" placeholder="enjoythevoid">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>nome do repositório</label>
+        <input type="text" id="ghRepo" placeholder="enjoythevoid">
+      </div>
+      <div class="field">
+        <label>branch</label>
+        <input type="text" id="ghBranch" placeholder="main" value="main">
+      </div>
+    </div>
+    <div class="field">
+      <label>token de acesso pessoal</label>
+      <input type="text" id="ghToken" placeholder="github_pat_xxxxxxxx...">
+      <p class="hint">
+        gerado uma única vez em <b>github.com/settings/personal-access-tokens/new</b> —
+        escolha "Only select repositories" → marque só o <b>enjoythevoid</b> →
+        em Permissions, "Contents" → <b>Read and write</b>. cole o token aqui.
+        ele fica guardado só neste navegador, nunca sai daqui além de falar
+        direto com o github.
+      </p>
+    </div>
+    <div class="actions" style="margin-top:0">
+      <button class="btn ghost" id="btnGhSave">salvar</button>
+      <button class="btn ghost" id="btnGhTest">testar conexão</button>
+    </div>
+  </details>
+
+  <div class="field">
+    <label>título</label>
+    <input type="text" id="fTitle" placeholder="PRAIA NEGRA">
+  </div>
+
+  <div class="row2">
+    <div class="field">
+      <label>data</label>
+      <input type="date" id="fDate">
+    </div>
+    <div class="field">
+      <label>local</label>
+      <input type="text" id="fLocation" placeholder="Ubatuba">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>tags (separadas por vírgula)</label>
+    <input type="text" id="fTags" placeholder="Photo, Analog">
+    <p class="hint">use "Article" numa tag pra aparecer no menu articles.</p>
+  </div>
+
+  <div class="field">
+    <label>tipo de post</label>
+    <div class="typetabs">
+      <button type="button" id="tabPhoto" class="active">fotos</button>
+      <button type="button" id="tabVideo">vídeo (YouTube)</button>
+    </div>
+  </div>
+
+  <!-- ===== FOTOS ===== -->
+  <div id="panelPhoto">
+    <div class="field">
+      <label>fotos — arraste pra reordenar, a primeira é a capa</label>
+      <div class="dropzone" id="dropzone">
+        arraste as fotos aqui, ou clique pra escolher
+        <input type="file" id="fileInput" accept="image/*" multiple>
+      </div>
+      <div id="photoList"></div>
+      <p class="hint" id="photoHint"></p>
+    </div>
+  </div>
+
+  <!-- ===== VÍDEO ===== -->
+  <div id="panelVideo" style="display:none">
+    <div class="field">
+      <label>link do YouTube</label>
+      <input type="text" id="fVideo" placeholder="https://youtu.be/XXXXXXXXXXX">
+      <p class="hint">cola o link como aparece na barra do navegador. o site converte pro player limpo sozinho.</p>
+    </div>
+    <div class="field">
+      <label>formato</label>
+      <div class="typetabs">
+        <button type="button" id="ratioH" class="active">16 / 9 — horizontal</button>
+        <button type="button" id="ratioV">9 / 16 — reels</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="toggle">
+      <input type="checkbox" id="fPage">
+      este post tem página completa (texto mais longo, além do card)
+    </label>
+  </div>
+
+  <div class="field" id="mdFieldWrap" style="display:none">
+    <label>texto da página completa (opcional escrever agora)</label>
+    <textarea id="fMd" rows="8" placeholder="Primeiro parágrafo...
+
+## um subtítulo
+
+Outro parágrafo, com *itálico* e **negrito**.
+
+![Legenda](02.jpg)"></textarea>
+    <p class="hint">se publicar direto no github, esse texto já sobe como posts/SLUG.md. se deixar em branco, dá pra escrever depois.</p>
+  </div>
+
+  <div class="publish-bar">
+    <button class="btn primary" id="btnPublish">publicar no github</button>
+    <button class="btn ghost" id="btnGenerate">só gerar o bloco (sem publicar)</button>
+  </div>
+  <div class="log" id="log"></div>
+
+  <div class="output" id="output">
+    <h2>bloco gerado — pra colar manualmente, se preferir</h2>
+    <pre id="codeBlock"></pre>
+    <button class="btn ghost copybtn" id="btnCopyCode">copiar bloco</button>
+
+    <div id="photoDownloadSection" style="display:none">
+      <h2 style="margin-top:var(--s5)">fotos prontas (redimensionadas + miniaturas)</h2>
+      <button class="btn" id="btnZip">baixar .zip das fotos</button>
+      <p id="status"></p>
+      <div class="steps">
+        <b>onde salvar:</b> extraia o .zip — ele já vem com a pasta <b>media/nome-do-post/</b>
+        certinha. Arraste essa pasta pra dentro da pasta <b>media/</b> do site.
+      </div>
+    </div>
+
+    <div id="mdDownloadSection" style="display:none">
+      <h2 style="margin-top:var(--s5)">texto da página completa</h2>
+      <button class="btn ghost" id="btnMd">baixar modelo .md</button>
+      <p class="steps">salve como <b><span id="mdFileName"></span></b> dentro da pasta <b>posts/</b> do site.</p>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+/* ===========================================================
+   CRIAR POST — ferramenta local, sem backend.
+   Gera o bloco pra colar no posts.js e empacota as fotos já
+   redimensionadas (grande + miniatura) num .zip pronto pra
+   arrastar dentro de media/.
+   =========================================================== */
+
+const root = document.documentElement;
+(function initTheme(){
+  try{ const s = localStorage.getItem('etv-theme'); if(s) root.setAttribute('data-theme', s); }catch(e){}
+})();
+document.getElementById('themeToggle').addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', next);
+  try{ localStorage.setItem('etv-theme', next); }catch(e){}
+});
+
+let type = 'photo';
+const tabPhoto = document.getElementById('tabPhoto');
+const tabVideo = document.getElementById('tabVideo');
+tabPhoto.addEventListener('click', () => setType('photo'));
+tabVideo.addEventListener('click', () => setType('video'));
+function setType(t){
+  type = t;
+  tabPhoto.classList.toggle('active', t === 'photo');
+  tabVideo.classList.toggle('active', t === 'video');
+  document.getElementById('panelPhoto').style.display = t === 'photo' ? '' : 'none';
+  document.getElementById('panelVideo').style.display = t === 'video' ? '' : 'none';
+}
+
+/* ===========================================================
+   GITHUB — publica direto no repositório, sem passar por
+   nenhum outro programa. Usa a API oficial do GitHub a partir
+   do próprio navegador, com o token que você cola no painel.
+   =========================================================== */
+
+let ratio = '16/9';
+
+const GH = {
+  owner:  localStorage.getItem('gh_owner')  || '',
+  repo:   localStorage.getItem('gh_repo')   || '',
+  branch: localStorage.getItem('gh_branch') || 'main',
+  token:  localStorage.getItem('gh_token')  || '',
+};
+document.getElementById('ghOwner').value  = GH.owner;
+document.getElementById('ghRepo').value   = GH.repo;
+document.getElementById('ghBranch').value = GH.branch;
+document.getElementById('ghToken').value  = GH.token;
+
+const ghDot = document.getElementById('ghDot');
+const ghStatusText = document.getElementById('ghStatusText');
+function setGhDot(state, text){
+  ghDot.className = 'gh-dot' + (state ? ' ' + state : '');
+  ghStatusText.textContent = '— ' + text;
+}
+if(GH.owner && GH.repo && GH.token) setGhDot('', 'configurado — clique em "testar conexão"');
+
+function saveGhConfig(){
+  GH.owner  = document.getElementById('ghOwner').value.trim();
+  GH.repo   = document.getElementById('ghRepo').value.trim();
+  GH.branch = document.getElementById('ghBranch').value.trim() || 'main';
+  GH.token  = document.getElementById('ghToken').value.trim();
+  localStorage.setItem('gh_owner', GH.owner);
+  localStorage.setItem('gh_repo', GH.repo);
+  localStorage.setItem('gh_branch', GH.branch);
+  localStorage.setItem('gh_token', GH.token);
+}
+document.getElementById('btnGhSave').addEventListener('click', () => {
+  saveGhConfig();
+  setGhDot('', 'salvo — clique em "testar conexão"');
+});
+
+async function ghTest(){
+  saveGhConfig();
+  if(!GH.owner || !GH.repo || !GH.token){ setGhDot('err', 'preencha usuário, repositório e token'); return false; }
+  try{
+    const res = await fetch(`https://api.github.com/repos/${GH.owner}/${GH.repo}`, {
+      headers: { 'Authorization': `Bearer ${GH.token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if(res.status === 401){ setGhDot('err', 'token inválido ou expirado'); return false; }
+    if(res.status === 404){ setGhDot('err', 'repositório não encontrado (confira usuário/nome)'); return false; }
+    if(!res.ok){ setGhDot('err', `erro ${res.status} ao conectar`); return false; }
+    const data = await res.json();
+    if(data.permissions && data.permissions.push === false){
+      setGhDot('err', 'token sem permissão de escrita neste repositório'); return false;
+    }
+    setGhDot('ok', 'conectado');
+    return true;
+  }catch(e){
+    setGhDot('err', 'falha de conexão — confira sua internet'); return false;
+  }
+}
+document.getElementById('btnGhTest').addEventListener('click', ghTest);
+
+/* --- base64 preservando acentos/emoji --- */
+function utf8ToB64(str){ return btoa(unescape(encodeURIComponent(str))); }
+function b64ToUtf8(b64){ return decodeURIComponent(escape(atob(b64.replace(/\n/g,'')))); }
+function blobToB64(blob){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(blob);
+  });
+}
+
+/* --- ler e gravar um arquivo do repositório --- */
+async function ghGetFile(path){
+  const res = await fetch(
+    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
+    { headers: { 'Authorization': `Bearer ${GH.token}`, 'Accept': 'application/vnd.github+json' } }
+  );
+  if(res.status === 404) return null;
+  if(!res.ok) throw new Error(`falha ao ler ${path} (${res.status})`);
+  const data = await res.json();
+  return { sha: data.sha, contentB64: data.content };
+}
+async function ghPutFile(path, contentB64, message, sha){
+  const res = await fetch(
+    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
+    {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${GH.token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ message, content: contentB64, branch: GH.branch, ...(sha ? { sha } : {}) })
+    }
+  );
+  if(!res.ok){
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `falha ao gravar ${path} (${res.status})`);
+  }
+  return res.json();
+}
+
+/* --- insere o novo bloco dentro de const POSTS = [ ... ]; --- */
+function insertPostBlock(postsJsText, block){
+  const idx = postsJsText.lastIndexOf('\n];');
+  if(idx === -1) throw new Error('não encontrei o final da lista POSTS no posts.js do repositório');
+  return postsJsText.slice(0, idx) + '\n  ' + block.trim() + '\n' + postsJsText.slice(idx);
+}
+
+/* --- log visual --- */
+const logEl = document.getElementById('log');
+function log(msg, cls){
+  logEl.querySelectorAll('.now').forEach(e => e.classList.remove('now'));
+  const line = document.createElement('div');
+  line.className = (cls || '') + ' now';
+  line.textContent = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+/* --- publicar tudo: posts.js + fotos + .md --- */
+document.getElementById('btnPublish').addEventListener('click', async () => {
+  logEl.innerHTML = '';
+  const btn = document.getElementById('btnPublish');
+
+  const ok = await ghTest();
+  if(!ok){ log('conexão com o github falhou — confira o painel de configuração acima.', 'err'); return; }
+
+  const built = buildPost();
+  if(!built) return;
+  const { slug, block, page, mdText } = built;
+
+  btn.disabled = true;
+  try{
+    log(`lendo posts.js do repositório...`);
+    const current = await ghGetFile('posts.js');
+    if(!current) throw new Error('posts.js não encontrado no repositório — confira se ele foi enviado.');
+    const currentText = b64ToUtf8(current.contentB64);
+
+    if(currentText.includes(`slug: "${slug}"`)){
+      throw new Error(`já existe um post com o slug "${slug}". troque o título ou apague o post antigo primeiro.`);
+    }
+
+    const updatedText = insertPostBlock(currentText, block);
+    log(`gravando posts.js...`);
+    await ghPutFile('posts.js', utf8ToB64(updatedText), `novo post: ${slug}`, current.sha);
+    log(`posts.js atualizado.`, 'ok');
+
+    if(type === 'photo'){
+      for(let i = 0; i < files.length; i++){
+        const name = `${String(i+1).padStart(2,'0')}.jpg`;
+        log(`preparando foto ${i+1} / ${files.length}...`);
+        const big = await resizeImage(files[i].file, 2000, 0.88);
+        const small = await resizeImage(files[i].file, 600, 0.85);
+        log(`enviando foto ${i+1} / ${files.length}...`);
+        await ghPutFile(`media/${slug}/${name}`, await blobToB64(big), `foto ${name} — ${slug}`);
+        await ghPutFile(`media/${slug}/thumbs/${name}`, await blobToB64(small), `miniatura ${name} — ${slug}`);
+      }
+      log(`${files.length} foto(s) enviada(s).`, 'ok');
+    }
+
+    if(page && mdText.trim()){
+      log(`enviando texto da página completa...`);
+      await ghPutFile(`posts/${slug}.md`, utf8ToB64(mdText), `texto: ${slug}`);
+      log(`posts/${slug}.md enviado.`, 'ok');
+    }
+
+    log(`publicado! pode levar 1–2 minutos pro github pages atualizar.`, 'ok');
+    log(`https://${GH.owner}.github.io/${GH.repo}/#${slug}`, 'ok');
+  }catch(e){
+    log(`erro: ${e.message}`, 'err');
+  }finally{
+    btn.disabled = false;
+  }
+});
+const ratioH = document.getElementById('ratioH'), ratioV = document.getElementById('ratioV');
+ratioH.addEventListener('click', () => { ratio = '16/9'; ratioH.classList.add('active'); ratioV.classList.remove('active'); });
+ratioV.addEventListener('click', () => { ratio = '9/16'; ratioV.classList.add('active'); ratioH.classList.remove('active'); });
+
+document.getElementById('fPage').addEventListener('change', e => {
+  document.getElementById('mdFieldWrap').style.display = e.target.checked ? '' : 'none';
+});
+
+/* --- slug automático a partir do título --- */
+function slugify(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'');
+}
+
+/* --- fotos: drag & drop, reordenar, preview --- */
+let files = []; // {file, url}
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const photoList = document.getElementById('photoList');
+const photoHint = document.getElementById('photoHint');
+
+dropzone.addEventListener('click', () => fileInput.click());
+['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+function addFiles(list){
+  [...list].filter(f => f.type.startsWith('image/')).forEach(f => {
+    files.push({ file:f, url:URL.createObjectURL(f) });
+  });
+  renderPhotoList();
+}
+
+function renderPhotoList(){
+  photoList.innerHTML = '';
+  files.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className = 'pitem';
+    el.draggable = true;
+    el.dataset.i = i;
+    el.innerHTML = `<span class="num">${String(i+1).padStart(2,'0')}</span>
+      <button type="button" class="rm" data-i="${i}">×</button>
+      <img src="${item.url}">`;
+    photoList.appendChild(el);
+  });
+  photoHint.textContent = files.length
+    ? `${files.length} foto(s). a primeira (01) vira a capa no grid.`
+    : '';
+
+  photoList.querySelectorAll('.rm').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      files.splice(+btn.dataset.i, 1);
+      renderPhotoList();
+    });
+  });
+
+  /* reordenar arrastando */
+  let dragIdx = null;
+  photoList.querySelectorAll('.pitem').forEach(el => {
+    el.addEventListener('dragstart', () => { dragIdx = +el.dataset.i; el.classList.add('dragging'); });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    el.addEventListener('dragover', e => e.preventDefault());
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const dropIdx = +el.dataset.i;
+      if(dragIdx === null || dragIdx === dropIdx) return;
+      const moved = files.splice(dragIdx, 1)[0];
+      files.splice(dropIdx, 0, moved);
+      renderPhotoList();
+    });
+  });
+}
+
+/* --- redimensionar no navegador (canvas) --- */
+function resizeImage(file, maxSide, quality){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width:w, height:h } = img;
+      if(w > h && w > maxSide){ h = h * (maxSide/w); w = maxSide; }
+      else if(h > maxSide){ w = w * (maxSide/h); h = maxSide; }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(w); canvas.height = Math.round(h);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/* --- monta os dados do post a partir do formulário ---
+   usado tanto pelo botão "gerar bloco" quanto por "publicar" */
+let currentSlug = '';
+function buildPost(){
+  const title = document.getElementById('fTitle').value.trim();
+  const date = document.getElementById('fDate').value;
+  const location = document.getElementById('fLocation').value.trim();
+  const tags = document.getElementById('fTags').value.split(',').map(s => s.trim()).filter(Boolean);
+  const page = document.getElementById('fPage').checked;
+  const mdText = document.getElementById('fMd').value;
+
+  if(!title || !date){ alert('preencha pelo menos título e data.'); return null; }
+  if(type === 'photo' && !files.length){ alert('adicione pelo menos uma foto.'); return null; }
+  if(type === 'video' && !document.getElementById('fVideo').value.trim()){ alert('cole o link do vídeo.'); return null; }
+
+  const slug = slugify(title);
+  currentSlug = slug;
+  const tagsStr = tags.length ? `[${tags.map(t => `"${t}"`).join(', ')}]` : '[]';
+
+  let block = `{\n    slug: "${slug}",\n    title: "${title.toUpperCase()}",\n    date: "${date}",\n    location: "${location}",\n    tags: ${tagsStr},\n`;
+  if(type === 'photo'){
+    block += `    photos: ${files.length},\n`;
+  } else {
+    block += `    video: "${document.getElementById('fVideo').value.trim()}",\n    ratio: "${ratio}",\n`;
+  }
+  if(page) block += `    page: true,\n`;
+  block += `  },`;
+
+  return { slug, block, page, mdText, title, date, location, tags };
+}
+
+document.getElementById('btnGenerate').addEventListener('click', () => {
+  const built = buildPost();
+  if(!built) return;
+  const { slug, block, page } = built;
+
+  document.getElementById('codeBlock').textContent = '  ' + block;
+  document.getElementById('output').classList.add('show');
+
+  document.getElementById('photoDownloadSection').style.display = type === 'photo' ? '' : 'none';
+  document.getElementById('mdDownloadSection').style.display = page ? '' : 'none';
+  document.getElementById('mdFileName').textContent = `posts/${slug}.md`;
+});
+
+document.getElementById('btnCopyCode').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('codeBlock').textContent);
+  const btn = document.getElementById('btnCopyCode');
+  const old = btn.textContent; btn.textContent = 'copiado ✓';
+  setTimeout(() => btn.textContent = old, 1400);
+});
+
+/* --- gerar o zip com as fotos já redimensionadas --- */
+document.getElementById('btnZip').addEventListener('click', async () => {
+  const status = document.getElementById('status');
+  const btn = document.getElementById('btnZip');
+  btn.disabled = true;
+  const zip = new JSZip();
+  const folder = zip.folder(`media/${currentSlug}`);
+  const thumbs = folder.folder('thumbs');
+
+  for(let i = 0; i < files.length; i++){
+    status.textContent = `processando ${i+1} / ${files.length}...`;
+    const name = `${String(i+1).padStart(2,'0')}.jpg`;
+    const big = await resizeImage(files[i].file, 2000, 0.88);
+    const small = await resizeImage(files[i].file, 600, 0.85);
+    folder.file(name, big);
+    thumbs.file(name, small);
+  }
+
+  status.textContent = 'compactando...';
+  const blob = await zip.generateAsync({ type:'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${currentSlug}.zip`;
+  a.click();
+  status.textContent = `pronto. ${files.length} foto(s) exportada(s).`;
+  btn.disabled = false;
+});
+
+/* --- baixar modelo .md --- */
+document.getElementById('btnMd').addEventListener('click', () => {
+  const title = document.getElementById('fTitle').value.trim();
+  const md = `Escreva aqui o primeiro parágrafo sobre ${title || 'o post'}.
+
+## um subtítulo
+
+Outro parágrafo, com *itálico*, **negrito** e [link](https://exemplo.com).
+
+![Legenda da foto](02.jpg)
+
+::grid 03.jpg | 04.jpg
+
+> uma citação, se fizer sentido
+
+---
+`;
+  const blob = new Blob([md], { type:'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${currentSlug}.md`;
+  a.click();
+});
+</script>
+</body>
+</html>
