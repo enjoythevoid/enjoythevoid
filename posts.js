@@ -40,6 +40,7 @@ const POSTS = [
     tags: ["T5I"],
     video: "https://www.youtube.com/watch?v=N_Wjpe0mooo",
     ratio: "16/9",
+    page: true,
   },
 
 ];
