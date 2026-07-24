@@ -32,4 +32,14 @@ const POSTS = [
   /* seus posts entram aqui — use o admin.html pra gerar cada bloco
      e cole dentro destes colchetes, separados por vírgula. */
 
+  {
+    slug: "adrielli",
+    title: "ADRIELLI",
+    date: "2017-07-03",
+    location: "São Paulo",
+    tags: ["T5I"],
+    video: "https://youtu.be/N_Wjpe0mooo",
+    ratio: "16/9",
+  },
+
 ];
