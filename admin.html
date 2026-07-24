@@ -315,27 +315,30 @@
       <div id="existingPhotosWrap" style="display:none;margin-bottom:var(--s3)">
         <label>fotos que já estão publicadas</label>
         <div id="existingPhotoList" class="pitem-grid"></div>
-        <p class="hint">essas já estão no ar. arraste fotos novas abaixo pra adicionar depois delas — não dá pra remover ou reordenar as antigas por aqui ainda, só direto pelo github.</p>
+        <p class="hint">essas já estão no ar, sempre antes das novas — não dá pra remover ou reordenar as antigas por aqui ainda, só direto pelo github.</p>
       </div>
-      <label id="photosFieldLabel">fotos — arraste pra reordenar, a primeira é a capa</label>
+      <label>fotos novas</label>
       <div class="dropzone" id="dropzone">
         arraste as fotos aqui, ou clique pra escolher
         <input type="file" id="fileInput" accept="image/*" multiple>
       </div>
-      <div id="photoList"></div>
-      <p class="hint" id="photoHint"></p>
     </div>
   </div>
 
   <!-- ===== VÍDEO ===== -->
   <div id="panelVideo" style="display:none">
     <div class="field">
-      <label>link do YouTube</label>
-      <input type="text" id="fVideo" placeholder="https://youtu.be/XXXXXXXXXXX">
-      <p class="hint">cola o link como aparece na barra do navegador. o site converte pro player limpo sozinho.</p>
-      <div id="videoPreviewWrap" style="display:none;margin-top:var(--s3)">
-        <div id="videoPreview" class="videopreview"></div>
+      <div id="existingVideosWrap" style="display:none;margin-bottom:var(--s3)">
+        <label>vídeos que já estão publicados</label>
+        <div id="existingVideoList" class="pitem-grid"></div>
+        <p class="hint">esses já estão no ar, sempre antes dos novos — não dá pra remover ou reordenar os antigos por aqui ainda, só direto pelo posts.js.</p>
       </div>
+      <label>adicionar vídeo (YouTube ou Vimeo)</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="fVideoInput" placeholder="https://youtu.be/XXXXXXXXXXX" style="flex:1">
+        <button type="button" class="btn ghost" id="btnAddVideo" style="white-space:nowrap">+ adicionar</button>
+      </div>
+      <p class="hint">cole o link e clique em adicionar. pode adicionar quantos vídeos quiser — cada um vira um item na lista de ordem, junto com as fotos.</p>
     </div>
     <div class="field">
       <label>formato</label>
@@ -343,7 +346,15 @@
         <button type="button" id="ratioH" class="active">16 / 9 — horizontal</button>
         <button type="button" id="ratioV">9 / 16 — reels</button>
       </div>
+      <p class="hint">vale pra todos os vídeos desse post.</p>
     </div>
+  </div>
+
+  <!-- ===== ORDEM: fotos e vídeos novos, misturados do jeito que quiser ===== -->
+  <div class="field" id="mediaOrderWrap">
+    <label id="photosFieldLabel">ordem de exibição — arraste pra misturar fotos e vídeos como quiser</label>
+    <div id="photoList" class="pitem-grid"></div>
+    <p class="hint" id="photoHint"></p>
   </div>
 
   <div class="field">
@@ -377,10 +388,10 @@
         </div>
         <div class="tsep"></div>
         <div class="tgroup" id="textSizeGroup">
-          <button type="button" data-tsize="sm" title="Texto pequeno">P</button>
-          <button type="button" data-tsize="md" title="Texto normal">Normal</button>
-          <button type="button" data-tsize="lg" title="Texto grande">G</button>
-          <button type="button" data-tsize="xl" title="Texto extra grande">GG</button>
+          <button type="button" data-tsize="80" title="Texto pequeno">P</button>
+          <button type="button" data-tsize="100" title="Texto normal">Normal</button>
+          <button type="button" data-tsize="135" title="Texto grande">G</button>
+          <button type="button" data-tsize="180" title="Texto extra grande">GG</button>
           <input type="range" id="textSizeRange" min="30" max="400" step="1" value="100" title="arraste pra ajustar aos poucos" style="width:90px;accent-color:var(--accent)">
           <input type="number" class="tsize" id="textSizeNum" min="30" max="400" step="1" placeholder="%" title="Tamanho exato do texto, em %">
         </div>
@@ -493,7 +504,7 @@ function setType(t){
   tabBoth.classList.toggle('active',  t === 'both');
   document.getElementById('panelPhoto').style.display = hasPhotoPart() ? '' : 'none';
   document.getElementById('panelVideo').style.display = hasVideoPart() ? '' : 'none';
-  if(typeof syncVideoToken === 'function') syncVideoToken();
+  if(typeof renderPhotoList === 'function') renderPhotoList();
 }
 
 /* ===========================================================
@@ -520,19 +531,9 @@ function embedURL(v){
   }
   return `https://player.vimeo.com/video/${v.id}?title=0&byline=0&portrait=0`;
 }
-function updateVideoPreview(){
-  const wrap = document.getElementById('videoPreviewWrap');
-  const box = document.getElementById('videoPreview');
-  const v = parseVideo(document.getElementById('fVideo').value.trim());
-  if(!v){ wrap.style.display = 'none'; box.innerHTML = ''; return; }
-  box.className = 'videopreview' + (ratio === '9/16' ? ' vertical' : '');
-  box.innerHTML = `<iframe src="${embedURL(v)}" allow="fullscreen" title="prévia"></iframe>`;
-  wrap.style.display = '';
+function youtubeCover(v){
+  return v && v.kind === 'youtube' ? `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` : '';
 }
-document.getElementById('fVideo').addEventListener('input', () => {
-  updateVideoPreview();
-  if(typeof renderPhotoList === 'function') renderPhotoList();
-});
 
 /* ===========================================================
    EDITOR — WYSIWYG pra página completa. Salva no formato antigo
@@ -548,6 +549,14 @@ function sizeToPercent(val){
   if(LEGACY_W[val] != null) return LEGACY_W[val];
   const n = parseFloat(val);
   return isFinite(n) ? Math.min(100, Math.max(5, Math.round(n))) : null;
+}
+/* igual à de cima, mas pro texto: vai até 400%, não 100% — usada só
+   pra mostrar o número certo no slider/campo do tamanho de texto */
+function sizeToTextPercent(val){
+  if(val == null || val === '') return 100;
+  if(LEGACY_F[val]) return Math.round(parseFloat(LEGACY_F[val]) * 100);
+  const n = parseFloat(val);
+  return isFinite(n) ? Math.min(400, Math.max(30, Math.round(n))) : 100;
 }
 function sizeToFont(val){
   if(val == null || val === '') return null;
@@ -989,6 +998,8 @@ function parseRemotePosts(postsJsText){
 
 let editingSlug = null;     // null = criando post novo
 let existingPhotoCount = 0; // quantas fotos já existem quando está editando
+let existingVideoCount = 0; // quantos vídeos já existem quando está editando
+let existingVideoUrls  = []; // urls desses vídeos, na ordem que já estão publicados
 let existingMdSha = null;   // sha do posts/slug.md, se já existir
 
 const editSelect = document.getElementById('editSelect');
@@ -1035,13 +1046,17 @@ editSelect.addEventListener('change', async () => {
     /* base pras fotos já publicadas aparecerem no editor */
     editingRawBase = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/`;
 
-    const temVideo = ('video' in p) && !!p.video;
+    const pVideos = Array.isArray(p.videos) ? p.videos : (p.video ? [p.video] : []);
+    existingVideoUrls = pVideos.slice();
+    existingVideoCount = pVideos.length;
+
+    const temVideo = existingVideoCount > 0;
     const temFoto  = p.photos != null && (Array.isArray(p.photos) ? p.photos.length : Number(p.photos)) > 0;
     setType(temVideo && temFoto ? 'both' : temVideo ? 'video' : 'photo');
 
     if(temVideo){
-      document.getElementById('fVideo').value = p.video || '';
       if(p.ratio === '9/16'){ ratioV.click(); } else { ratioH.click(); }
+      loadExistingVideoPreviews();
     }
     if(temFoto){
       existingPhotoCount = Array.isArray(p.photos) ? p.photos.length : (Number(p.photos) || 0);
@@ -1065,8 +1080,11 @@ editSelect.addEventListener('change', async () => {
 
     btnDelete.style.display = '';
     document.getElementById('btnPublish').textContent = 'salvar alterações';
-    editHint.textContent = existingPhotoCount
-      ? `editando "${p.title}" — já tem ${existingPhotoCount} foto(s). as que você arrastar agora entram depois delas.`
+    const bits = [];
+    if(existingPhotoCount) bits.push(`${existingPhotoCount} foto(s)`);
+    if(existingVideoCount) bits.push(`${existingVideoCount} vídeo(s)`);
+    editHint.textContent = bits.length
+      ? `editando "${p.title}" — já tem ${bits.join(' e ')}. o que você adicionar agora entra depois, na ordem que arrastar.`
       : `editando "${p.title}".`;
   }catch(e){
     editHint.textContent = `erro ao carregar: ${e.message}`;
@@ -1076,6 +1094,8 @@ editSelect.addEventListener('change', async () => {
 function resetFormToNew(){
   editingSlug = null;
   existingPhotoCount = 0;
+  existingVideoCount = 0;
+  existingVideoUrls = [];
   existingMdSha = null;
   editingRawBase = '';
   selectedMedia = null;
@@ -1087,19 +1107,33 @@ function resetFormToNew(){
   document.getElementById('fDate').value = '';
   document.getElementById('fLocation').value = '';
   document.getElementById('fTags').value = '';
-  document.getElementById('fVideo').value = '';
-  document.getElementById('videoPreviewWrap').style.display = 'none';
-  document.getElementById('videoPreview').innerHTML = '';
+  document.getElementById('fVideoInput').value = '';
+  document.getElementById('existingVideosWrap').style.display = 'none';
   editorArea.innerHTML = '';
   editorImages = [];
   document.getElementById('fPage').checked = false;
   document.getElementById('mdFieldWrap').style.display = 'none';
   document.getElementById('existingPhotosWrap').style.display = 'none';
-  document.getElementById('photosFieldLabel').textContent = 'fotos — arraste pra reordenar, a primeira é a capa';
   refreshChipStates();
   btnDelete.style.display = 'none';
   document.getElementById('btnPublish').textContent = 'publicar no github';
   editHint.textContent = '';
+}
+
+/* mostra os vídeos já publicados desse post (não vêm de arquivo,
+   vêm direto do posts.js — então não precisa buscar nada) */
+function loadExistingVideoPreviews(){
+  const wrap = document.getElementById('existingVideosWrap');
+  const grid = document.getElementById('existingVideoList');
+  if(!existingVideoUrls.length){ wrap.style.display = 'none'; grid.innerHTML = ''; return; }
+  grid.innerHTML = existingVideoUrls.map((url, i) => {
+    const v = parseVideo(url);
+    const cover = youtubeCover(v);
+    return `<div class="exitem"><span class="num">▶ ${i+1}</span>` +
+      (cover ? `<img src="${cover}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:10px">vídeo</div>`) +
+      `</div>`;
+  }).join('');
+  wrap.style.display = '';
 }
 
 /* --- mostra as fotos que já estão publicadas, ao editar um post --- */
@@ -1244,9 +1278,55 @@ function currentBlock(){
   return null;
 }
 
+/* troca o tipo do bloco (parágrafo/título/citação) sem usar
+   execCommand('formatBlock') — essa função do navegador é antiga e
+   tem dois problemas: ela força um scroll pro bloco editado (dando
+   aquele "flick" na tela) e às vezes carrega estilos que não
+   deveriam estar ali. Aqui a troca é feita à mão, then o scroll não
+   se mexe, e ao virar título (Seção/Sub) qualquer cor ou tamanho que
+   tinha sido aplicado só num trecho do texto normal é removido —
+   um título não deveria sair com pedaços em tamanhos/cores
+   diferentes por causa de uma formatação que fazia sentido só no
+   corpo do texto. */
 function setBlock(tag){
   focusEditor();
-  document.execCommand('formatBlock', false, tag);
+  restoreSavedRange();
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+
+  let node = sel.getRangeAt(0).startContainer;
+  if(node.nodeType === 3) node = node.parentNode;
+  let block = node.closest ? node.closest('p, h2, h3, blockquote, li') : null;
+  if(!block || !editorArea.contains(block)) block = currentBlock();
+  if(!block || block.tagName.toLowerCase() === tag) return;
+
+  const scrollTop  = editorArea.scrollTop;
+  const pageScroll = window.scrollY;
+
+  const el = document.createElement(tag);
+  while(block.firstChild) el.appendChild(block.firstChild);
+  block.replaceWith(el);
+
+  if(tag === 'h2' || tag === 'h3'){
+    el.querySelectorAll('span[data-size], span[data-color]').forEach(span => {
+      const parent = span.parentNode;
+      while(span.firstChild) parent.insertBefore(span.firstChild, span);
+      parent.removeChild(span);
+    });
+  }
+
+  const r = document.createRange();
+  r.selectNodeContents(el);
+  r.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(r);
+  saveCurrentRange();
+
+  editorArea.scrollTop = scrollTop;
+  window.scrollTo(window.scrollX, pageScroll);
+
+  editorArea.dispatchEvent(new Event('input'));
+  updateToolbarState();
 }
 
 /* insere um n\u00f3 no ponto do cursor, e move o cursor pra depois dele */
@@ -1521,25 +1601,23 @@ function setActiveSizeSpan(span){
 }
 
 function syncTextSizeBar(){
-  const w = activeSizeSpan ? (sizeToPercent(activeSizeSpan.dataset.size) ?? 100) : 100;
+  const w = activeSizeSpan ? sizeToTextPercent(activeSizeSpan.dataset.size) : 100;
   textSizeRange.value = w;
   textSizeNum.value = w;
 }
 
-/* aplica um tamanho — clique num preset (val = 'sm'/'md'/'lg'/'xl')
-   ou um número exato (val = "130") */
+/* aplica um tamanho — clique num preset (val = "80"/"100"/"135"/"180")
+   ou um número exato digitado/arrastado. os quatro presets e o
+   número funcionam todos do mesmo jeito, incluindo "Normal": ele
+   também marca o texto selecionado, exatamente como os outros —
+   não é um caso especial que só limpa formatação. */
 function applyTextSize(val){
   /* já existe um span ativo (segunda tentativa em diante): só edita ele */
   if(activeSizeSpan){
-    if(val === 'md'){
-      unwrapSpan(activeSizeSpan);
-      setActiveSizeSpan(null);
-    } else {
-      activeSizeSpan.dataset.size = val;
-      const f = sizeToFont(val);
-      if(f) activeSizeSpan.style.fontSize = f; else activeSizeSpan.style.removeProperty('font-size');
-      syncTextSizeBar();
-    }
+    activeSizeSpan.dataset.size = val;
+    const f = sizeToFont(val);
+    if(f) activeSizeSpan.style.fontSize = f; else activeSizeSpan.style.removeProperty('font-size');
+    syncTextSizeBar();
     editorArea.dispatchEvent(new Event('input'));
     return;
   }
@@ -1549,7 +1627,6 @@ function applyTextSize(val){
   restoreSavedRange();
   const sel = window.getSelection();
   if(!sel.rangeCount || sel.isCollapsed) return;
-  if(val === 'md') return; // nada selecionado de tamanho pra limpar
 
   /* se a seleção já é exatamente um span de tamanho, reaproveita
      em vez de aninhar um span dentro do outro */
@@ -1710,7 +1787,7 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
      falha aqui (ex.: erro de sha numa foto) não impede o texto da
      página completa de ser enviado depois */
   const seq = photoItems(); // fotos novas na ordem escolhida (com ou sem o vídeo intercalado)
-  if(hasPhotoPart() && seq.length){
+  if(seq.length){
     try{
       for(let i = 0; i < seq.length; i++){
         const n = existingPhotoCount + i + 1;
@@ -1779,8 +1856,8 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
   btn.disabled = false;
 });
 const ratioH = document.getElementById('ratioH'), ratioV = document.getElementById('ratioV');
-ratioH.addEventListener('click', () => { ratio = '16/9'; ratioH.classList.add('active'); ratioV.classList.remove('active'); updateVideoPreview(); });
-ratioV.addEventListener('click', () => { ratio = '9/16'; ratioV.classList.add('active'); ratioH.classList.remove('active'); updateVideoPreview(); });
+ratioH.addEventListener('click', () => { ratio = '16/9'; ratioH.classList.add('active'); ratioV.classList.remove('active'); });
+ratioV.addEventListener('click', () => { ratio = '9/16'; ratioV.classList.add('active'); ratioH.classList.remove('active'); });
 
 document.getElementById('fPage').addEventListener('change', e => {
   document.getElementById('mdFieldWrap').style.display = e.target.checked ? '' : 'none';
@@ -1794,36 +1871,37 @@ function slugify(s){
     .replace(/^-+|-+$/g,'');
 }
 
-/* --- fotos + vídeo: drag & drop, reordenar juntos, preview ---
-   "order" guarda a sequência escolhida pra galeria: cada item é
-   uma foto nova ({file,url}) ou o token 'video' — o vídeo pode ser
-   arrastado pra qualquer posição entre as fotos. fotos já publicadas
-   (num post em edição) continuam sempre antes dessas, por enquanto
-   não dá pra reordenar/remover elas por aqui. */
+/* --- fotos + vídeos: drag & drop, reordenar tudo junto ---
+   "order" guarda a sequência escolhida: cada item é uma foto nova
+   ({file,url}) ou um vídeo novo ({video:true, url}) — pode ter
+   quantos vídeos quiser, em qualquer posição entre as fotos.
+   fotos e vídeos já publicados (post em edição) continuam sempre
+   antes desses, por enquanto não dá pra reordenar/remover eles
+   por aqui. */
 let order = [];
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const photoList = document.getElementById('photoList');
 const photoHint = document.getElementById('photoHint');
+const fVideoInput = document.getElementById('fVideoInput');
+const btnAddVideo = document.getElementById('btnAddVideo');
 
-/* só as fotos da sequência, na ordem — usado em toda parte que
-   antes usava "files" */
-function photoItems(){ return order.filter(x => x !== 'video'); }
-function videoInOrder(){ return order.includes('video'); }
-/* quantas fotos NOVAS vêm antes do vídeo na sequência escolhida */
-function videoOffsetInOrder(){
-  const vi = order.indexOf('video');
-  if(vi === -1) return null;
-  return order.slice(0, vi).filter(x => x !== 'video').length;
-}
-/* garante (ou remove) o token 'video' em order conforme o tipo de post */
-function syncVideoToken(){
-  const shouldHave = type === 'both';
-  const has = videoInOrder();
-  if(shouldHave && !has) order.unshift('video');
-  if(!shouldHave && has) order = order.filter(x => x !== 'video');
+/* só as fotos da sequência nova, na ordem — usado em toda parte
+   que precisa montar os arquivos 01.jpg, 02.jpg... */
+function photoItems(){ return order.filter(x => !x.video); }
+/* só os vídeos novos, na ordem em que foram arrastados */
+function videoItems(){ return order.filter(x => x.video); }
+
+function addVideoFromInput(){
+  const url = fVideoInput.value.trim();
+  if(!url) return;
+  if(!parseVideo(url)){ alert('link não reconhecido. cole um link do YouTube ou Vimeo.'); return; }
+  order.push({ video:true, url });
+  fVideoInput.value = '';
   renderPhotoList();
 }
+btnAddVideo.addEventListener('click', addVideoFromInput);
+fVideoInput.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); addVideoFromInput(); } });
 
 dropzone.addEventListener('click', () => fileInput.click());
 ['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
@@ -1840,16 +1918,18 @@ function addFiles(list){
 
 function renderPhotoList(){
   photoList.innerHTML = '';
-  let photoNum = 0;
+  let photoNum = 0, videoNum = 0;
   order.forEach((item, i) => {
     const el = document.createElement('div');
     el.draggable = true;
     el.dataset.i = i;
-    if(item === 'video'){
+    if(item.video){
+      videoNum++;
+      const v = parseVideo(item.url);
+      const cover = youtubeCover(v);
       el.className = 'pitem pitem-video';
-      const v = parseVideo(document.getElementById('fVideo').value.trim());
-      const cover = v && v.kind === 'youtube' ? `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` : '';
-      el.innerHTML = `<span class="num">▶ vídeo</span>` +
+      el.innerHTML = `<span class="num">▶ ${videoNum}</span>
+        <button type="button" class="rm" data-i="${i}">×</button>` +
         (cover ? `<img src="${cover}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:11px">vídeo</div>`);
     } else {
       photoNum++;
@@ -1861,10 +1941,12 @@ function renderPhotoList(){
     photoList.appendChild(el);
   });
 
-  const nPhotos = photoItems().length;
-  photoHint.textContent = nPhotos
-    ? `${nPhotos} foto(s) nova(s).${existingPhotoCount ? '' : ' a primeira (01) vira a capa no grid.'}${videoInOrder() ? ' arraste "vídeo" pra escolher onde ele entra na sequência.' : ''}`
-    : (videoInOrder() ? 'arraste o vídeo pra reordenar quando tiver fotos.' : '');
+  const bits = [];
+  if(photoNum) bits.push(`${photoNum} foto(s) nova(s)`);
+  if(videoNum) bits.push(`${videoNum} vídeo(s) novo(s)`);
+  photoHint.textContent = bits.length
+    ? `${bits.join(', ')}. arraste os itens acima pra misturar do jeito que quiser.${(!existingPhotoCount && photoNum) ? ' a primeira foto vira a capa no grid.' : ''}`
+    : '';
 
   photoList.querySelectorAll('.rm').forEach(btn => {
     btn.addEventListener('click', e => {
@@ -1874,7 +1956,8 @@ function renderPhotoList(){
     });
   });
 
-  /* reordenar arrastando — fotos e vídeo na mesma lista */
+  /* reordenar arrastando — fotos e vídeos na mesma lista, em
+     qualquer combinação */
   let dragIdx = null;
   photoList.querySelectorAll('.pitem').forEach(el => {
     el.addEventListener('dragstart', () => { dragIdx = +el.dataset.i; el.classList.add('dragging'); });
@@ -1919,42 +2002,52 @@ function buildPost(){
   const tags = document.getElementById('fTags').value.split(',').map(s => s.trim()).filter(Boolean);
   const page = document.getElementById('fPage').checked;
 
+  const totalPhotos = existingPhotoCount + photoItems().length;
+  const newVideoUrls = videoItems().map(v => v.url);
+  const allVideoUrls = existingVideoUrls.concat(newVideoUrls);
+
   if(!title || !date){ alert('preencha pelo menos título e data.'); return null; }
-  if(hasPhotoPart() && !photoItems().length && !existingPhotoCount){ alert('adicione pelo menos uma foto.'); return null; }
-  if(hasVideoPart() && !document.getElementById('fVideo').value.trim()){ alert('cole o link do vídeo.'); return null; }
+  if(!totalPhotos && !allVideoUrls.length){ alert('adicione pelo menos uma foto ou um vídeo.'); return null; }
 
   const slug = editingSlug || slugify(title);
   currentSlug = slug;
   const tagsStr = tags.length ? `[${tags.map(t => `"${t}"`).join(', ')}]` : '[]';
-  const totalPhotos = existingPhotoCount + photoItems().length;
 
   let block = `{\n    slug: "${slug}",\n    title: "${title.toUpperCase()}",\n    date: "${date}",\n    location: "${location}",\n    tags: ${tagsStr},\n`;
-  if(hasPhotoPart()){
+  if(totalPhotos){
     block += `    photos: ${totalPhotos},\n`;
   }
-  if(hasVideoPart()){
-    block += `    video: "${document.getElementById('fVideo').value.trim()}",\n    ratio: "${ratio}",\n`;
-    if(type === 'both'){
-      const off = videoOffsetInOrder();
-      const videoAt = existingPhotoCount + (off == null ? 0 : off);
-      block += `    videoAt: ${videoAt},\n`;
-    }
+  if(allVideoUrls.length){
+    const videosStr = `[${allVideoUrls.map(u => JSON.stringify(u)).join(', ')}]`;
+    block += `    videos: ${videosStr},\n    ratio: "${ratio}",\n`;
+
+    /* ordem completa: primeiro o que já estava publicado (fotos
+       antigas, depois vídeos antigos), depois o que foi arrastado
+       agora nessa sessão, na ordem escolhida */
+    const prefix = [];
+    for(let i = 0; i < existingPhotoCount; i++) prefix.push('photo');
+    for(let i = 0; i < existingVideoCount; i++) prefix.push(`video:${i}`);
+    let nextVideoIdx = existingVideoCount;
+    const newTokens = order.map(item => item.video ? `video:${nextVideoIdx++}` : 'photo');
+    const fullOrder = prefix.concat(newTokens);
+    const orderStr = `[${fullOrder.map(t => JSON.stringify(t)).join(', ')}]`;
+    block += `    order: ${orderStr},\n`;
   }
   if(page) block += `    page: true,\n`;
   block += `  },`;
 
-  return { slug, block, page, title, date, location, tags };
+  return { slug, block, page, title, date, location, tags, totalPhotos, allVideoUrls };
 }
 
 document.getElementById('btnGenerate').addEventListener('click', () => {
   const built = buildPost();
   if(!built) return;
-  const { slug, block, page } = built;
+  const { slug, block, page, totalPhotos } = built;
 
   document.getElementById('codeBlock').textContent = '  ' + block;
   document.getElementById('output').classList.add('show');
 
-  document.getElementById('photoDownloadSection').style.display = hasPhotoPart() ? '' : 'none';
+  document.getElementById('photoDownloadSection').style.display = totalPhotos ? '' : 'none';
   document.getElementById('mdDownloadSection').style.display = page ? '' : 'none';
   document.getElementById('mdFileName').textContent = `posts/${slug}.md`;
 });

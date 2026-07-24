@@ -51,8 +51,9 @@ function renderIndex(){
 
       /* selo: play pra vídeo, contagem pra galeria */
       let badge = '';
-      if(p.hasVideo && p.photos.length){
-        badge = `<span class="badge">${ICON_PLAY}<span>${p.photos.length}</span></span>`;
+      const nMedia = p.photos.length + p.videos.length;
+      if(p.hasVideo && nMedia > 1){
+        badge = `<span class="badge">${ICON_PLAY}<span>${nMedia}</span></span>`;
       } else if(p.hasVideo){
         badge = `<span class="badge only-icon">${ICON_PLAY}</span>`;
       } else if(p.photos.length > 1){
@@ -124,6 +125,31 @@ uniqueTags.forEach(tag => {
   });
   tagsDropdown.appendChild(a);
 });
+
+/* redes sociais — entram no mesmo menu do #, com o mesmo tamanho de
+   fonte dos filtros de tag (é a mesma regra de CSS, .topbar a).
+   troque os links abaixo pelos seus. */
+const SOCIALS = [
+  { label: 'instagram',  url: 'https://instagram.com/enjoythevoid' },
+  { label: 'linkedin',   url: 'https://linkedin.com/in/enjoythevoid' },
+  { label: 'letterboxd', url: 'https://letterboxd.com/enjoythevoid' },
+];
+if(SOCIALS.length){
+  if(uniqueTags.length){
+    const sep = document.createElement('div');
+    sep.className = 'tags-dropdown-sep';
+    tagsDropdown.appendChild(sep);
+  }
+  SOCIALS.forEach(s => {
+    const a = document.createElement('a');
+    a.href = s.url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = s.label;
+    tagsDropdown.appendChild(a);
+  });
+}
+
 tagsToggle.addEventListener('click', e => { e.stopPropagation(); tagsMenu.classList.toggle('open'); });
 document.addEventListener('click', () => tagsMenu.classList.remove('open'));
 
@@ -179,7 +205,7 @@ function renderPhoto(id, keepIndex){
   } else if(item.kind === 'video'){
     photoFrame.classList.add('is-video');
     photoFrame.style.setProperty('--vr', p.ratio.replace('/',' / '));
-    photoFrame.innerHTML = `<iframe src="${embedURL(p.video)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${p.title}"></iframe>`;
+    photoFrame.innerHTML = `<iframe src="${embedURL(item.video)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${p.title}"></iframe>`;
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" alt="${p.title}">`;
   }

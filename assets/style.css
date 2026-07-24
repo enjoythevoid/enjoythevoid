@@ -73,6 +73,7 @@ a{color:inherit;text-decoration:none}
 .topbar .tags-dropdown a{padding:5px 24px;color:var(--ink-dim);white-space:nowrap;line-height:1.4}
 .tags-dropdown a:hover{color:var(--ink);background:rgba(255,255,255,.04)}
 .tags-dropdown a.is-active{color:var(--ink)}
+.tags-dropdown-sep{height:1px;background:var(--line);margin:6px 14px}
 
 /* ---------- ÍNDICE ---------- */
 #indexView{padding:calc(var(--s4) + var(--s1)) 0 var(--s6)}

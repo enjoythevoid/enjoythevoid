@@ -345,3 +345,45 @@ o certificado HTTPS sozinho. Dá pra fazer depois, sem refazer nada.
   (1% de cada vez) e não perdem mais o texto que você tinha
   selecionado no meio do ajuste — clique num texto já redimensionado
   pra continuar ajustando ele.
+
+
+---
+
+## atualização 3 — múltiplos vídeos, mistura livre de fotos e vídeos
+
+- **vários vídeos no mesmo post:** na aba "vídeo" (ou "fotos + vídeo"),
+  cole um link e clique em "adicionar" — pode adicionar quantos
+  vídeos quiser. cada um vira um item na lista de ordem, junto com
+  as fotos.
+- **ordem livre:** arraste fotos e vídeos na mesma lista pra colocar
+  em QUALQUER sequência — não precisa mais ser "vídeo primeiro,
+  fotos depois". dá pra intercalar do jeito que quiser: foto, vídeo,
+  foto, foto, vídeo...
+- posts assim usam os campos novos `videos` (lista de links) e
+  `order` (a sequência exata) no posts.js — o admin escreve isso
+  sozinho. Posts antigos com só `video` continuam funcionando iguais.
+- **limite atual:** fotos e vídeos já publicados (quando você edita
+  um post existente) continuam sempre antes dos novos — ainda não dá
+  pra reordenar ou remover os antigos por aqui, só direto pelo
+  posts.js no github.
+
+
+---
+
+## atualização 4 — botão "Normal", título sem misturar formatação, sem flick no scroll
+
+- **botão "Normal" do tamanho de texto:** agora funciona igual P/G/GG
+  — marca o texto selecionado e fica ativo pra você ajustar a partir
+  dali, em vez de simplesmente não fazer nada.
+- **slider de tamanho de texto:** corrigido um bug em que o número
+  mostrado no slider não batia com o tamanho realmente aplicado
+  (o G e o GG apareciam mostrando 75/100 no campo, mas o texto
+  estava mesmo em 135%/180% — só a exibição estava errada).
+- **Seção / Sub / Corpo / Citação:** não usam mais o método antigo do
+  navegador pra trocar o tipo do bloco. Isso resolvia dois problemas:
+  a tela não "pula" mais o scroll ao clicar, e transformar um trecho
+  em Seção ou Sub agora limpa cor/tamanho que tinham sido aplicados
+  só naquele trecho de texto — um título fica com uma aparência só,
+  em vez de sair com pedaços em tamanhos e cores diferentes. Virar
+  citação ou parágrafo continua preservando negrito/itálico/cor
+  normalmente.

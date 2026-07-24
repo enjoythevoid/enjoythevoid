@@ -64,7 +64,11 @@ const ARCHIVE = POSTS
   .slice()
   .sort((a,b) => new Date(a.date) - new Date(b.date))
   .map((p,i) => {
-    const video  = parseVideo(p.video);
+    /* um post pode ter vários vídeos: "videos" é a lista (nova),
+       "video" continua funcionando sozinho pra posts antigos */
+    const rawVideos = Array.isArray(p.videos) ? p.videos : (p.video ? [p.video] : []);
+    const videos = rawVideos.map(parseVideo).filter(Boolean);
+    const video  = videos[0] || null; // compatibilidade com código que ainda lê post.video
     const photos = photoList(p);
     const cover  = p.cover ? resolvePath(p, p.cover) : (photos[0] || videoCover(video));
     return {
@@ -72,13 +76,14 @@ const ARCHIVE = POSTS
       id: i+1,
       catalogNo: String(i+1).padStart(3,'0'),
       year: Number(p.date.slice(0,4)),
-      /* basta o campo "video" existir pro post ser tratado como vídeo,
+      /* basta ter vídeo(s) pro post ser tratado como vídeo,
          mesmo que o link ainda esteja vazio */
-      type: p.type || ('video' in p ? 'video' : 'photo'),
-      /* um post pode ter foto E vídeo ao mesmo tempo */
-      hasVideo: !!video,
+      type: p.type || (rawVideos.length ? 'video' : 'photo'),
+      /* um post pode ter foto(s) E vídeo(s) ao mesmo tempo, misturados
+         na ordem que quiser (ver mediaItems() logo abaixo) */
+      hasVideo: videos.length > 0,
       hasPhotos: photos.length > 0,
-      video, photos, cover,
+      video, videos, photos, cover,
       ratio: p.ratio || '16/9',
       tags: p.tags || [],
       href: p.page ? `post.html?p=${p.slug}` : ''
@@ -115,14 +120,39 @@ function bindTheme(btn){
    vêm em seguida, tudo na mesma tira de miniaturas. --- */
 function mediaItems(p){
   const items = [];
-  /* videoAt: quantas fotos vêm ANTES do vídeo na tira do visor.
-     0 (padrão) = vídeo primeiro, igual antes. undefined também vira 0. */
-  const at = p.video ? Math.max(0, Math.min(p.photos.length, Number(p.videoAt) || 0)) : -1;
+
+  /* posts novos: "order" descreve a sequência exata, misturando
+     quantas fotos e vídeos quiser em qualquer ordem —
+     "photo" consome a próxima foto da lista; "video:N" usa o vídeo
+     de índice N dentro de p.videos. */
+  if(Array.isArray(p.order) && p.order.length){
+    let pi = 0;
+    p.order.forEach(tok => {
+      if(tok === 'photo'){
+        const src = p.photos[pi++];
+        if(src) items.push({ kind:'photo', src, thumb: src });
+      } else if(typeof tok === 'string' && tok.startsWith('video')){
+        const idx = tok.includes(':') ? Number(tok.split(':')[1]) : 0;
+        const v = p.videos[idx];
+        if(v) items.push({ kind:'video', video:v, thumb: videoCover(v) });
+      }
+    });
+    /* sobra alguma foto fora do "order" (não deveria acontecer se o
+       admin gerou o bloco certinho) — adiciona no final mesmo assim,
+       pra nunca sumir uma foto por causa disso */
+    while(pi < p.photos.length){ items.push({ kind:'photo', src: p.photos[pi], thumb: p.photos[pi] }); pi++; }
+    return items;
+  }
+
+  /* posts antigos: só um vídeo, posição fixa por "videoAt"
+     (0 = vídeo primeiro, era o único comportamento antes) */
+  const v0 = p.videos[0];
+  const at = v0 ? Math.max(0, Math.min(p.photos.length, Number(p.videoAt) || 0)) : -1;
   p.photos.forEach((src,i) => {
-    if(p.video && i === at) items.push({ kind:'video', thumb: videoCover(p.video) });
+    if(v0 && i === at) items.push({ kind:'video', video:v0, thumb: videoCover(v0) });
     items.push({ kind:'photo', src, thumb: src });
   });
-  if(p.video && at >= p.photos.length) items.push({ kind:'video', thumb: videoCover(p.video) });
+  if(v0 && at >= p.photos.length) items.push({ kind:'video', video:v0, thumb: videoCover(v0) });
   return items;
 }
 
