@@ -46,4 +46,13 @@ const POSTS = [
     order: ["photo", "photo", "photo", "photo", "photo", "video:0"],
   },
 
+  {
+    slug: "isabele",
+    title: "ISABELE",
+    date: "2017-02-11",
+    location: "São Paulo",
+    tags: ["T5I"],
+    photos: 1,
+  },
+
 ];
