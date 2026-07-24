@@ -160,6 +160,11 @@
   .pitem .rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:12px;width:18px;height:18px;cursor:pointer;z-index:1}
   .pitem.dragging{opacity:.35}
   .pitem.pitem-video{outline:1px solid var(--accent);outline-offset:-1px}
+  .pitem.pitem-existing::after{
+    content:"publicado";position:absolute;left:4px;bottom:4px;
+    background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:2px 6px;
+    letter-spacing:.03em;pointer-events:none;z-index:1;
+  }
   .pitem.pitem-video .num{background:var(--accent)}
 
   .toggle{display:flex;align-items:center;gap:10px;cursor:pointer}
@@ -312,12 +317,7 @@
   <!-- ===== FOTOS ===== -->
   <div id="panelPhoto">
     <div class="field">
-      <div id="existingPhotosWrap" style="display:none;margin-bottom:var(--s3)">
-        <label>fotos que já estão publicadas</label>
-        <div id="existingPhotoList" class="pitem-grid"></div>
-        <p class="hint">essas já estão no ar, sempre antes das novas — não dá pra remover ou reordenar as antigas por aqui ainda, só direto pelo github.</p>
-      </div>
-      <label>fotos novas</label>
+      <label>adicionar fotos</label>
       <div class="dropzone" id="dropzone">
         arraste as fotos aqui, ou clique pra escolher
         <input type="file" id="fileInput" accept="image/*" multiple>
@@ -328,11 +328,6 @@
   <!-- ===== VÍDEO ===== -->
   <div id="panelVideo" style="display:none">
     <div class="field">
-      <div id="existingVideosWrap" style="display:none;margin-bottom:var(--s3)">
-        <label>vídeos que já estão publicados</label>
-        <div id="existingVideoList" class="pitem-grid"></div>
-        <p class="hint">esses já estão no ar, sempre antes dos novos — não dá pra remover ou reordenar os antigos por aqui ainda, só direto pelo posts.js.</p>
-      </div>
       <label>adicionar vídeo (YouTube ou Vimeo)</label>
       <div style="display:flex;gap:8px">
         <input type="text" id="fVideoInput" placeholder="https://youtu.be/XXXXXXXXXXX" style="flex:1">
@@ -350,9 +345,9 @@
     </div>
   </div>
 
-  <!-- ===== ORDEM: fotos e vídeos novos, misturados do jeito que quiser ===== -->
+  <!-- ===== ORDEM: fotos e vídeos, publicados ou novos, misturados do jeito que quiser ===== -->
   <div class="field" id="mediaOrderWrap">
-    <label id="photosFieldLabel">ordem de exibição — arraste pra misturar fotos e vídeos como quiser</label>
+    <label id="photosFieldLabel">ordem de exibição — arraste pra reordenar (inclusive o que já está publicado)</label>
     <div id="photoList" class="pitem-grid"></div>
     <p class="hint" id="photoHint"></p>
   </div>
@@ -997,9 +992,6 @@ function parseRemotePosts(postsJsText){
    =========================================================== */
 
 let editingSlug = null;     // null = criando post novo
-let existingPhotoCount = 0; // quantas fotos já existem quando está editando
-let existingVideoCount = 0; // quantos vídeos já existem quando está editando
-let existingVideoUrls  = []; // urls desses vídeos, na ordem que já estão publicados
 let existingMdSha = null;   // sha do posts/slug.md, se já existir
 
 const editSelect = document.getElementById('editSelect');
@@ -1047,21 +1039,13 @@ editSelect.addEventListener('change', async () => {
     editingRawBase = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/`;
 
     const pVideos = Array.isArray(p.videos) ? p.videos : (p.video ? [p.video] : []);
-    existingVideoUrls = pVideos.slice();
-    existingVideoCount = pVideos.length;
+    const photoCount = p.photos != null ? (Array.isArray(p.photos) ? p.photos.length : Number(p.photos) || 0) : 0;
 
-    const temVideo = existingVideoCount > 0;
-    const temFoto  = p.photos != null && (Array.isArray(p.photos) ? p.photos.length : Number(p.photos)) > 0;
-    setType(temVideo && temFoto ? 'both' : temVideo ? 'video' : 'photo');
+    setType(pVideos.length && photoCount ? 'both' : pVideos.length ? 'video' : 'photo');
+    if(pVideos.length && p.ratio === '9/16'){ ratioV.click(); } else { ratioH.click(); }
 
-    if(temVideo){
-      if(p.ratio === '9/16'){ ratioV.click(); } else { ratioH.click(); }
-      loadExistingVideoPreviews();
-    }
-    if(temFoto){
-      existingPhotoCount = Array.isArray(p.photos) ? p.photos.length : (Number(p.photos) || 0);
-      await loadExistingPhotoPreviews(slug);
-    }
+    editHint.textContent = 'carregando fotos e vídeos publicados...';
+    await loadExistingMediaIntoOrder(slug, p, pVideos, photoCount);
 
     const pageChk = document.getElementById('fPage');
     pageChk.checked = !!p.page;
@@ -1081,21 +1065,19 @@ editSelect.addEventListener('change', async () => {
     btnDelete.style.display = '';
     document.getElementById('btnPublish').textContent = 'salvar alterações';
     const bits = [];
-    if(existingPhotoCount) bits.push(`${existingPhotoCount} foto(s)`);
-    if(existingVideoCount) bits.push(`${existingVideoCount} vídeo(s)`);
+    if(photoCount) bits.push(`${photoCount} foto(s)`);
+    if(pVideos.length) bits.push(`${pVideos.length} vídeo(s)`);
     editHint.textContent = bits.length
-      ? `editando "${p.title}" — já tem ${bits.join(' e ')}. o que você adicionar agora entra depois, na ordem que arrastar.`
+      ? `editando "${p.title}" — já tem ${bits.join(' e ')}. arraste os itens abaixo (inclusive os já publicados) pra reordenar.`
       : `editando "${p.title}".`;
   }catch(e){
     editHint.textContent = `erro ao carregar: ${e.message}`;
   }
 });
 
+
 function resetFormToNew(){
   editingSlug = null;
-  existingPhotoCount = 0;
-  existingVideoCount = 0;
-  existingVideoUrls = [];
   existingMdSha = null;
   editingRawBase = '';
   selectedMedia = null;
@@ -1108,59 +1090,64 @@ function resetFormToNew(){
   document.getElementById('fLocation').value = '';
   document.getElementById('fTags').value = '';
   document.getElementById('fVideoInput').value = '';
-  document.getElementById('existingVideosWrap').style.display = 'none';
   editorArea.innerHTML = '';
   editorImages = [];
   document.getElementById('fPage').checked = false;
   document.getElementById('mdFieldWrap').style.display = 'none';
-  document.getElementById('existingPhotosWrap').style.display = 'none';
   refreshChipStates();
   btnDelete.style.display = 'none';
   document.getElementById('btnPublish').textContent = 'publicar no github';
   editHint.textContent = '';
 }
 
-/* mostra os vídeos já publicados desse post (não vêm de arquivo,
-   vêm direto do posts.js — então não precisa buscar nada) */
-function loadExistingVideoPreviews(){
-  const wrap = document.getElementById('existingVideosWrap');
-  const grid = document.getElementById('existingVideoList');
-  if(!existingVideoUrls.length){ wrap.style.display = 'none'; grid.innerHTML = ''; return; }
-  grid.innerHTML = existingVideoUrls.map((url, i) => {
-    const v = parseVideo(url);
-    const cover = youtubeCover(v);
-    return `<div class="exitem"><span class="num">▶ ${i+1}</span>` +
-      (cover ? `<img src="${cover}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:10px">vídeo</div>`) +
-      `</div>`;
-  }).join('');
-  wrap.style.display = '';
-}
-
-/* --- mostra as fotos que já estão publicadas, ao editar um post --- */
-async function loadExistingPhotoPreviews(slug){
-  const wrap = document.getElementById('existingPhotosWrap');
-  const grid = document.getElementById('existingPhotoList');
-  const label = document.getElementById('photosFieldLabel');
-  grid.innerHTML = '';
-  try{
-    const items = await ghListDir(`media/${slug}`);
-    const photos = items
-      .filter(it => it.type === 'file' && /^\d+\.(jpe?g|png|webp)$/i.test(it.name))
-      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-
-    if(!photos.length){
-      wrap.style.display = 'none';
-      label.textContent = 'fotos — arraste pra reordenar, a primeira é a capa';
-      return;
+/* --- carrega as fotos e vídeos já publicados de um post direto
+   dentro de "order", junto com o que for adicionado agora — dá pra
+   arrastar, reordenar e até remover o que já está no ar. reconstrói
+   a sequência original a partir de p.order (posts novos) ou do
+   esquema antigo (video + videoAt, só fotos, etc). --- */
+async function loadExistingMediaIntoOrder(slug, p, pVideos, photoCount){
+  let photoFiles = [];
+  if(photoCount){
+    try{
+      const items = await ghListDir(`media/${slug}`);
+      photoFiles = items
+        .filter(it => it.type === 'file' && /^\d+\.(jpe?g|png|webp)$/i.test(it.name))
+        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+        .map(it => ({ name: it.name, url: it.download_url }));
+    }catch(e){
+      editHint.textContent = ` (não consegui listar as fotos publicadas: ${e.message})`;
     }
-    grid.innerHTML = photos.map((f, i) =>
-      `<div class="exitem"><span class="num">${i+1}</span><img src="${f.download_url}" loading="lazy"></div>`).join('');
-    wrap.style.display = '';
-    label.textContent = 'fotos novas — entram depois das que já existem';
-  }catch(e){
-    wrap.style.display = 'none';
-    editHint.textContent += ' (não consegui carregar a prévia das fotos, mas a contagem acima está certa.)';
   }
+
+  const items = [];
+  if(Array.isArray(p.order) && p.order.length){
+    let pi = 0;
+    p.order.forEach(tok => {
+      if(tok === 'photo'){
+        const f = photoFiles[pi++];
+        if(f) items.push({ kind:'photo', new:false, name:f.name, url:f.url });
+      } else if(typeof tok === 'string' && tok.startsWith('video')){
+        const idx = tok.includes(':') ? Number(tok.split(':')[1]) : 0;
+        const url = pVideos[idx];
+        if(url) items.push({ kind:'video', new:false, url });
+      }
+    });
+    while(pi < photoFiles.length){ items.push({ kind:'photo', new:false, name:photoFiles[pi].name, url:photoFiles[pi].url }); pi++; }
+  } else {
+    /* post antigo, sem "order": vídeo(s) na posição de videoAt (só
+       o primeiro vídeo tinha posição definida nesse esquema) */
+    const v0 = pVideos[0];
+    const at = v0 ? Math.max(0, Math.min(photoFiles.length, Number(p.videoAt) || 0)) : -1;
+    photoFiles.forEach((f, i) => {
+      if(v0 && i === at) items.push({ kind:'video', new:false, url:v0 });
+      items.push({ kind:'photo', new:false, name:f.name, url:f.url });
+    });
+    if(v0 && at >= photoFiles.length) items.push({ kind:'video', new:false, url:v0 });
+    pVideos.slice(1).forEach(url => items.push({ kind:'video', new:false, url }));
+  }
+
+  order = items.concat(order); // preserva o que já tinha sido adicionado antes de trocar o post no seletor
+  renderPhotoList();
 }
 
 btnDelete.addEventListener('click', async () => {
@@ -1783,26 +1770,18 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
     return;
   }
 
-  /* fotos da galeria — cada etapa cai no catch dela mesma, então uma
-     falha aqui (ex.: erro de sha numa foto) não impede o texto da
-     página completa de ser enviado depois */
-  const seq = photoItems(); // fotos novas na ordem escolhida (com ou sem o vídeo intercalado)
-  if(seq.length){
+  /* fotos — novas E já publicadas, pra baterem com a ordem escolhida.
+     cada etapa cai no catch dela mesma, então uma falha aqui (ex.:
+     erro de sha numa foto) não impede o texto da página completa
+     de ser enviado depois */
+  const photoSeq = photoEntries();
+  if(photoSeq.length){
     try{
-      for(let i = 0; i < seq.length; i++){
-        const n = existingPhotoCount + i + 1;
-        const name = `${String(n).padStart(2,'0')}.jpg`;
-        log(`preparando foto ${i+1} / ${seq.length}...`);
-        const big = await resizeImage(seq[i].file, 2000, 0.88);
-        const small = await resizeImage(seq[i].file, 600, 0.85);
-        log(`enviando foto ${i+1} / ${seq.length}...`);
-        await ghPutSmart(`media/${slug}/${name}`, await blobToB64(big), `foto ${name} — ${slug}`);
-        await ghPutSmart(`media/${slug}/thumbs/${name}`, await blobToB64(small), `miniatura ${name} — ${slug}`);
-      }
-      log(`${seq.length} foto(s) nova(s) enviada(s).`, 'ok');
+      await syncPhotosToOrder(slug, photoSeq);
+      log(`fotos sincronizadas com a ordem escolhida.`, 'ok');
     }catch(e){
       hadError = true;
-      log(`erro ao enviar fotos: ${e.message}`, 'err');
+      log(`erro ao sincronizar fotos: ${e.message}`, 'err');
       log(`o post já está publicado com o que deu certo até aqui — pode tentar salvar de novo pra reenviar só o que faltou.`, 'err');
     }
   }
@@ -1872,12 +1851,16 @@ function slugify(s){
 }
 
 /* --- fotos + vídeos: drag & drop, reordenar tudo junto ---
-   "order" guarda a sequência escolhida: cada item é uma foto nova
-   ({file,url}) ou um vídeo novo ({video:true, url}) — pode ter
-   quantos vídeos quiser, em qualquer posição entre as fotos.
-   fotos e vídeos já publicados (post em edição) continuam sempre
-   antes desses, por enquanto não dá pra reordenar/remover eles
-   por aqui. */
+   "order" guarda a sequência inteira do post: cada item é uma foto
+   ou vídeo, publicado ou novo —
+     {kind:'photo', new:true,  file, url}         foto nova
+     {kind:'photo', new:false, name:'03.jpg', url} foto já publicada
+     {kind:'video', new:true,  url}                vídeo novo
+     {kind:'video', new:false, url}                vídeo já publicado
+   dá pra arrastar e remover QUALQUER item, publicado ou não — ao
+   salvar, o admin recalcula os nomes dos arquivos (01.jpg, 02.jpg...)
+   pra bater com essa ordem, mesmo que isso signifique renomear foto
+   já publicada. */
 let order = [];
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
@@ -1886,17 +1869,17 @@ const photoHint = document.getElementById('photoHint');
 const fVideoInput = document.getElementById('fVideoInput');
 const btnAddVideo = document.getElementById('btnAddVideo');
 
-/* só as fotos da sequência nova, na ordem — usado em toda parte
-   que precisa montar os arquivos 01.jpg, 02.jpg... */
-function photoItems(){ return order.filter(x => !x.video); }
-/* só os vídeos novos, na ordem em que foram arrastados */
-function videoItems(){ return order.filter(x => x.video); }
+/* só as fotos da sequência, na ordem final — usado pra montar os
+   arquivos 01.jpg, 02.jpg... */
+function photoEntries(){ return order.filter(x => x.kind === 'photo'); }
+/* só os vídeos, na ordem final */
+function videoEntries(){ return order.filter(x => x.kind === 'video'); }
 
 function addVideoFromInput(){
   const url = fVideoInput.value.trim();
   if(!url) return;
   if(!parseVideo(url)){ alert('link não reconhecido. cole um link do YouTube ou Vimeo.'); return; }
-  order.push({ video:true, url });
+  order.push({ kind:'video', new:true, url });
   fVideoInput.value = '';
   renderPhotoList();
 }
@@ -1911,7 +1894,7 @@ fileInput.addEventListener('change', e => addFiles(e.target.files));
 
 function addFiles(list){
   [...list].filter(f => f.type.startsWith('image/')).forEach(f => {
-    order.push({ file:f, url:URL.createObjectURL(f) });
+    order.push({ kind:'photo', new:true, file:f, url:URL.createObjectURL(f) });
   });
   renderPhotoList();
 }
@@ -1923,17 +1906,18 @@ function renderPhotoList(){
     const el = document.createElement('div');
     el.draggable = true;
     el.dataset.i = i;
-    if(item.video){
+    if(item.kind === 'video'){
       videoNum++;
-      const v = parseVideo(item.url);
-      const cover = youtubeCover(v);
-      el.className = 'pitem pitem-video';
+      const cover = youtubeCover(parseVideo(item.url));
+      el.className = 'pitem pitem-video' + (item.new ? '' : ' pitem-existing');
+      el.title = item.new ? 'vídeo novo' : 'vídeo já publicado — arraste pra reordenar ou × pra remover';
       el.innerHTML = `<span class="num">▶ ${videoNum}</span>
         <button type="button" class="rm" data-i="${i}">×</button>` +
         (cover ? `<img src="${cover}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:11px">vídeo</div>`);
     } else {
       photoNum++;
-      el.className = 'pitem';
+      el.className = 'pitem' + (item.new ? '' : ' pitem-existing');
+      el.title = item.new ? 'foto nova' : 'foto já publicada — arraste pra reordenar ou × pra remover';
       el.innerHTML = `<span class="num">${String(photoNum).padStart(2,'0')}</span>
         <button type="button" class="rm" data-i="${i}">×</button>
         <img src="${item.url}">`;
@@ -1942,10 +1926,10 @@ function renderPhotoList(){
   });
 
   const bits = [];
-  if(photoNum) bits.push(`${photoNum} foto(s) nova(s)`);
-  if(videoNum) bits.push(`${videoNum} vídeo(s) novo(s)`);
+  if(photoNum) bits.push(`${photoNum} foto(s)`);
+  if(videoNum) bits.push(`${videoNum} vídeo(s)`);
   photoHint.textContent = bits.length
-    ? `${bits.join(', ')}. arraste os itens acima pra misturar do jeito que quiser.${(!existingPhotoCount && photoNum) ? ' a primeira foto vira a capa no grid.' : ''}`
+    ? `${bits.join(', ')} no total. arraste pra reordenar — vale pro que já está publicado também. a primeira foto vira a capa no grid.`
     : '';
 
   photoList.querySelectorAll('.rm').forEach(btn => {
@@ -1956,8 +1940,8 @@ function renderPhotoList(){
     });
   });
 
-  /* reordenar arrastando — fotos e vídeos na mesma lista, em
-     qualquer combinação */
+  /* reordenar arrastando — fotos e vídeos, publicados ou novos,
+     todos na mesma lista, em qualquer combinação */
   let dragIdx = null;
   photoList.querySelectorAll('.pitem').forEach(el => {
     el.addEventListener('dragstart', () => { dragIdx = +el.dataset.i; el.classList.add('dragging'); });
@@ -1992,6 +1976,65 @@ function resizeImage(file, maxSide, quality){
   });
 }
 
+/* ===========================================================
+   SINCRONIZA AS FOTOS COM A ORDEM ESCOLHIDA — inclusive as que já
+   estavam publicadas. Pode envolver renomear (01.jpg vira 03.jpg,
+   por exemplo) ou apagar uma foto que foi removida da lista.
+
+   pra isso funcionar mesmo quando duas fotos trocam de lugar entre
+   si, o conteúdo de TODAS as fotos existentes que vão mudar de nome
+   é lido pra memória ANTES de escrever qualquer coisa — senão dava
+   pra sobrescrever uma foto ainda necessária antes dela ser copiada
+   pro lugar certo.
+   =========================================================== */
+async function syncPhotosToOrder(slug, photoSeq){
+  const targets = photoSeq.map((_, i) => `${String(i+1).padStart(2,'0')}.jpg`);
+
+  const existingContent = new Map(); // nome atual -> {big, thumb} (base64)
+  for(const item of photoSeq){
+    if(item.new || existingContent.has(item.name)) continue;
+    log(`lendo ${item.name}...`);
+    const big = await ghGetFileB64(`media/${slug}/${item.name}`);
+    const thumb = await ghGetFileB64(`media/${slug}/thumbs/${item.name}`).catch(() => null);
+    existingContent.set(item.name, { big: big && big.b64, thumb: thumb && thumb.b64 });
+  }
+
+  for(let i = 0; i < photoSeq.length; i++){
+    const item = photoSeq[i];
+    const target = targets[i];
+    if(item.new){
+      log(`preparando foto nova ${i+1} / ${photoSeq.length}...`);
+      const big = await resizeImage(item.file, 2000, 0.88);
+      const small = await resizeImage(item.file, 600, 0.85);
+      log(`enviando foto ${i+1} / ${photoSeq.length}...`);
+      await ghPutSmart(`media/${slug}/${target}`, await blobToB64(big), `foto ${target} — ${slug}`);
+      await ghPutSmart(`media/${slug}/thumbs/${target}`, await blobToB64(small), `miniatura ${target} — ${slug}`);
+    } else if(item.name !== target){
+      log(`movendo ${item.name} → ${target}...`);
+      const content = existingContent.get(item.name);
+      if(content && content.big) await ghPutSmart(`media/${slug}/${target}`, content.big, `reordena foto — ${slug}`);
+      if(content && content.thumb) await ghPutSmart(`media/${slug}/thumbs/${target}`, content.thumb, `reordena miniatura — ${slug}`);
+    }
+    /* item.name === target: já está no lugar certo, não faz nada */
+  }
+
+  /* apaga o que sobrou sem dono (foto removida da ordem, ou nome
+     antigo que ninguém mais ocupa depois da reorganização) */
+  const usedNames = new Set(targets);
+  const staleNames = [...existingContent.keys()].filter(n => !usedNames.has(n));
+  for(const name of staleNames){
+    try{
+      log(`removendo ${name} (não faz mais parte da ordem)...`);
+      const bigMeta = await ghGetFile(`media/${slug}/${name}`);
+      if(bigMeta) await ghDeleteFile(`media/${slug}/${name}`, bigMeta.sha, `remove foto — ${slug}`);
+      const thumbMeta = await ghGetFile(`media/${slug}/thumbs/${name}`);
+      if(thumbMeta) await ghDeleteFile(`media/${slug}/thumbs/${name}`, thumbMeta.sha, `remove miniatura — ${slug}`);
+    }catch(e){
+      log(`não consegui remover ${name}: ${e.message}`, 'err');
+    }
+  }
+}
+
 /* --- monta os dados do post a partir do formulário ---
    usado tanto pelo botão "gerar bloco" quanto por "publicar" */
 let currentSlug = '';
@@ -2002,52 +2045,46 @@ function buildPost(){
   const tags = document.getElementById('fTags').value.split(',').map(s => s.trim()).filter(Boolean);
   const page = document.getElementById('fPage').checked;
 
-  const totalPhotos = existingPhotoCount + photoItems().length;
-  const newVideoUrls = videoItems().map(v => v.url);
-  const allVideoUrls = existingVideoUrls.concat(newVideoUrls);
+  const photoSeq = photoEntries();
+  const videoSeq = videoEntries();
 
   if(!title || !date){ alert('preencha pelo menos título e data.'); return null; }
-  if(!totalPhotos && !allVideoUrls.length){ alert('adicione pelo menos uma foto ou um vídeo.'); return null; }
+  if(!photoSeq.length && !videoSeq.length){ alert('adicione pelo menos uma foto ou um vídeo.'); return null; }
 
   const slug = editingSlug || slugify(title);
   currentSlug = slug;
   const tagsStr = tags.length ? `[${tags.map(t => `"${t}"`).join(', ')}]` : '[]';
 
   let block = `{\n    slug: "${slug}",\n    title: "${title.toUpperCase()}",\n    date: "${date}",\n    location: "${location}",\n    tags: ${tagsStr},\n`;
-  if(totalPhotos){
-    block += `    photos: ${totalPhotos},\n`;
+  if(photoSeq.length){
+    block += `    photos: ${photoSeq.length},\n`;
   }
-  if(allVideoUrls.length){
-    const videosStr = `[${allVideoUrls.map(u => JSON.stringify(u)).join(', ')}]`;
+  if(videoSeq.length){
+    const videosStr = `[${videoSeq.map(v => JSON.stringify(v.url)).join(', ')}]`;
     block += `    videos: ${videosStr},\n    ratio: "${ratio}",\n`;
 
-    /* ordem completa: primeiro o que já estava publicado (fotos
-       antigas, depois vídeos antigos), depois o que foi arrastado
-       agora nessa sessão, na ordem escolhida */
-    const prefix = [];
-    for(let i = 0; i < existingPhotoCount; i++) prefix.push('photo');
-    for(let i = 0; i < existingVideoCount; i++) prefix.push(`video:${i}`);
-    let nextVideoIdx = existingVideoCount;
-    const newTokens = order.map(item => item.video ? `video:${nextVideoIdx++}` : 'photo');
-    const fullOrder = prefix.concat(newTokens);
-    const orderStr = `[${fullOrder.map(t => JSON.stringify(t)).join(', ')}]`;
-    block += `    order: ${orderStr},\n`;
+    /* ordem completa — a mesma sequência que está na tela agora,
+       fotos e vídeos publicados ou novos misturados do jeito que
+       foi arrastado */
+    const videoIndexOf = new Map(videoSeq.map((v, i) => [v, i]));
+    const tokens = order.map(item => item.kind === 'photo' ? 'photo' : `video:${videoIndexOf.get(item)}`);
+    block += `    order: [${tokens.map(t => JSON.stringify(t)).join(', ')}],\n`;
   }
   if(page) block += `    page: true,\n`;
   block += `  },`;
 
-  return { slug, block, page, title, date, location, tags, totalPhotos, allVideoUrls };
+  return { slug, block, page, title, date, location, tags, photoSeq, videoSeq };
 }
 
 document.getElementById('btnGenerate').addEventListener('click', () => {
   const built = buildPost();
   if(!built) return;
-  const { slug, block, page, totalPhotos } = built;
+  const { slug, block, page, photoSeq } = built;
 
   document.getElementById('codeBlock').textContent = '  ' + block;
   document.getElementById('output').classList.add('show');
 
-  document.getElementById('photoDownloadSection').style.display = totalPhotos ? '' : 'none';
+  document.getElementById('photoDownloadSection').style.display = photoSeq.some(p => p.new) ? '' : 'none';
   document.getElementById('mdDownloadSection').style.display = page ? '' : 'none';
   document.getElementById('mdFileName').textContent = `posts/${slug}.md`;
 });
@@ -2059,7 +2096,11 @@ document.getElementById('btnCopyCode').addEventListener('click', () => {
   setTimeout(() => btn.textContent = old, 1400);
 });
 
-/* --- gerar o zip com as fotos já redimensionadas --- */
+/* --- gerar o zip com as fotos novas já redimensionadas ---
+   só as novas: as que já estavam publicadas não têm o arquivo
+   original aqui na memória do navegador pra reprocessar, e mesmo
+   que tivessem, reordenar as antigas só funciona mesmo publicando
+   direto pelo github (é isso que renomeia os arquivos lá). */
 document.getElementById('btnZip').addEventListener('click', async () => {
   const status = document.getElementById('status');
   const btn = document.getElementById('btnZip');
@@ -2068,7 +2109,7 @@ document.getElementById('btnZip').addEventListener('click', async () => {
   const folder = zip.folder(`media/${currentSlug}`);
   const thumbs = folder.folder('thumbs');
 
-  const seq = photoItems();
+  const seq = photoEntries().filter(p => p.new);
   for(let i = 0; i < seq.length; i++){
     status.textContent = `processando ${i+1} / ${seq.length}...`;
     const name = `${String(i+1).padStart(2,'0')}.jpg`;

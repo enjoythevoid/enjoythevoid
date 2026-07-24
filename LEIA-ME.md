@@ -387,3 +387,23 @@ o certificado HTTPS sozinho. Dá pra fazer depois, sem refazer nada.
   em vez de sair com pedaços em tamanhos e cores diferentes. Virar
   citação ou parágrafo continua preservando negrito/itálico/cor
   normalmente.
+
+
+---
+
+## atualização 5 — reordenar (e remover) o que já está publicado
+
+- agora a lista de ordem mostra TUDO — fotos e vídeos publicados e
+  os que você acabou de adicionar — misturados na mesma grade
+  arrastável. dá pra arrastar qualquer item, publicado ou não, e dá
+  pra remover (×) qualquer um também.
+- itens já publicados aparecem com um selinho "publicado" no canto.
+- ao salvar, o admin recalcula os nomes dos arquivos de foto (01.jpg,
+  02.jpg...) pra bater com a ordem que ficou na tela — isso pode
+  significar renomear uma foto que já estava lá, ou apagar uma que
+  você removeu da lista. vídeos não precisam de arquivo nenhum, só
+  reordena a lista mesmo.
+- o botão "baixar .zip das fotos" continua exportando só as fotos
+  NOVAS (as publicadas não têm o arquivo original disponível aqui
+  no navegador pra reprocessar) — reordenar as antigas só funciona
+  publicando direto pelo github.
