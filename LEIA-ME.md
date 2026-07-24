@@ -407,3 +407,19 @@ o certificado HTTPS sozinho. Dá pra fazer depois, sem refazer nada.
   NOVAS (as publicadas não têm o arquivo original disponível aqui
   no navegador pra reprocessar) — reordenar as antigas só funciona
   publicando direto pelo github.
+
+
+---
+
+## atualização 6 — vídeo no mobile, redes sociais como ícone
+
+- **vídeo minúsculo no mobile:** a correção anterior calculava o
+  tamanho do vídeo lendo de volta o max-width/max-height do CSS
+  (que usa vw/vh dentro de min()) — e isso não vinha confiável no
+  Chrome do Android, dando um vídeo bem menor do que deveria. agora
+  o tamanho vem direto de window.innerWidth/innerHeight, sem
+  depender de ler nada do CSS de volta.
+- **redes sociais:** saíram de dentro do menu do # e viraram ícones
+  (Instagram, LinkedIn, Letterboxd) do lado dele, na barra de
+  navegação. pra trocar os links, edita o `index.html` e procura
+  por `id="socialLinks"` — são só 3 `<a href="...">`.
