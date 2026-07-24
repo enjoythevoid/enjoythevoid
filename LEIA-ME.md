@@ -423,3 +423,40 @@ o certificado HTTPS sozinho. Dá pra fazer depois, sem refazer nada.
   (Instagram, LinkedIn, Letterboxd) do lado dele, na barra de
   navegação. pra trocar os links, edita o `index.html` e procura
   por `id="socialLinks"` — são só 3 `<a href="...">`.
+
+
+---
+
+## atualização 7 — escolher a thumb de um vídeo
+
+- cada vídeo na lista de ordem agora tem um ícone 🖼 — clique pra
+  escolher uma foto do seu computador pra usar como thumb dele, em
+  vez do frame automático que o YouTube gera. aparece um ↺ do lado
+  pra voltar a usar o automático.
+- funciona tanto pra vídeo novo quanto pra vídeo já publicado.
+- isso fica salvo como `videoCovers` no posts.js, uma lista paralela
+  a `videos` (mesma posição = mesmo vídeo). o nome do arquivo da
+  thumb é baseado no próprio vídeo (não na posição dele), então
+  reordenar os vídeos nunca bagunça qual thumb pertence a qual.
+
+
+---
+
+## atualização 8 — ajustes finos no mobile
+
+- **light/dark colado no logo:** o `margin-left:auto` que empurrava
+  o botão pro canto direito só tinha sido cancelado do lado do logo,
+  não do lado do próprio botão — por isso ele continuava indo pro
+  canto oposto. corrigido.
+- **ícones sociais menores no mobile.**
+- **espaço entre anos reduzido no mobile:** de 56px pra 20px de
+  respiro entre uma seção de ano e a próxima.
+- **linha pontilhada/serrilhada perto do cabeçalho do ano:** é um bug
+  conhecido do Safari/WebKit em elementos `position:sticky` com fundo
+  transparente — o navegador às vezes desenha uma costura na borda
+  da camada de composição. adicionei as propriedades que forçam uma
+  promoção de camada "limpa" (`translateZ(0)` + `backface-visibility`),
+  que é a correção padrão pra esse bug específico.
+- **thumb de vídeo ao editar um post já publicado:** já funciona —
+  o ícone 🖼 aparece em qualquer vídeo, publicado ou novo, desde a
+  atualização anterior.
