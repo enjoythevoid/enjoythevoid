@@ -64,4 +64,15 @@ const POSTS = [
     photos: 1,
   },
 
+  {
+    slug: "imback",
+    title: "IMBACK",
+    date: "2026-07-02",
+    location: "São Paulo",
+    tags: ["AI"],
+    videos: ["https://www.youtube.com/watch?v=XIn1jCvmO1k"],
+    ratio: "16/9",
+    order: ["video:0"],
+  },
+
 ];
