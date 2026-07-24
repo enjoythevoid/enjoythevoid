@@ -10,13 +10,21 @@ const elHead = document.getElementById('postHead');
 const elBody = document.getElementById('postBody');
 const elFoot = document.getElementById('postFoot');
 
-/* ---------- inline: negrito, itálico, link ---------- */
+/* ---------- inline: negrito, itálico, sublinhado, tachado, cor, link ---------- */
 function inline(s){
   return s
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    /* protege as tags customizadas que queremos manter (u, s, span cor) */
+    .replace(/</g,'\u0001').replace(/>/g,'\u0002').replace(/&/g,'&amp;')
+    .replace(/\u0001u\u0002([\s\S]*?)\u0001\/u\u0002/g, '<u>$1</u>')
+    .replace(/\u0001s\u0002([\s\S]*?)\u0001\/s\u0002/g, '<s>$1</s>')
+    .replace(/\u0001span data-color="([^"]+)"\u0002([\s\S]*?)\u0001\/span\u0002/g, '<span data-color="$1">$2</span>')
+    /* markdown "normal" */
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/~~([^~]+)~~/g, '<s>$1</s>')
+    /* restaura qualquer < > que sobrou */
+    .replace(/\u0001/g,'&lt;').replace(/\u0002/g,'&gt;');
 }
 
 /* caminho curto ("03.jpg") vira media/slug/03.jpg */
@@ -64,9 +72,18 @@ function renderMarkdown(src){
     }
 
     if(b === '---'){ out.push('<hr>'); return; }
+    if(b.startsWith('### ')){ out.push(`<h3>${inline(b.slice(4))}</h3>`); return; }
     if(b.startsWith('## ')){ out.push(`<h2>${inline(b.slice(3))}</h2>`); return; }
     if(b.startsWith('> ')){
       out.push(`<blockquote>${inline(b.replace(/^> ?/gm,''))}</blockquote>`); return;
+    }
+    if(/^(-|\*)\s/m.test(b) && b.split('\n').every(l => /^(-|\*)\s/.test(l.trim()))){
+      const items = b.split('\n').map(l => `<li>${inline(l.replace(/^\s*(-|\*)\s/, ''))}</li>`).join('');
+      out.push(`<ul>${items}</ul>`); return;
+    }
+    if(/^\d+\.\s/m.test(b) && b.split('\n').every(l => /^\d+\.\s/.test(l.trim()))){
+      const items = b.split('\n').map(l => `<li>${inline(l.replace(/^\s*\d+\.\s/, ''))}</li>`).join('');
+      out.push(`<ol>${items}</ol>`); return;
     }
 
     /* quebra de linha simples só junta o texto (como no markdown de verdade).

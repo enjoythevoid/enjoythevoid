@@ -54,6 +54,50 @@
   .videopreview{position:relative;width:100%;max-width:320px;aspect-ratio:16/9;background:var(--thumb)}
   .videopreview.vertical{aspect-ratio:9/16;max-width:180px}
   .videopreview iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+
+  /* ---------- editor WYSIWYG ---------- */
+  .editor{border:1px solid var(--line);background:var(--bg)}
+  .toolbar{
+    display:flex;flex-wrap:wrap;align-items:center;gap:4px;
+    padding:6px 8px;border-bottom:1px solid var(--line);
+  }
+  .tgroup{display:flex;gap:2px}
+  .tsep{width:1px;height:20px;background:var(--line);margin:0 4px}
+  .toolbar button{
+    background:none;border:1px solid transparent;color:var(--ink-dim);
+    font-family:'Space Mono',monospace;font-size:11px;
+    height:28px;padding:0 10px;cursor:pointer;transition:all .15s;
+    white-space:nowrap;
+  }
+  .toolbar button:hover{border-color:var(--line);color:var(--ink)}
+  .toolbar button.is-active{border-color:var(--ink);color:var(--ink);background:rgba(255,255,255,.04)}
+  .color-group{display:flex;gap:3px;align-items:center}
+  .color-btn{
+    width:20px;height:20px;min-width:20px;padding:0;
+    border:1px solid var(--line);cursor:pointer;
+  }
+  .color-btn:hover{border-color:var(--ink)}
+  .color-btn[data-val="clear"]{background:var(--bg);color:var(--ink-dim);font-size:14px}
+
+  .editor-area{
+    padding:var(--s3);min-height:220px;
+    font-family:'Newsreader',serif;font-size:17px;line-height:1.7;
+    color:var(--ink);outline:none;overflow-wrap:break-word;
+  }
+  .editor-area:empty::before{content:attr(data-placeholder);color:var(--ink-dim);font-style:italic}
+  .editor-area h2{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin:1.6em 0 .6em}
+  .editor-area h3{font-family:'Space Mono',monospace;font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:1.2em 0 .4em}
+  .editor-area p{margin:0 0 .8em}
+  .editor-area blockquote{border-left:1px solid var(--line);padding-left:var(--s3);margin:.8em 0;color:var(--ink-dim);font-style:italic}
+  .editor-area ul,.editor-area ol{margin:0 0 .8em 1.4em}
+  .editor-area hr{border:none;border-top:1px solid var(--line);margin:1.4em 0}
+  .editor-area a{color:var(--accent);border-bottom:1px solid rgba(138,20,20,.4)}
+  .editor-area img{max-width:100%;height:auto;display:block;margin:.8em 0;background:var(--thumb)}
+  .editor-area .video-embed{position:relative;width:100%;aspect-ratio:16/9;background:var(--thumb);margin:.8em 0}
+  .editor-area .video-embed.vertical{aspect-ratio:9/16;max-width:320px;margin-inline:auto}
+  .editor-area .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+  .editor-area [data-color="dim"]{color:var(--ink-dim)}
+  .editor-area [data-color="accent"]{color:var(--accent)}
   .pitem{position:relative;aspect-ratio:1;background:var(--thumb);cursor:grab}
   .pitem img{width:100%;height:100%;object-fit:cover;display:block}
   .pitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px}
@@ -251,15 +295,55 @@
   </div>
 
   <div class="field" id="mdFieldWrap" style="display:none">
-    <label>texto da página completa (opcional escrever agora)</label>
-    <textarea id="fMd" rows="8" placeholder="Primeiro parágrafo...
-
-## um subtítulo
-
-Outro parágrafo, com *itálico* e **negrito**.
-
-![Legenda](02.jpg)"></textarea>
-    <p class="hint">se publicar direto no github, esse texto já sobe como posts/SLUG.md. se deixar em branco, dá pra escrever depois.</p>
+    <label>conteúdo da página completa</label>
+    <div class="editor">
+      <div class="toolbar" id="editorToolbar">
+        <div class="tgroup">
+          <button type="button" data-cmd="block" data-val="p" title="Corpo">¶</button>
+          <button type="button" data-cmd="block" data-val="h2" title="Seção">Seção</button>
+          <button type="button" data-cmd="block" data-val="h3" title="Sub-seção">Sub</button>
+          <button type="button" data-cmd="block" data-val="blockquote" title="Citação">”</button>
+        </div>
+        <div class="tsep"></div>
+        <div class="tgroup">
+          <button type="button" data-cmd="bold" title="Negrito"><b>B</b></button>
+          <button type="button" data-cmd="italic" title="Itálico"><i>I</i></button>
+          <button type="button" data-cmd="underline" title="Sublinhado"><u>U</u></button>
+          <button type="button" data-cmd="strike" title="Tachado"><s>S</s></button>
+        </div>
+        <div class="tsep"></div>
+        <div class="tgroup">
+          <button type="button" data-cmd="ul" title="Lista">•</button>
+          <button type="button" data-cmd="ol" title="Numerada">1.</button>
+        </div>
+        <div class="tsep"></div>
+        <div class="tgroup color-group">
+          <button type="button" class="color-btn" data-cmd="color" data-val="default" title="Cor padrão" style="background:var(--ink)"></button>
+          <button type="button" class="color-btn" data-cmd="color" data-val="dim" title="Cinza" style="background:var(--ink-dim)"></button>
+          <button type="button" class="color-btn" data-cmd="color" data-val="accent" title="Vermelho" style="background:var(--accent)"></button>
+          <button type="button" class="color-btn" data-cmd="color" data-val="clear" title="Remover cor">×</button>
+        </div>
+        <div class="tsep"></div>
+        <div class="tgroup">
+          <button type="button" data-cmd="link" title="Link">↗</button>
+          <button type="button" data-cmd="hr" title="Separador">—</button>
+        </div>
+        <div class="tsep"></div>
+        <div class="tgroup">
+          <button type="button" data-cmd="image" title="Inserir foto">🖼</button>
+          <button type="button" data-cmd="video" title="Inserir vídeo">▶</button>
+        </div>
+        <div class="tsep"></div>
+        <div class="tgroup">
+          <button type="button" data-cmd="undo" title="Desfazer">↶</button>
+          <button type="button" data-cmd="redo" title="Refazer">↷</button>
+        </div>
+      </div>
+      <div class="editor-area" id="editorArea" contenteditable="true"
+           data-placeholder="Escreva aqui. Use os botões acima pra formatar, inserir foto ou vídeo."></div>
+      <input type="file" id="editorImageInput" accept="image/*" multiple style="display:none">
+    </div>
+    <p class="hint">as fotos inseridas aqui sobem junto quando você publicar. o texto salva como página completa do post.</p>
   </div>
 
   <div class="publish-bar">
@@ -358,6 +442,127 @@ function updateVideoPreview(){
   wrap.style.display = '';
 }
 document.getElementById('fVideo').addEventListener('input', updateVideoPreview);
+
+/* ===========================================================
+   EDITOR — WYSIWYG pra página completa. Salva no formato antigo
+   (markdown) pra compatibilizar com posts que já existem, mas o
+   usuário mexe com botões visuais.
+   =========================================================== */
+
+/* --- markdown -> html (só o suficiente pra popular o editor
+   quando carrega um post antigo salvo em .md) --- */
+function mdToHtml(md, slug){
+  if(!md) return '';
+  const out = [];
+  const blocks = md.replace(/\r/g,'').split(/\n{2,}/);
+  const inline = s => s
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  const mediaSrc = (name) => {
+    name = name.trim();
+    if(/^(https?:)?\/\//.test(name) || name.startsWith('media/')) return name;
+    return `media/${slug}/${name}`;
+  };
+  blocks.forEach(raw => {
+    const b = raw.trim();
+    if(!b) return;
+    if(b.startsWith('::video')){
+      const [url, mod] = b.replace('::video','').split('|').map(s => s.trim());
+      const v = parseVideo(url);
+      if(v) out.push(`<div class="video-embed${mod==='vertical'?' vertical':''}" data-src="${url}"><iframe src="${embedURL(v)}" allow="fullscreen"></iframe></div>`);
+      return;
+    }
+    if(b.startsWith('::grid')){
+      const files = b.replace('::grid','').split('|').map(s => s.trim()).filter(Boolean);
+      files.forEach(f => out.push(`<img src="${mediaSrc(f)}" alt="">`));
+      return;
+    }
+    const img = b.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if(img){ out.push(`<img src="${mediaSrc(img[2])}" alt="${img[1]}">`); return; }
+    if(b === '---'){ out.push('<hr>'); return; }
+    if(b.startsWith('## ')){ out.push(`<h2>${inline(b.slice(3))}</h2>`); return; }
+    if(b.startsWith('### ')){ out.push(`<h3>${inline(b.slice(4))}</h3>`); return; }
+    if(b.startsWith('> ')){ out.push(`<blockquote>${inline(b.replace(/^> ?/gm,''))}</blockquote>`); return; }
+    out.push(`<p>${inline(b).replace(/\n/g,'<br>')}</p>`);
+  });
+  return out.join('');
+}
+
+/* --- html do editor -> markdown pra salvar. mantemos negrito,
+   itálico, título, subtítulo, cor, imagem, vídeo, link. --- */
+function htmlToMd(rootEl, slug){
+  const lines = [];
+
+  function inlineOf(node){
+    let s = '';
+    node.childNodes.forEach(c => {
+      if(c.nodeType === 3){ s += c.textContent; return; }
+      if(c.nodeType !== 1) return;
+      const tag = c.tagName.toLowerCase();
+      const inner = inlineOf(c);
+      if(tag === 'br'){ s += '  \n'; return; }
+      if(tag === 'strong' || tag === 'b'){ s += `**${inner}**`; return; }
+      if(tag === 'em' || tag === 'i'){ s += `*${inner}*`; return; }
+      if(tag === 'u'){ s += `<u>${inner}</u>`; return; }
+      if(tag === 's' || tag === 'strike' || tag === 'del'){ s += `~~${inner}~~`; return; }
+      if(tag === 'a'){ s += `[${inner}](${c.getAttribute('href') || ''})`; return; }
+      if(tag === 'span' && c.dataset.color){ s += `<span data-color="${c.dataset.color}">${inner}</span>`; return; }
+      s += inner;
+    });
+    return s;
+  }
+
+  function relImg(src){
+    if(!src) return src;
+    // media/slug/xx.jpg -> só o nome do arquivo (o site adiciona o resto)
+    const m = src.match(new RegExp(`media/${slug}/([^/]+)$`));
+    return m ? m[1] : src;
+  }
+
+  Array.from(rootEl.children).forEach(el => {
+    const tag = el.tagName.toLowerCase();
+    if(tag === 'h2'){ lines.push(`## ${inlineOf(el)}`); return; }
+    if(tag === 'h3'){ lines.push(`### ${inlineOf(el)}`); return; }
+    if(tag === 'blockquote'){
+      inlineOf(el).split('\n').forEach(l => lines.push(`> ${l}`));
+      return;
+    }
+    if(tag === 'hr'){ lines.push('---'); return; }
+    if(tag === 'ul'){
+      el.querySelectorAll(':scope > li').forEach(li => lines.push(`- ${inlineOf(li)}`));
+      return;
+    }
+    if(tag === 'ol'){
+      let i = 1;
+      el.querySelectorAll(':scope > li').forEach(li => lines.push(`${i++}. ${inlineOf(li)}`));
+      return;
+    }
+    if(tag === 'img'){
+      const src = relImg(el.getAttribute('src'));
+      const alt = el.getAttribute('alt') || '';
+      lines.push(`![${alt}](${src})`);
+      return;
+    }
+    if(tag === 'div' && el.classList.contains('video-embed')){
+      const url = el.dataset.src || '';
+      const mod = el.classList.contains('vertical') ? ' | vertical' : '';
+      if(url) lines.push(`::video ${url}${mod}`);
+      return;
+    }
+    if(tag === 'p'){
+      const t = inlineOf(el).trim();
+      if(t) lines.push(t);
+      return;
+    }
+    // fallback: qualquer outra coisa vira parágrafo simples
+    const t = inlineOf(el).trim();
+    if(t) lines.push(t);
+  });
+
+  return lines.join('\n\n');
+}
 
 let ratio = '16/9';
 
@@ -574,7 +779,11 @@ editSelect.addEventListener('change', async () => {
     if(p.page){
       try{
         const md = await ghGetFile(`posts/${slug}.md`);
-        if(md){ document.getElementById('fMd').value = b64ToUtf8(md.contentB64); existingMdSha = md.sha; }
+        if(md){
+          const raw = b64ToUtf8(md.contentB64);
+          editorArea.innerHTML = mdToHtml(raw, slug);
+          existingMdSha = md.sha;
+        }
       }catch(e){ /* sem texto ainda, tudo bem */ }
     }
 
@@ -601,7 +810,8 @@ function resetFormToNew(){
   document.getElementById('fVideo').value = '';
   document.getElementById('videoPreviewWrap').style.display = 'none';
   document.getElementById('videoPreview').innerHTML = '';
-  document.getElementById('fMd').value = '';
+  editorArea.innerHTML = '';
+  editorImages = [];
   document.getElementById('fPage').checked = false;
   document.getElementById('mdFieldWrap').style.display = 'none';
   document.getElementById('existingPhotosWrap').style.display = 'none';
@@ -705,6 +915,191 @@ async function loadTagSuggestions(){
   }catch(e){ /* silencioso — tags são só uma ajuda, não bloqueiam nada */ }
 }
 
+/* --- editor: bot\u00f5es da barra e a\u00e7\u00f5es --- */
+const editorArea = document.getElementById('editorArea');
+const editorToolbar = document.getElementById('editorToolbar');
+const editorImageInput = document.getElementById('editorImageInput');
+
+/* fotos inseridas no editor (blob local + nome final que ganhar\u00e3o no repo) */
+let editorImages = []; // { file, url, filename }
+
+function focusEditor(){ editorArea.focus(); }
+
+function currentBlock(){
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return null;
+  let n = sel.getRangeAt(0).startContainer;
+  while(n && n !== editorArea){
+    if(n.nodeType === 1 && ['P','H2','H3','BLOCKQUOTE','LI'].includes(n.tagName)) return n;
+    n = n.parentNode;
+  }
+  return null;
+}
+
+function setBlock(tag){
+  focusEditor();
+  document.execCommand('formatBlock', false, tag);
+}
+
+/* insere um n\u00f3 no ponto do cursor, e move o cursor pra depois dele */
+function insertNode(node){
+  focusEditor();
+  const sel = window.getSelection();
+  if(!sel.rangeCount){
+    editorArea.appendChild(node);
+  } else {
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(node);
+    range.setStartAfter(node);
+    range.collapse(true);
+  }
+  editorArea.dispatchEvent(new Event('input'));
+}
+
+function insertImage(file){
+  const filename = `${Date.now().toString(36)}-${file.name.toLowerCase().replace(/[^a-z0-9.]+/g,'-')}`;
+  const url = URL.createObjectURL(file);
+  editorImages.push({ file, url, filename });
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = '';
+  img.dataset.pending = filename;
+  insertNode(img);
+}
+
+function insertVideo(url){
+  const v = parseVideo(url);
+  if(!v){ alert('link n\u00e3o reconhecido. cole um link do YouTube ou Vimeo.'); return; }
+  const div = document.createElement('div');
+  div.className = 'video-embed';
+  div.dataset.src = url;
+  div.contentEditable = 'false';
+  div.innerHTML = `<iframe src="${embedURL(v)}" allow="fullscreen"></iframe>`;
+  insertNode(div);
+  // adiciona uma linha em branco depois pra n\u00e3o ficar preso
+  insertNode(document.createElement('br'));
+}
+
+editorToolbar.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  const cmd = btn.dataset.cmd;
+  const val = btn.dataset.val;
+
+  if(cmd === 'block'){ setBlock(val); return; }
+  if(cmd === 'bold'){ focusEditor(); document.execCommand('bold'); return; }
+  if(cmd === 'italic'){ focusEditor(); document.execCommand('italic'); return; }
+  if(cmd === 'underline'){ focusEditor(); document.execCommand('underline'); return; }
+  if(cmd === 'strike'){ focusEditor(); document.execCommand('strikeThrough'); return; }
+  if(cmd === 'ul'){ focusEditor(); document.execCommand('insertUnorderedList'); return; }
+  if(cmd === 'ol'){ focusEditor(); document.execCommand('insertOrderedList'); return; }
+  if(cmd === 'undo'){ focusEditor(); document.execCommand('undo'); return; }
+  if(cmd === 'redo'){ focusEditor(); document.execCommand('redo'); return; }
+
+  if(cmd === 'link'){
+    const url = prompt('link (cole a URL completa, come\u00e7ando com https://)');
+    if(!url) return;
+    focusEditor();
+    document.execCommand('createLink', false, url);
+    return;
+  }
+  if(cmd === 'hr'){
+    focusEditor();
+    document.execCommand('insertHorizontalRule');
+    return;
+  }
+  if(cmd === 'color'){
+    focusEditor();
+    if(val === 'clear'){
+      document.execCommand('removeFormat');
+      // remove tamb\u00e9m spans data-color
+      const sel = window.getSelection();
+      if(sel.rangeCount){
+        const range = sel.getRangeAt(0);
+        editorArea.querySelectorAll('span[data-color]').forEach(span => {
+          if(range.intersectsNode(span)){
+            const parent = span.parentNode;
+            while(span.firstChild) parent.insertBefore(span.firstChild, span);
+            parent.removeChild(span);
+          }
+        });
+      }
+      return;
+    }
+    if(val === 'default'){
+      document.execCommand('removeFormat');
+      return;
+    }
+    // envolve a sele\u00e7\u00e3o em span data-color
+    const sel = window.getSelection();
+    if(!sel.rangeCount || sel.isCollapsed) return;
+    const span = document.createElement('span');
+    span.dataset.color = val;
+    span.textContent = sel.toString();
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(span);
+    return;
+  }
+  if(cmd === 'image'){
+    editorImageInput.click();
+    return;
+  }
+  if(cmd === 'video'){
+    const url = prompt('cole o link do YouTube ou Vimeo:');
+    if(url) insertVideo(url);
+    return;
+  }
+});
+
+editorImageInput.addEventListener('change', e => {
+  Array.from(e.target.files).filter(f => f.type.startsWith('image/')).forEach(insertImage);
+  editorImageInput.value = '';
+});
+
+/* arrastar imagens direto pra dentro do editor */
+editorArea.addEventListener('dragover', e => { e.preventDefault(); });
+editorArea.addEventListener('drop', e => {
+  const files = [...(e.dataTransfer?.files || [])].filter(f => f.type.startsWith('image/'));
+  if(!files.length) return;
+  e.preventDefault();
+  files.forEach(insertImage);
+});
+
+/* colar texto sem formata\u00e7\u00e3o alien\u00edgena (do Word etc) */
+editorArea.addEventListener('paste', e => {
+  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  if(text !== undefined){
+    e.preventDefault();
+    document.execCommand('insertText', false, text);
+  }
+});
+
+/* atualiza estado ativo dos bot\u00f5es enquanto o cursor se move */
+function updateToolbarState(){
+  const qcs = (cmd) => { try{ return document.queryCommandState(cmd); }catch(e){ return false; } };
+  const map = {
+    bold: qcs('bold'),
+    italic: qcs('italic'),
+    underline: qcs('underline'),
+    strike: qcs('strikeThrough'),
+  };
+  editorToolbar.querySelectorAll('button[data-cmd]').forEach(btn => {
+    const c = btn.dataset.cmd;
+    if(c in map) btn.classList.toggle('is-active', !!map[c]);
+  });
+  const blk = currentBlock();
+  editorToolbar.querySelectorAll('button[data-cmd="block"]').forEach(btn => {
+    btn.classList.toggle('is-active', !!blk && blk.tagName.toLowerCase() === btn.dataset.val);
+  });
+}
+editorArea.addEventListener('keyup', updateToolbarState);
+editorArea.addEventListener('mouseup', updateToolbarState);
+document.addEventListener('selectionchange', () => {
+  if(document.activeElement === editorArea) updateToolbarState();
+});
+
 function log(msg, cls){
   logEl.querySelectorAll('.now').forEach(e => e.classList.remove('now'));
   const line = document.createElement('div');
@@ -724,7 +1119,7 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
 
   const built = buildPost();
   if(!built) return;
-  const { slug, block, page, mdText } = built;
+  const { slug, block, page } = built;
 
   btn.disabled = true;
   try{
@@ -758,10 +1153,31 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
       log(`${files.length} foto(s) nova(s) enviada(s).`, 'ok');
     }
 
-    if(page && mdText.trim()){
-      log(`enviando texto da página completa...`);
-      await ghPutFile(`posts/${slug}.md`, utf8ToB64(mdText), `texto: ${slug}`, existingMdSha || undefined);
-      log(`posts/${slug}.md enviado.`, 'ok');
+    if(page){
+      /* 1) sobe as fotos inseridas dentro do editor pra pasta do post */
+      const pending = editorArea.querySelectorAll('img[data-pending]');
+      let uploadedCount = 0;
+      for(const img of pending){
+        const filename = img.dataset.pending;
+        const rec = editorImages.find(r => r.filename === filename);
+        if(!rec) continue;
+        uploadedCount++;
+        log(`enviando foto do texto (${uploadedCount})...`);
+        const big = await resizeImage(rec.file, 2000, 0.88);
+        await ghPutFile(`media/${slug}/${filename}`, await blobToB64(big), `foto embutida — ${slug}`);
+        /* aponta o src pro caminho real e limpa a marca pendente */
+        img.setAttribute('src', `media/${slug}/${filename}`);
+        img.removeAttribute('data-pending');
+      }
+      if(uploadedCount) log(`${uploadedCount} foto(s) embutida(s) enviada(s).`, 'ok');
+
+      /* 2) converte o HTML pra markdown e sobe */
+      const mdText = htmlToMd(editorArea, slug);
+      if(mdText.trim()){
+        log(`enviando texto da página completa...`);
+        await ghPutFile(`posts/${slug}.md`, utf8ToB64(mdText), `texto: ${slug}`, existingMdSha || undefined);
+        log(`posts/${slug}.md enviado.`, 'ok');
+      }
     }
 
     log(`publicado! pode levar 1–2 minutos pro github pages atualizar.`, 'ok');
@@ -876,7 +1292,6 @@ function buildPost(){
   const location = document.getElementById('fLocation').value.trim();
   const tags = document.getElementById('fTags').value.split(',').map(s => s.trim()).filter(Boolean);
   const page = document.getElementById('fPage').checked;
-  const mdText = document.getElementById('fMd').value;
 
   if(!title || !date){ alert('preencha pelo menos título e data.'); return null; }
   if(type === 'photo' && !files.length && !existingPhotoCount){ alert('adicione pelo menos uma foto.'); return null; }
@@ -896,7 +1311,7 @@ function buildPost(){
   if(page) block += `    page: true,\n`;
   block += `  },`;
 
-  return { slug, block, page, mdText, title, date, location, tags };
+  return { slug, block, page, title, date, location, tags };
 }
 
 document.getElementById('btnGenerate').addEventListener('click', () => {
