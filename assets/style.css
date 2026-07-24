@@ -403,7 +403,7 @@ a{color:inherit;text-decoration:none}
   /* a grade de fotos estava começando bem baixo na tela — comprimi
      a barra de topo (acima) e o cabeçalho do ano (abaixo) pra ela
      subir bastante */
-  #indexView{padding:calc(var(--topbar-h, 74px) + 2px) 0 var(--s5)}
+  #indexView{padding:calc(var(--topbar-h, 74px) + var(--s3)) 0 var(--s5)}
   .year-section{margin-bottom:var(--s3)}
   .year-head{top:var(--topbar-h, 74px)}
   .year-head-inner{padding:4px var(--s3)}
