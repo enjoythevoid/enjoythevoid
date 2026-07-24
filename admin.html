@@ -102,11 +102,29 @@
   .editor-area .video-embed{position:relative;width:100%;aspect-ratio:16/9;background:var(--thumb);margin:.8em 0}
   .editor-area .video-embed.vertical{aspect-ratio:9/16;max-width:320px;margin-inline:auto}
   .editor-area .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+  .editor-area .md-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:4px;margin:.8em 0}
+  .editor-area .md-grid img{width:100%;height:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--thumb);margin:0}
   .editor-area [data-color="dim"]{color:var(--ink-dim)}
   .editor-area [data-color="accent"]{color:var(--accent)}
   .editor-area [data-size="sm"]{font-size:.8em}
   .editor-area [data-size="lg"]{font-size:1.35em}
   .editor-area [data-size="xl"]{font-size:1.8em}
+  /* imagem, vídeo e grade usam a MESMA escala pra largura, não fonte */
+  .editor-area img[data-size],
+  .editor-area .video-embed[data-size],
+  .editor-area .md-grid[data-size]{
+    font-size:1em; /* anula a regra de texto acima nesses elementos */
+    margin-left:auto;margin-right:auto;
+  }
+  .editor-area img[data-size="sm"], .editor-area .video-embed[data-size="sm"]{max-width:35%}
+  .editor-area img[data-size="lg"], .editor-area .video-embed[data-size="lg"]{max-width:75%}
+  .editor-area img[data-size="xl"], .editor-area .video-embed[data-size="xl"]{max-width:100%}
+  .editor-area .md-grid[data-size="sm"]{max-width:40%}
+  .editor-area .md-grid[data-size="lg"]{max-width:75%}
+  .editor-area .md-grid[data-size="xl"]{max-width:100%}
+  .editor-area img.is-selected,
+  .editor-area .video-embed.is-selected,
+  .editor-area .md-grid.is-selected{outline:2px solid var(--accent);outline-offset:3px;cursor:pointer}
   .pitem{position:relative;aspect-ratio:1;background:var(--thumb);cursor:grab}
   .pitem img{width:100%;height:100%;object-fit:cover;display:block}
   .pitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px}
@@ -349,6 +367,7 @@
         <div class="tsep"></div>
         <div class="tgroup">
           <button type="button" data-cmd="image" title="Inserir foto">🖼</button>
+          <button type="button" data-cmd="grid" title="Inserir grade de fotos">▦</button>
           <button type="button" data-cmd="video" title="Inserir vídeo">▶</button>
         </div>
         <div class="tsep"></div>
@@ -493,18 +512,28 @@ function mdToHtml(md, slug){
     const b = raw.trim();
     if(!b) return;
     if(b.startsWith('::video')){
-      const [url, mod] = b.replace('::video','').split('|').map(s => s.trim());
+      const parts = b.replace('::video','').split('|').map(s => s.trim());
+      const url = parts[0];
+      const mods = parts.slice(1);
+      const vertical = mods.includes('vertical');
+      const sizeMod = mods.find(m => /^size=(sm|md|lg|xl)$/.test(m));
+      const size = sizeMod ? sizeMod.split('=')[1] : '';
       const v = parseVideo(url);
-      if(v) out.push(`<div class="video-embed${mod==='vertical'?' vertical':''}" data-src="${url}"><iframe src="${embedURL(v)}" allow="fullscreen"></iframe></div>`);
+      if(v) out.push(`<div class="video-embed${vertical?' vertical':''}" data-src="${url}"${size?` data-size="${size}"`:''}><iframe src="${embedURL(v)}" allow="fullscreen"></iframe></div>`);
       return;
     }
     if(b.startsWith('::grid')){
-      const files = b.replace('::grid','').split('|').map(s => s.trim()).filter(Boolean);
-      files.forEach(f => out.push(`<img src="${mediaSrc(f)}" alt="">`));
+      const parts = b.replace('::grid','').split('|').map(s => s.trim()).filter(Boolean);
+      const sizeIdx = parts.findIndex(m => /^size=(sm|md|lg|xl)$/.test(m));
+      let size = '';
+      let files = parts;
+      if(sizeIdx !== -1){ size = parts[sizeIdx].split('=')[1]; files = parts.filter((_,i) => i !== sizeIdx); }
+      out.push(`<div class="md-grid"${size?` data-size="${size}"`:''}>` +
+        files.map(f => `<img src="${mediaSrc(f)}" alt="">`).join('') + `</div>`);
       return;
     }
-    const img = b.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
-    if(img){ out.push(`<img src="${mediaSrc(img[2])}" alt="${img[1]}">`); return; }
+    const img = b.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{size=(sm|md|lg|xl)\})?$/);
+    if(img){ out.push(`<img src="${mediaSrc(img[2])}" alt="${img[1]}"${img[3]?` data-size="${img[3]}"`:''}>`); return; }
     if(b === '---'){ out.push('<hr>'); return; }
     if(b.startsWith('## ')){ out.push(`<h2>${inline(b.slice(3))}</h2>`); return; }
     if(b.startsWith('### ')){ out.push(`<h3>${inline(b.slice(4))}</h3>`); return; }
@@ -575,13 +604,21 @@ function htmlToMd(rootEl, slug){
     if(tag === 'img'){
       const src = relImg(el.getAttribute('src'));
       const alt = el.getAttribute('alt') || '';
-      lines.push(`![${alt}](${src})`);
+      const size = el.dataset.size;
+      lines.push(`![${alt}](${src})${size ? `{size=${size}}` : ''}`);
       return;
     }
     if(tag === 'div' && el.classList.contains('video-embed')){
       const url = el.dataset.src || '';
       const mod = el.classList.contains('vertical') ? ' | vertical' : '';
-      if(url) lines.push(`::video ${url}${mod}`);
+      const size = el.dataset.size ? ` | size=${el.dataset.size}` : '';
+      if(url) lines.push(`::video ${url}${mod}${size}`);
+      return;
+    }
+    if(tag === 'div' && el.classList.contains('md-grid')){
+      const files = Array.from(el.querySelectorAll('img')).map(img => relImg(img.getAttribute('src')));
+      const size = el.dataset.size ? ` | size=${el.dataset.size}` : '';
+      if(files.length) lines.push(`::grid ${files.join(' | ')}${size}`);
       return;
     }
     if(tag === 'p'){
@@ -956,7 +993,13 @@ const editorImageInput = document.getElementById('editorImageInput');
 /* fotos inseridas no editor (blob local + nome final que ganhar\u00e3o no repo) */
 let editorImages = []; // { file, url, filename }
 
-function focusEditor(){ editorArea.focus(); restoreSavedRange(); }
+function focusEditor(){ editorArea.focus(); }
+
+/* impede que clicar num botão da barra tire o foco do editor —
+   é isso que fazia a seleção "sumir" entre uma inserção e outra */
+editorToolbar.addEventListener('mousedown', e => {
+  if(e.target.closest('button')) e.preventDefault();
+});
 
 /* guarda a última seleção feita dentro do editor. quando o foco sai
    pra clicar num botão ou no <select> de tamanho, a seleção se perde —
@@ -1036,6 +1079,25 @@ function insertVideo(url){
   insertNode(document.createElement('br'));
 }
 
+function insertGrid(files){
+  if(!files.length) return;
+  const grid = document.createElement('div');
+  grid.className = 'md-grid';
+  grid.contentEditable = 'false';
+  files.forEach(file => {
+    const filename = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}-${file.name.toLowerCase().replace(/[^a-z0-9.]+/g,'-')}`;
+    const url = URL.createObjectURL(file);
+    editorImages.push({ file, url, filename });
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = '';
+    img.dataset.pending = filename;
+    grid.appendChild(img);
+  });
+  insertNode(grid);
+  insertNode(document.createElement('br'));
+}
+
 editorToolbar.addEventListener('click', e => {
   const btn = e.target.closest('button');
   if(!btn) return;
@@ -1098,6 +1160,12 @@ editorToolbar.addEventListener('click', e => {
     return;
   }
   if(cmd === 'image'){
+    pendingGridMode = false;
+    editorImageInput.click();
+    return;
+  }
+  if(cmd === 'grid'){
+    pendingGridMode = true;
     editorImageInput.click();
     return;
   }
@@ -1108,10 +1176,35 @@ editorToolbar.addEventListener('click', e => {
   }
 });
 
+/* --- selecionar uma imagem/vídeo já inserido, pra poder redimensionar --- */
+let selectedMedia = null;
+editorArea.addEventListener('click', e => {
+  editorArea.querySelectorAll('.is-selected').forEach(el => el.classList.remove('is-selected'));
+  const media = e.target.closest('img, .video-embed, .md-grid');
+  if(media){
+    media.classList.add('is-selected');
+    selectedMedia = media;
+  } else {
+    selectedMedia = null;
+  }
+});
+
 const sizeSelect = document.getElementById('sizeSelect');
 sizeSelect.addEventListener('change', () => {
   const val = sizeSelect.value;
+
+  /* se uma imagem, vídeo ou grade está selecionada, o tamanho
+     redimensiona ela (menor/maior), em vez de mexer em texto */
+  if(selectedMedia){
+    if(val === 'md') delete selectedMedia.dataset.size;
+    else selectedMedia.dataset.size = val;
+    sizeSelect.value = 'md';
+    editorArea.dispatchEvent(new Event('input'));
+    return;
+  }
+
   focusEditor();
+  restoreSavedRange(); // o <select> rouba o foco de verdade, esse é o único caso que precisa disso
   const sel = window.getSelection();
 
   // sempre limpa qualquer data-size que a seleção já tenha, primeiro
@@ -1139,9 +1232,13 @@ sizeSelect.addEventListener('change', () => {
   editorArea.dispatchEvent(new Event('input'));
 });
 
+let pendingGridMode = false;
 editorImageInput.addEventListener('change', e => {
-  Array.from(e.target.files).filter(f => f.type.startsWith('image/')).forEach(insertImage);
+  const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+  if(pendingGridMode) insertGrid(files);
+  else files.forEach(insertImage);
   editorImageInput.value = '';
+  pendingGridMode = false;
 });
 
 /* arrastar imagens direto pra dentro do editor */
