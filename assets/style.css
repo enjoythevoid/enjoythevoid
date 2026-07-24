@@ -6,6 +6,7 @@
   --thumb:#111;
   --accent:#8a1414;
   --s1:6px;--s2:12px;--s3:20px;--s4:34px;--s5:56px;--s6:90px;
+  --topbar-h:52px;
 }
 html[data-theme="light"]{
   --bg:#f5f4f2;
@@ -336,16 +337,18 @@ a{color:inherit;text-decoration:none}
   .topbar .seg.nav-main{order:5;flex:1 0 100%;margin-top:6px;flex-wrap:wrap;row-gap:6px}
   .topbar button,.topbar a{font-size:10px}
 
-  #indexView{padding:calc(var(--s5) + var(--s4)) 0 var(--s5)}
-  .year-head{padding:10px var(--s3);top:37px}
+  #indexView{padding:calc(var(--topbar-h, 90px) + 10px) 0 var(--s5)}
+  .year-head{padding:10px var(--s3);top:var(--topbar-h, 74px)}
   .year-num{font-size:clamp(40px,16vw,64px)}
   .entry-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2) 6px;padding:0 var(--s3)}
   .entry .cap{font-size:11px}
 
-  .photo-stage{padding:calc(var(--s5) + var(--s3)) var(--s3) var(--s3)}
+  .photo-stage{padding:calc(var(--s5) + var(--s3)) var(--s3) var(--s3);touch-action:pan-y}
   .photo-stage .frame,.photo-stage .frame img{max-width:100%;max-height:56vh}
   .photo-stage .frame.is-video,.photo-stage .frame.is-empty{height:auto;width:100%;max-height:56vh}
-  .photo-nav{padding:var(--s2);font-size:18px}
+  /* setas grandes somem no mobile — arrastar o dedo pra esquerda/direita
+     no lugar delas troca de foto */
+  .photo-nav{display:none}
   .photo-cap{padding:0 var(--s3) var(--s3);flex-direction:column;align-items:flex-start;gap:var(--s2)}
   .photo-cap .meta .ti{font-size:14px}
   .post-link{margin-top:10px}

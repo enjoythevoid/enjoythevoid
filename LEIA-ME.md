@@ -23,33 +23,12 @@ ver-local.bat     abre o site no seu PC antes de subir.
 
 ## 2. Publicar um post
 
-Tem dois jeitos. Os dois terminam no mesmo lugar: um bloco de texto colado no `posts.js`.
+Tem três jeitos. Todos terminam no mesmo lugar: uma entrada no `posts.js`
+e as fotos na pasta certa.
 
-### Jeito fácil — formulário (`admin.html`)
+### Jeito principal — publicar direto pelo `admin.html`
 
-Dê dois cliques em `ver-local.bat` e acesse `localhost:8000/admin.html`.
-É uma tela parecida com um formulário de cadastro:
-
-1. Preenche título, data, local, tags.
-2. Escolhe **fotos** (arrasta as imagens — ele já mostra a prévia, dá pra
-   reordenar arrastando, a primeira vira a capa) ou **vídeo** (cola o link
-   do YouTube).
-3. Clica **gerar bloco do post**.
-4. Copia o bloco e cola dentro de `posts.js`, entre os colchetes `[ ]`.
-5. Se escolheu fotos: clica **baixar .zip** — ele já entrega redimensionado
-   (imagem grande + miniatura) dentro da pasta certa. Só extrair e arrastar
-   pra dentro de `media/`.
-6. Se marcou "página completa": baixa o modelo `.md` e escreve o texto nele.
-
-Isso roda **inteiramente no seu navegador** — nenhuma foto sai do seu PC
-nesse passo. Ele só te entrega os arquivos prontos; subir pro GitHub
-continua sendo o passo 5 deste guia.
-
-### Jeito mais fácil de todos — publicar direto pelo `admin.html`
-
-Depois de fazer o primeiro upload (passos 4 e 5 mais abaixo, uma vez só),
-o `admin.html` publica **sozinho**, sem zip, sem GitHub Desktop, sem colar
-nada na mão. Configura uma vez:
+Configura uma vez:
 
 1. Acessa **github.com/settings/personal-access-tokens/new**
 2. Dá um nome pro token, tipo `enjoythevoid-admin`
@@ -75,17 +54,48 @@ já está tudo conectado.
 2. Clica **publicar no github**
 3. Acompanha o log — ele mostra cada passo (lendo, gravando, enviando
    foto 1/3...) e no final entrega o link do post
-4. Espera 1–2 minutos e recarrega o site
+4. Espera 1–5 minutos e recarrega o site (numa aba anônima, se não
+   aparecer de primeira — o navegador guarda cache)
 
 O token fica guardado só no seu navegador (`localStorage`), nunca é
 enviado a nenhum lugar além de falar direto com a API do GitHub. Se
 trocar de computador, gera outro token e configura de novo lá.
 
-> Se preferir não usar token nenhum, o botão **"só gerar o bloco (sem
-> publicar)"** continua funcionando exatamente como antes — gera o texto
-> e o zip das fotos pra você colar manualmente.
+### Editar um post já publicado, ou adicionar mais fotos
 
----
+No `admin.html`, logo abaixo da conexão com o github, tem o campo
+**"editar um post já publicado"**:
+
+1. Clica **carregar lista** — ele busca todos os posts direto do repositório
+2. Escolhe o post na lista
+3. O formulário se preenche sozinho com os dados daquele post
+4. Se for post de fotos, ele avisa quantas já existem
+   (ex: *"já tem 3 foto(s). as que você arrastar agora entram depois delas"*)
+5. Arrasta as fotos novas (só as novas — não precisa readicionar as antigas),
+   ou reescreve o texto da página completa, ou muda qualquer campo
+6. Clica **salvar alterações**
+
+Ele atualiza o post **no lugar certo** do `posts.js` (não duplica), e as
+fotos novas continuam a numeração de onde parou (`03.jpg`, `04.jpg`...).
+
+**Apagar um post:** depois de carregar ele na lista, aparece um botão
+vermelho **"apagar este post"**. Ele remove a entrada do `posts.js`, mas
+**não apaga as fotos** da pasta `media/` — isso você faz manualmente pelo
+site do GitHub, se quiser liberar o espaço.
+
+### Jeito alternativo — sem token, gerando o bloco pra colar manualmente
+
+Se preferir não usar token nenhum, o botão **"só gerar o bloco (sem
+publicar)"** no `admin.html` funciona sem precisar de conexão nenhuma:
+
+1. Preenche o formulário
+2. Clica **só gerar o bloco (sem publicar)**
+3. Copia o bloco e cola dentro de `posts.js`, entre os colchetes `[ ]`
+4. Se escolheu fotos: clica **baixar .zip** — ele já entrega redimensionado
+   (imagem grande + miniatura) dentro da pasta certa. Só extrair e arrastar
+   pra dentro de `media/`
+5. Se marcou "página completa": baixa o modelo `.md` e escreve o texto nele
+6. Sobe tudo pro GitHub manualmente (GitHub Desktop ou upload pelo site)
 
 ### Jeito manual — editar `posts.js` direto
 

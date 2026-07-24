@@ -32,13 +32,4 @@ const POSTS = [
   /* seus posts entram aqui — use o admin.html pra gerar cada bloco
      e cole dentro destes colchetes, separados por vírgula. */
 
-  {
-    slug: "adrieli",
-    title: "ADRIELI",
-    date: "2026-07-11",
-    location: "",
-    tags: ["T5I"],
-    photos: 2,
-  },
-
 ];

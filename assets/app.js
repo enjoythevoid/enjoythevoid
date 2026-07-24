@@ -223,12 +223,58 @@ function stepPhoto(dir){
   renderPhoto(NAV_ORDER[(idx + dir + NAV_ORDER.length) % NAV_ORDER.length].id);
 }
 
+let justSwiped = false;
 document.querySelector('.photo-stage').addEventListener('click', e => {
+  if(justSwiped){ justSwiped = false; return; }
   if(e.target.closest('.frame') || e.target.closest('.photo-nav')) return;
   closePhoto();
 });
 document.getElementById('prevBtn').addEventListener('click', () => stepPhoto(-1));
 document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1));
+
+/* arrastar o dedo pra esquerda/direita troca de foto — é o que
+   substitui as setas grandes quando elas somem no mobile */
+(function(){
+  const stage = document.querySelector('.photo-stage');
+  let dragging = false, startX = 0, startY = 0, horizontal = null;
+  stage.addEventListener('pointerdown', e => {
+    if(e.target.closest('.photo-nav')) return;
+    dragging = true; horizontal = null; startX = e.clientX; startY = e.clientY;
+  });
+  stage.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if(horizontal === null){
+      if(Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      horizontal = Math.abs(dx) > Math.abs(dy);
+    }
+  });
+  function endDrag(e){
+    if(!dragging) return;
+    dragging = false;
+    if(horizontal){
+      const dx = (e.clientX ?? startX) - startX;
+      if(Math.abs(dx) >= 50){
+        justSwiped = true;
+        stepPhoto(dx < 0 ? 1 : -1);
+      }
+    }
+    horizontal = null;
+  }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+})();
+
+/* mede a altura real do topbar (varia conforme ele quebra linha
+   no mobile) pra colocar o espaçamento certo abaixo dele, sem
+   sobra de espaço vazio */
+function syncTopbarHeight(){
+  const h = document.querySelector('.topbar').offsetHeight;
+  document.documentElement.style.setProperty('--topbar-h', h + 'px');
+}
+window.addEventListener('resize', syncTopbarHeight);
+window.addEventListener('orientationchange', syncTopbarHeight);
+syncTopbarHeight();
 
 let hintShown = false;
 function showKeyHint(){
