@@ -38,8 +38,7 @@ const POSTS = [
     date: "2017-07-03",
     location: "São Paulo",
     tags: ["T5I"],
-    video: "https://youtu.be/N_Wjpe0mooo",
-    ratio: "16/9",
+    photos: 5,
   },
 
 ];
