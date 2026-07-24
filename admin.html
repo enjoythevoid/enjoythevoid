@@ -47,6 +47,13 @@
   .dropzone input{display:none}
 
   #photoList{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:var(--s3)}
+  .pitem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:var(--s2)}
+  .pitem-grid .exitem{position:relative;aspect-ratio:1;background:var(--thumb);overflow:hidden}
+  .pitem-grid .exitem img{width:100%;height:100%;object-fit:cover;display:block;opacity:.85}
+  .pitem-grid .exitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px}
+  .videopreview{position:relative;width:100%;max-width:320px;aspect-ratio:16/9;background:var(--thumb)}
+  .videopreview.vertical{aspect-ratio:9/16;max-width:180px}
+  .videopreview iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
   .pitem{position:relative;aspect-ratio:1;background:var(--thumb);cursor:grab}
   .pitem img{width:100%;height:100%;object-fit:cover;display:block}
   .pitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px}
@@ -202,7 +209,12 @@
   <!-- ===== FOTOS ===== -->
   <div id="panelPhoto">
     <div class="field">
-      <label>fotos — arraste pra reordenar, a primeira é a capa</label>
+      <div id="existingPhotosWrap" style="display:none;margin-bottom:var(--s3)">
+        <label>fotos que já estão publicadas</label>
+        <div id="existingPhotoList" class="pitem-grid"></div>
+        <p class="hint">essas já estão no ar. arraste fotos novas abaixo pra adicionar depois delas — não dá pra remover ou reordenar as antigas por aqui ainda, só direto pelo github.</p>
+      </div>
+      <label id="photosFieldLabel">fotos — arraste pra reordenar, a primeira é a capa</label>
       <div class="dropzone" id="dropzone">
         arraste as fotos aqui, ou clique pra escolher
         <input type="file" id="fileInput" accept="image/*" multiple>
@@ -218,6 +230,9 @@
       <label>link do YouTube</label>
       <input type="text" id="fVideo" placeholder="https://youtu.be/XXXXXXXXXXX">
       <p class="hint">cola o link como aparece na barra do navegador. o site converte pro player limpo sozinho.</p>
+      <div id="videoPreviewWrap" style="display:none;margin-top:var(--s3)">
+        <div id="videoPreview" class="videopreview"></div>
+      </div>
     </div>
     <div class="field">
       <label>formato</label>
@@ -315,6 +330,35 @@ function setType(t){
    do próprio navegador, com o token que você cola no painel.
    =========================================================== */
 
+/* --- reconhece link de YouTube/Vimeo e monta o embed limpo ---
+   (mesma lógica do assets/core.js, copiada aqui porque o admin.html
+   roda sozinho, sem carregar o resto do site) */
+function parseVideo(url){
+  if(!url) return null;
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  if(yt) return {kind:'youtube', id:yt[1]};
+  const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if(vm) return {kind:'vimeo', id:vm[1]};
+  return null;
+}
+function embedURL(v){
+  if(!v) return '';
+  if(v.kind === 'youtube'){
+    return `https://www.youtube.com/embed/${v.id}?enablejsapi=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3`;
+  }
+  return `https://player.vimeo.com/video/${v.id}?title=0&byline=0&portrait=0`;
+}
+function updateVideoPreview(){
+  const wrap = document.getElementById('videoPreviewWrap');
+  const box = document.getElementById('videoPreview');
+  const v = parseVideo(document.getElementById('fVideo').value.trim());
+  if(!v){ wrap.style.display = 'none'; box.innerHTML = ''; return; }
+  box.className = 'videopreview' + (ratio === '9/16' ? ' vertical' : '');
+  box.innerHTML = `<iframe src="${embedURL(v)}" allow="fullscreen" title="prévia"></iframe>`;
+  wrap.style.display = '';
+}
+document.getElementById('fVideo').addEventListener('input', updateVideoPreview);
+
 let ratio = '16/9';
 
 const GH = {
@@ -395,6 +439,16 @@ async function ghGetFile(path){
   if(!res.ok) throw new Error(`falha ao ler ${path} (${res.status})`);
   const data = await res.json();
   return { sha: data.sha, contentB64: data.content };
+}
+async function ghListDir(path){
+  const res = await fetch(
+    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
+    { headers: { 'Authorization': `Bearer ${GH.token}`, 'Accept': 'application/vnd.github+json' } }
+  );
+  if(res.status === 404) return [];
+  if(!res.ok) throw new Error(`falha ao listar ${path} (${res.status})`);
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
 }
 async function ghPutFile(path, contentB64, message, sha){
   const res = await fetch(
@@ -510,6 +564,7 @@ editSelect.addEventListener('change', async () => {
     } else {
       setType('photo');
       existingPhotoCount = Array.isArray(p.photos) ? p.photos.length : (Number(p.photos) || 0);
+      await loadExistingPhotoPreviews(slug);
     }
 
     const pageChk = document.getElementById('fPage');
@@ -544,13 +599,44 @@ function resetFormToNew(){
   document.getElementById('fLocation').value = '';
   document.getElementById('fTags').value = '';
   document.getElementById('fVideo').value = '';
+  document.getElementById('videoPreviewWrap').style.display = 'none';
+  document.getElementById('videoPreview').innerHTML = '';
   document.getElementById('fMd').value = '';
   document.getElementById('fPage').checked = false;
   document.getElementById('mdFieldWrap').style.display = 'none';
+  document.getElementById('existingPhotosWrap').style.display = 'none';
+  document.getElementById('photosFieldLabel').textContent = 'fotos — arraste pra reordenar, a primeira é a capa';
   refreshChipStates();
   btnDelete.style.display = 'none';
   document.getElementById('btnPublish').textContent = 'publicar no github';
   editHint.textContent = '';
+}
+
+/* --- mostra as fotos que já estão publicadas, ao editar um post --- */
+async function loadExistingPhotoPreviews(slug){
+  const wrap = document.getElementById('existingPhotosWrap');
+  const grid = document.getElementById('existingPhotoList');
+  const label = document.getElementById('photosFieldLabel');
+  grid.innerHTML = '';
+  try{
+    const items = await ghListDir(`media/${slug}`);
+    const photos = items
+      .filter(it => it.type === 'file' && /^\d+\.(jpe?g|png|webp)$/i.test(it.name))
+      .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+
+    if(!photos.length){
+      wrap.style.display = 'none';
+      label.textContent = 'fotos — arraste pra reordenar, a primeira é a capa';
+      return;
+    }
+    grid.innerHTML = photos.map((f, i) =>
+      `<div class="exitem"><span class="num">${i+1}</span><img src="${f.download_url}" loading="lazy"></div>`).join('');
+    wrap.style.display = '';
+    label.textContent = 'fotos novas — entram depois das que já existem';
+  }catch(e){
+    wrap.style.display = 'none';
+    editHint.textContent += ' (não consegui carregar a prévia das fotos, mas a contagem acima está certa.)';
+  }
 }
 
 btnDelete.addEventListener('click', async () => {
@@ -687,8 +773,8 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
   }
 });
 const ratioH = document.getElementById('ratioH'), ratioV = document.getElementById('ratioV');
-ratioH.addEventListener('click', () => { ratio = '16/9'; ratioH.classList.add('active'); ratioV.classList.remove('active'); });
-ratioV.addEventListener('click', () => { ratio = '9/16'; ratioV.classList.add('active'); ratioH.classList.remove('active'); });
+ratioH.addEventListener('click', () => { ratio = '16/9'; ratioH.classList.add('active'); ratioV.classList.remove('active'); updateVideoPreview(); });
+ratioV.addEventListener('click', () => { ratio = '9/16'; ratioV.classList.add('active'); ratioH.classList.remove('active'); updateVideoPreview(); });
 
 document.getElementById('fPage').addEventListener('change', e => {
   document.getElementById('mdFieldWrap').style.display = e.target.checked ? '' : 'none';

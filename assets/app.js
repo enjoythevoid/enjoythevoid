@@ -226,19 +226,18 @@ function stepPhoto(dir){
 let justSwiped = false;
 document.querySelector('.photo-stage').addEventListener('click', e => {
   if(justSwiped){ justSwiped = false; return; }
-  if(e.target.closest('.frame') || e.target.closest('.photo-nav')) return;
+  if(e.target.closest('.frame')) return;
   closePhoto();
 });
 document.getElementById('prevBtn').addEventListener('click', () => stepPhoto(-1));
 document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1));
 
-/* arrastar o dedo pra esquerda/direita troca de foto — é o que
-   substitui as setas grandes quando elas somem no mobile */
+/* arrastar o dedo pra esquerda/direita também troca de foto —
+   útil no mobile além dos botões pequenos embaixo */
 (function(){
   const stage = document.querySelector('.photo-stage');
   let dragging = false, startX = 0, startY = 0, horizontal = null;
   stage.addEventListener('pointerdown', e => {
-    if(e.target.closest('.photo-nav')) return;
     dragging = true; horizontal = null; startX = e.clientX; startY = e.clientY;
   });
   stage.addEventListener('pointermove', e => {
