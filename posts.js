@@ -73,6 +73,7 @@ const POSTS = [
     videos: ["https://www.youtube.com/watch?v=XIn1jCvmO1k"],
     ratio: "16/9",
     order: ["video:0"],
+    videoCovers: ["media/imback/video-thumbs/yt-XIn1jCvmO1k.jpg"],
   },
 
 ];
