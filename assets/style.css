@@ -1,5 +1,5 @@
 :root{
-  --bg:#090909;
+  --bg:#000;
   --ink:#f5f4f2;
   --ink-dim:#6a6864;
   --line:#1a1a1a;
@@ -322,13 +322,24 @@ a{color:inherit;text-decoration:none}
   color:var(--ink-dim);margin-top:8px;
 }
 .post-body .md-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;margin:var(--s4) 0}
-.post-body .md-grid img{width:100%;height:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--thumb)}
+.post-body .md-grid img{width:100%;height:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--thumb);cursor:pointer;transition:opacity .2s}
+.post-body .md-grid img:hover{opacity:.85}
+.post-body .md-grid[data-size="sm"]{max-width:40%}
+.post-body .md-grid[data-size="lg"]{max-width:75%}
+.post-body .md-grid[data-size="xl"]{max-width:100%}
 .post-body .md-video{
   position:relative;width:100%;aspect-ratio:16/9;
   background:var(--thumb);margin:var(--s4) 0;
 }
 .post-body .md-video.vertical{aspect-ratio:9/16;max-width:420px;margin-inline:auto}
+.post-body .md-video[data-size="sm"]{max-width:35%}
+.post-body .md-video[data-size="lg"]{max-width:75%}
+.post-body .md-video[data-size="xl"]{max-width:100%}
 .post-body .md-video iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.post-body figure[data-size="sm"]{max-width:35%}
+.post-body figure[data-size="lg"]{max-width:75%}
+.post-body figure[data-size="xl"]{max-width:100%}
+.post-body figure[data-size] img{cursor:default}
 
 .post-foot{
   margin-top:var(--s6);padding-top:var(--s3);
@@ -337,6 +348,31 @@ a{color:inherit;text-decoration:none}
   font-size:11px;letter-spacing:.06em;color:var(--ink-dim);
 }
 .post-foot a:hover{color:var(--ink)}
+
+/* ---------- lightbox das fotos dentro de grades no texto ---------- */
+#gridLightbox{
+  position:fixed;inset:0;z-index:700;background:var(--bg);
+  opacity:0;pointer-events:none;transition:opacity .3s ease;
+  display:flex;align-items:center;justify-content:center;
+}
+#gridLightbox.open{opacity:1;pointer-events:auto}
+.glb-frame{max-width:88vw;max-height:82vh}
+.glb-frame img{max-width:88vw;max-height:82vh;width:auto;height:auto;display:block;object-fit:contain}
+.glb-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--ink);
+  font-size:26px;opacity:.5;transition:opacity .2s;cursor:pointer;padding:var(--s3);
+}
+.glb-nav:hover{opacity:1}
+.glb-nav.prev{left:var(--s2)}
+.glb-nav.next{right:var(--s2)}
+.glb-pos{
+  position:absolute;bottom:var(--s3);left:50%;transform:translateX(-50%);
+  font-family:'Space Mono',monospace;font-size:11px;color:var(--ink-dim);
+}
+@media(max-width:640px){
+  .glb-nav{padding:var(--s2);font-size:20px}
+}
 
 /* ---------- RESPONSIVO ---------- */
 @media(max-width:900px) and (min-width:641px){
@@ -371,4 +407,24 @@ a{color:inherit;text-decoration:none}
 }
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important;animation:none !important}
+}
+
+
+/* ===== miniatura de vídeo dentro da tira (post com foto + vídeo) ===== */
+.fs-thumb.is-video-thumb{position:relative}
+.fs-thumb .fs-play{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.35);pointer-events:none;
+}
+.entry .thumb .badge svg + span{margin-left:5px}
+
+/* ===== mídia no corpo do post: largura livre em % ===== */
+.post-body figure[data-w] img{cursor:zoom-in}
+.post-body figure img{cursor:zoom-in}
+.post-body .md-grid[data-cols]{grid-template-columns:repeat(var(--cols,3),1fr)}
+.post-body .md-grid img{cursor:zoom-in}
+@media(max-width:640px){
+  .post-body figure[style*="width"],
+  .post-body .md-video[style*="width"],
+  .post-body .md-grid[style*="width"]{width:100% !important}
 }

@@ -75,6 +75,9 @@ const ARCHIVE = POSTS
       /* basta o campo "video" existir pro post ser tratado como vídeo,
          mesmo que o link ainda esteja vazio */
       type: p.type || ('video' in p ? 'video' : 'photo'),
+      /* um post pode ter foto E vídeo ao mesmo tempo */
+      hasVideo: !!video,
+      hasPhotos: photos.length > 0,
       video, photos, cover,
       ratio: p.ratio || '16/9',
       tags: p.tags || [],
@@ -105,4 +108,33 @@ function bindTheme(btn){
     root.setAttribute('data-theme', next);
     try{ localStorage.setItem('etv-theme', next); }catch(e){}
   });
+}
+
+/* --- mídias de um post, na ordem em que aparecem no visor ---
+   se o post tem vídeo E fotos, o vídeo entra primeiro e as fotos
+   vêm em seguida, tudo na mesma tira de miniaturas. --- */
+function mediaItems(p){
+  const items = [];
+  if(p.video) items.push({ kind:'video', thumb: videoCover(p.video) });
+  p.photos.forEach(src => items.push({ kind:'photo', src, thumb: src }));
+  return items;
+}
+
+/* --- tamanho de mídia dentro do texto -------------------
+   aceita os presets antigos (sm/md/lg/xl) e também número
+   puro em porcentagem ("65" = 65% da largura). --- */
+const LEGACY_W = { sm:35, md:60, lg:75, xl:100 };
+function sizeToPercent(val){
+  if(val == null || val === '') return null;
+  if(LEGACY_W[val] != null) return LEGACY_W[val];
+  const n = parseFloat(val);
+  return isFinite(n) ? Math.min(100, Math.max(5, n)) : null;
+}
+/* fonte: presets antigos viram em, número vira porcentagem */
+const LEGACY_F = { sm:'0.8em', md:'1em', lg:'1.35em', xl:'1.8em' };
+function sizeToFont(val){
+  if(val == null || val === '') return null;
+  if(LEGACY_F[val]) return LEGACY_F[val];
+  const n = parseFloat(val);
+  return isFinite(n) ? `${Math.min(400, Math.max(30, n))}%` : null;
 }

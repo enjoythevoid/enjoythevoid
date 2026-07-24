@@ -7,7 +7,12 @@ let activeFilter = {type:'all', value:null};
 
 function matchesFilter(p){
   if(activeFilter.type === 'all') return true;
-  if(activeFilter.type === 'category') return p.type === activeFilter.value;
+  if(activeFilter.type === 'category'){
+    /* um post com foto E vídeo aparece nas duas abas */
+    if(activeFilter.value === 'video') return p.hasVideo;
+    if(activeFilter.value === 'photo') return p.hasPhotos;
+    return p.type === activeFilter.value;
+  }
   if(activeFilter.type === 'tag') return p.tags.some(t => t.toLowerCase() === activeFilter.value.toLowerCase());
   return true;
 }
@@ -46,8 +51,13 @@ function renderIndex(){
 
       /* selo: play pra vídeo, contagem pra galeria */
       let badge = '';
-      if(p.type === 'video') badge = `<span class="badge only-icon">${ICON_PLAY}</span>`;
-      else if(p.photos.length > 1) badge = `<span class="badge">${p.photos.length}</span>`;
+      if(p.hasVideo && p.photos.length){
+        badge = `<span class="badge">${ICON_PLAY}<span>${p.photos.length}</span></span>`;
+      } else if(p.hasVideo){
+        badge = `<span class="badge only-icon">${ICON_PLAY}</span>`;
+      } else if(p.photos.length > 1){
+        badge = `<span class="badge">${p.photos.length}</span>`;
+      }
 
       el.innerHTML = `
         <div class="thumb">
@@ -136,8 +146,10 @@ let currentId = null, galleryIndex = 0, closeTimer = null;
 
 function stepGallery(dir){
   const p = byId(currentId);
-  if(!p || p.photos.length < 2) return;
-  galleryIndex = (galleryIndex + dir + p.photos.length) % p.photos.length;
+  if(!p) return;
+  const items = mediaItems(p);
+  if(items.length < 2) return;
+  galleryIndex = (galleryIndex + dir + items.length) % items.length;
   renderPhoto(currentId, true);
   const active = filmstrip.querySelector('.fs-thumb.is-active');
   if(active) active.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
@@ -154,27 +166,32 @@ function renderPhoto(id, keepIndex){
   photoFrame.className = 'frame';
   photoFrame.style.removeProperty('--vr');
 
-  if(p.type === 'video'){
-    photoFrame.classList.add(p.video ? 'is-video' : 'is-empty');
+  /* o visor trata vídeo e fotos como itens da mesma lista, então
+     um post pode ter os dois e navegar entre eles na tira */
+  const items = mediaItems(p);
+  if(galleryIndex >= items.length) galleryIndex = 0;
+  const item = items[galleryIndex];
+
+  if(!item){
+    photoFrame.classList.add('is-empty');
+    photoFrame.style.setProperty('--vr', p.type === 'video' ? p.ratio.replace('/',' / ') : '4 / 5');
+    photoFrame.innerHTML = `<span class="ph">${p.type === 'video' ? 'vídeo (YouTube/Vimeo)' : 'imagem'}</span>`;
+  } else if(item.kind === 'video'){
+    photoFrame.classList.add('is-video');
     photoFrame.style.setProperty('--vr', p.ratio.replace('/',' / '));
-    photoFrame.innerHTML = p.video
-      ? `<iframe src="${embedURL(p.video)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${p.title}"></iframe>`
-      : `<span class="ph">vídeo (YouTube/Vimeo)</span>`;
+    photoFrame.innerHTML = `<iframe src="${embedURL(p.video)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${p.title}"></iframe>`;
   } else {
-    const src = p.photos[galleryIndex];
-    if(src){
-      photoFrame.innerHTML = `<img src="${src}" alt="${p.title}">`;
-    } else {
-      photoFrame.classList.add('is-empty');
-      photoFrame.style.setProperty('--vr','4 / 5');
-      photoFrame.innerHTML = `<span class="ph">imagem</span>`;
-    }
+    photoFrame.innerHTML = `<img src="${item.src}" alt="${p.title}">`;
   }
 
-  const hasGallery = p.type !== 'video' && p.photos.length > 1;
+  const hasGallery = items.length > 1;
   if(hasGallery){
-    filmstrip.innerHTML = p.photos.map((src,i) =>
-      `<div class="fs-thumb ${i===galleryIndex?'is-active':''}" data-i="${i}">${imgWithFallback(src, '')}</div>`).join('');
+    filmstrip.innerHTML = items.map((it,i) =>
+      `<div class="fs-thumb ${it.kind === 'video' ? 'is-video-thumb' : ''} ${i===galleryIndex?'is-active':''}" data-i="${i}">` +
+      (it.kind === 'video'
+        ? `<img src="${it.thumb}" alt="vídeo"><span class="fs-play">${ICON_PLAY}</span>`
+        : imgWithFallback(it.src, '')) +
+      `</div>`).join('');
     filmstrip.querySelectorAll('.fs-thumb').forEach(fs => {
       fs.addEventListener('click', () => { galleryIndex = +fs.dataset.i; renderPhoto(id, true); });
     });

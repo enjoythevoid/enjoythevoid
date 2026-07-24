@@ -294,3 +294,25 @@ colar no `posts.js`. Os originais não são tocados.
 Compre o domínio (Registro.br, Namecheap), aponte os DNS pro GitHub e
 coloque o endereço em **Settings → Pages → Custom domain**. O GitHub gera
 o certificado HTTPS sozinho. Dá pra fazer depois, sem refazer nada.
+
+
+---
+
+## atualização — editor e visor
+
+- **foto + vídeo no mesmo post:** na aba "tipo de post" existe agora
+  a opção **fotos + vídeo**. O post publica os dois; no visor da home
+  o vídeo aparece primeiro e as fotos vêm logo depois, na mesma tira
+  de miniaturas.
+- **tamanho de foto/vídeo/grade na página completa:** clique na mídia
+  dentro do editor e use a barra que aparece — presets (25/50/75/100%),
+  slider, número exato em % e, no caso da grade, o número de colunas.
+  As setas ← → também ajustam de 5 em 5. A grade cresce e diminui
+  inteira, como grupo, mantendo a proporção entre as fotos.
+- **tamanho do texto:** botões P / Normal / G / GG mais um campo de
+  número em % (ex.: 130).
+- **clicar numa foto da página completa** abre em tela cheia, com
+  setas pra navegar entre todas as fotos daquele post.
+- no markdown isso vira `{w=65}` nas imagens e `| w=65 | cols=3`
+  nas grades e vídeos. Os arquivos antigos com `size=lg` continuam
+  funcionando.

@@ -102,7 +102,7 @@
   .editor-area .video-embed{position:relative;width:100%;aspect-ratio:16/9;background:var(--thumb);margin:.8em 0}
   .editor-area .video-embed.vertical{aspect-ratio:9/16;max-width:320px;margin-inline:auto}
   .editor-area .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-  .editor-area .md-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:4px;margin:.8em 0}
+  .editor-area .md-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:.8em 0}
   .editor-area .md-grid img{width:100%;height:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--thumb);margin:0}
   .editor-area [data-color="dim"]{color:var(--ink-dim)}
   .editor-area [data-color="accent"]{color:var(--accent)}
@@ -122,6 +122,34 @@
   .editor-area .md-grid[data-size="sm"]{max-width:40%}
   .editor-area .md-grid[data-size="lg"]{max-width:75%}
   .editor-area .md-grid[data-size="xl"]{max-width:100%}
+  /* barra de tamanho da mídia selecionada */
+  .mediabar{
+    display:flex;flex-wrap:wrap;align-items:center;gap:6px;
+    padding:6px 8px;border-bottom:1px solid var(--line);
+    background:rgba(127,127,127,.06);
+  }
+  .mediabar[hidden]{display:none}
+  .mediabar .mb-label{
+    font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);
+    letter-spacing:.06em;margin-right:4px;
+  }
+  .mediabar input[type=range]{width:120px;accent-color:var(--accent)}
+  .mediabar input[type=number]{
+    width:62px;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    font-family:'Space Mono',monospace;font-size:11px;padding:5px 6px;
+  }
+  .mediabar .mb-unit{font-size:11px;color:var(--ink-dim);margin-left:-2px}
+  .mediabar .mb-cols{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-dim)}
+  .mediabar button{
+    background:none;border:1px solid var(--line);color:var(--ink-dim);
+    font-family:'Space Mono',monospace;font-size:11px;height:26px;padding:0 9px;cursor:pointer;
+  }
+  .mediabar button:hover{border-color:var(--ink);color:var(--ink)}
+  .mediabar button.danger{border-color:var(--accent);color:var(--accent)}
+  .toolbar input[type=number].tsize{
+    width:58px;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+    font-family:'Space Mono',monospace;font-size:11px;height:28px;padding:0 6px;
+  }
   .editor-area img.is-selected,
   .editor-area .video-embed.is-selected,
   .editor-area .md-grid.is-selected{outline:2px solid var(--accent);outline-offset:3px;cursor:pointer}
@@ -273,7 +301,8 @@
     <label>tipo de post</label>
     <div class="typetabs">
       <button type="button" id="tabPhoto" class="active">fotos</button>
-      <button type="button" id="tabVideo">vídeo (YouTube)</button>
+      <button type="button" id="tabVideo">vídeo</button>
+      <button type="button" id="tabBoth">fotos + vídeo</button>
     </div>
   </div>
 
@@ -344,13 +373,12 @@
           <button type="button" data-cmd="ol" title="Numerada">1.</button>
         </div>
         <div class="tsep"></div>
-        <div class="tgroup">
-          <select id="sizeSelect" title="Tamanho da fonte">
-            <option value="sm">Pequeno</option>
-            <option value="md" selected>Normal</option>
-            <option value="lg">Grande</option>
-            <option value="xl">Extra grande</option>
-          </select>
+        <div class="tgroup" id="textSizeGroup">
+          <button type="button" data-tsize="sm" title="Texto pequeno">P</button>
+          <button type="button" data-tsize="md" title="Texto normal">Normal</button>
+          <button type="button" data-tsize="lg" title="Texto grande">G</button>
+          <button type="button" data-tsize="xl" title="Texto extra grande">GG</button>
+          <input type="number" class="tsize" id="textSizeNum" min="30" max="400" step="5" placeholder="%" title="Tamanho exato do texto, em %">
         </div>
         <div class="tsep"></div>
         <div class="tgroup color-group">
@@ -375,6 +403,18 @@
           <button type="button" data-cmd="undo" title="Desfazer">↶</button>
           <button type="button" data-cmd="redo" title="Refazer">↷</button>
         </div>
+      </div>
+      <div class="mediabar" id="mediaBar" hidden>
+        <span class="mb-label" id="mbLabel">imagem</span>
+        <button type="button" data-mw="25">25%</button>
+        <button type="button" data-mw="50">50%</button>
+        <button type="button" data-mw="75">75%</button>
+        <button type="button" data-mw="100">100%</button>
+        <input type="range" id="mbRange" min="10" max="100" step="1" value="100" title="arraste pra redimensionar">
+        <input type="number" id="mbNum" min="10" max="100" step="1" value="100"><span class="mb-unit">%</span>
+        <span class="mb-cols" id="mbColsWrap" hidden>colunas <input type="number" id="mbCols" min="1" max="6" step="1" value="3"></span>
+        <button type="button" id="mbReset">limpar</button>
+        <button type="button" class="danger" id="mbDel">remover</button>
       </div>
       <div class="editor-area" id="editorArea" contenteditable="true"
            data-placeholder="Escreva aqui. Use os botões acima pra formatar, inserir foto ou vídeo."></div>
@@ -432,17 +472,23 @@ document.getElementById('themeToggle').addEventListener('click', () => {
   try{ localStorage.setItem('etv-theme', next); }catch(e){}
 });
 
+/* 'photo' | 'video' | 'both' — 'both' publica foto E vídeo no mesmo post */
 let type = 'photo';
 const tabPhoto = document.getElementById('tabPhoto');
 const tabVideo = document.getElementById('tabVideo');
+const tabBoth  = document.getElementById('tabBoth');
 tabPhoto.addEventListener('click', () => setType('photo'));
 tabVideo.addEventListener('click', () => setType('video'));
+tabBoth.addEventListener('click',  () => setType('both'));
+function hasPhotoPart(){ return type === 'photo' || type === 'both'; }
+function hasVideoPart(){ return type === 'video' || type === 'both'; }
 function setType(t){
   type = t;
   tabPhoto.classList.toggle('active', t === 'photo');
   tabVideo.classList.toggle('active', t === 'video');
-  document.getElementById('panelPhoto').style.display = t === 'photo' ? '' : 'none';
-  document.getElementById('panelVideo').style.display = t === 'video' ? '' : 'none';
+  tabBoth.classList.toggle('active',  t === 'both');
+  document.getElementById('panelPhoto').style.display = hasPhotoPart() ? '' : 'none';
+  document.getElementById('panelVideo').style.display = hasVideoPart() ? '' : 'none';
 }
 
 /* ===========================================================
@@ -486,6 +532,60 @@ document.getElementById('fVideo').addEventListener('input', updateVideoPreview);
    usuário mexe com botões visuais.
    =========================================================== */
 
+/* --- tamanhos: presets antigos (sm/md/lg/xl) + número em % --- */
+const LEGACY_W = { sm:35, md:60, lg:75, xl:100 };
+const LEGACY_F = { sm:'0.8em', md:'1em', lg:'1.35em', xl:'1.8em' };
+function sizeToPercent(val){
+  if(val == null || val === '') return null;
+  if(LEGACY_W[val] != null) return LEGACY_W[val];
+  const n = parseFloat(val);
+  return isFinite(n) ? Math.min(100, Math.max(5, Math.round(n))) : null;
+}
+function sizeToFont(val){
+  if(val == null || val === '') return null;
+  if(LEGACY_F[val]) return LEGACY_F[val];
+  const n = parseFloat(val);
+  return isFinite(n) ? `${Math.min(400, Math.max(30, Math.round(n)))}%` : null;
+}
+function pickWidth(mods){
+  const m = mods.find(x => /^(w|size)=/.test(x));
+  if(!m) return { raw:'', pct:null };
+  const raw = m.split('=')[1];
+  return { raw, pct: sizeToPercent(raw) };
+}
+function pickCols(mods){
+  const m = mods.find(x => /^cols=\d+$/.test(x));
+  return m ? Number(m.split('=')[1]) : null;
+}
+/* aplica largura/colunas num elemento do editor */
+function applyMediaWidth(el, raw){
+  const pct = sizeToPercent(raw);
+  if(pct == null){
+    delete el.dataset.w;
+    el.style.removeProperty('width');
+    el.style.removeProperty('max-width');
+    el.style.removeProperty('margin-left');
+    el.style.removeProperty('margin-right');
+    return;
+  }
+  el.dataset.w = String(pct);
+  el.style.width = pct + '%';
+  el.style.maxWidth = '100%';
+  el.style.marginLeft = 'auto';
+  el.style.marginRight = 'auto';
+}
+function applyGridCols(el, n){
+  n = Math.max(1, Math.min(6, Number(n) || 1));
+  el.dataset.cols = String(n);
+  el.style.gridTemplateColumns = `repeat(${n},1fr)`;
+}
+
+/* base pra abrir as fotos de um post que já está publicado */
+let editingRawBase = '';
+function rawURL(rel){
+  return editingRawBase ? editingRawBase + rel : rel;
+}
+
 /* --- markdown -> html (só o suficiente pra popular o editor
    quando carrega um post antigo salvo em .md) --- */
 function mdToHtml(md, slug){
@@ -497,16 +597,21 @@ function mdToHtml(md, slug){
     .replace(/\u0001u\u0002([\s\S]*?)\u0001\/u\u0002/g, '<u>$1</u>')
     .replace(/\u0001s\u0002([\s\S]*?)\u0001\/s\u0002/g, '<s>$1</s>')
     .replace(/\u0001span data-color="([^"]+)"\u0002([\s\S]*?)\u0001\/span\u0002/g, '<span data-color="$1">$2</span>')
-    .replace(/\u0001span data-size="([^"]+)"\u0002([\s\S]*?)\u0001\/span\u0002/g, '<span data-size="$1">$2</span>')
+    .replace(/\u0001span data-size="([^"]+)"\u0002([\s\S]*?)\u0001\/span\u0002/g,
+      (m, sz, txt) => { const f = sizeToFont(sz); return `<span data-size="${sz}"${f ? ` style="font-size:${f}"` : ''}>${txt}</span>`; })
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
     .replace(/~~([^~]+)~~/g, '<s>$1</s>')
     .replace(/\u0001/g,'&lt;').replace(/\u0002/g,'&gt;');
+  /* devolve {url, rel}: url é o que o editor mostra (aponta pro
+     github quando estamos editando um post já publicado, senão a
+     foto apareceria quebrada), rel é o nome que volta pro markdown */
   const mediaSrc = (name) => {
     name = name.trim();
-    if(/^(https?:)?\/\//.test(name) || name.startsWith('media/')) return name;
-    return `media/${slug}/${name}`;
+    if(/^(https?:)?\/\//.test(name)) return { url:name, rel:name };
+    const rel = name.startsWith('media/') ? name.split('/').pop() : name;
+    return { url: rawURL(`media/${slug}/${rel}`), rel };
   };
   blocks.forEach(raw => {
     const b = raw.trim();
@@ -516,24 +621,32 @@ function mdToHtml(md, slug){
       const url = parts[0];
       const mods = parts.slice(1);
       const vertical = mods.includes('vertical');
-      const sizeMod = mods.find(m => /^size=(sm|md|lg|xl)$/.test(m));
-      const size = sizeMod ? sizeMod.split('=')[1] : '';
+      const w = pickWidth(mods);
+      const st = w.pct ? ` style="width:${w.pct}%;max-width:100%;margin-left:auto;margin-right:auto"` : '';
       const v = parseVideo(url);
-      if(v) out.push(`<div class="video-embed${vertical?' vertical':''}" data-src="${url}"${size?` data-size="${size}"`:''}><iframe src="${embedURL(v)}" allow="fullscreen"></iframe></div>`);
+      if(v) out.push(`<div class="video-embed${vertical?' vertical':''}" data-src="${url}" contenteditable="false"${w.pct?` data-w="${w.pct}"`:''}${st}><iframe src="${embedURL(v)}" allow="fullscreen"></iframe></div>`);
       return;
     }
     if(b.startsWith('::grid')){
       const parts = b.replace('::grid','').split('|').map(s => s.trim()).filter(Boolean);
-      const sizeIdx = parts.findIndex(m => /^size=(sm|md|lg|xl)$/.test(m));
-      let size = '';
-      let files = parts;
-      if(sizeIdx !== -1){ size = parts[sizeIdx].split('=')[1]; files = parts.filter((_,i) => i !== sizeIdx); }
-      out.push(`<div class="md-grid"${size?` data-size="${size}"`:''}>` +
-        files.map(f => `<img src="${mediaSrc(f)}" alt="">`).join('') + `</div>`);
+      const mods = parts.filter(x => /^(w|size|cols)=/.test(x));
+      const files = parts.filter(x => !/^(w|size|cols)=/.test(x));
+      const w = pickWidth(mods);
+      const cols = pickCols(mods) || Math.min(files.length, 3);
+      const st = `grid-template-columns:repeat(${cols},1fr);` +
+        (w.pct ? `width:${w.pct}%;max-width:100%;margin-left:auto;margin-right:auto;` : '');
+      out.push(`<div class="md-grid" contenteditable="false" data-cols="${cols}"${w.pct?` data-w="${w.pct}"`:''} style="${st}">` +
+        files.map(f => { const m = mediaSrc(f); return `<img src="${m.url}" data-rel="${m.rel}" alt="">`; }).join('') + `</div>`);
       return;
     }
-    const img = b.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{size=(sm|md|lg|xl)\})?$/);
-    if(img){ out.push(`<img src="${mediaSrc(img[2])}" alt="${img[1]}"${img[3]?` data-size="${img[3]}"`:''}>`); return; }
+    const img = b.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{(?:size|w)=([^}]+)\})?$/);
+    if(img){
+      const m = mediaSrc(img[2]);
+      const pct = sizeToPercent(img[3] || '');
+      const st = pct ? ` style="width:${pct}%;max-width:100%;margin-left:auto;margin-right:auto"` : '';
+      out.push(`<img src="${m.url}" data-rel="${m.rel}" alt="${img[1]}"${pct?` data-w="${pct}"`:''}${st}>`);
+      return;
+    }
     if(b === '---'){ out.push('<hr>'); return; }
     if(b.startsWith('## ')){ out.push(`<h2>${inline(b.slice(3))}</h2>`); return; }
     if(b.startsWith('### ')){ out.push(`<h3>${inline(b.slice(4))}</h3>`); return; }
@@ -553,7 +666,28 @@ function mdToHtml(md, slug){
 
 /* --- html do editor -> markdown pra salvar. mantemos negrito,
    itálico, título, subtítulo, cor, imagem, vídeo, link. --- */
+/* tira imagens/vídeos/grades de dentro de parágrafos — o
+   contenteditable às vezes engole a mídia dentro de um <p>, e era
+   por isso que a foto sumia quando o post era editado de novo */
+function liftMedia(rootEl){
+  const lastRef = new Map();
+  Array.from(rootEl.querySelectorAll('img, .video-embed, .md-grid')).forEach(el => {
+    if(el.tagName === 'IMG' && el.closest('.md-grid')) return;
+    let top = el;
+    while(top.parentNode && top.parentNode !== rootEl) top = top.parentNode;
+    if(top === el) return;
+    const ref = lastRef.get(top) || top.nextSibling;
+    rootEl.insertBefore(el, ref);
+    lastRef.set(top, el.nextSibling);
+  });
+  /* limpa parágrafos que ficaram vazios */
+  Array.from(rootEl.children).forEach(el => {
+    if(el.tagName === 'P' && !el.textContent.trim() && !el.querySelector('img,iframe,br')) el.remove();
+  });
+}
+
 function htmlToMd(rootEl, slug){
+  liftMedia(rootEl);
   const lines = [];
 
   function inlineOf(node){
@@ -576,11 +710,18 @@ function htmlToMd(rootEl, slug){
     return s;
   }
 
-  function relImg(src){
+  function relImg(el){
+    /* data-rel guarda o nome original mesmo quando o src aponta
+       pro github (caso de post já publicado sendo editado) */
+    if(el && el.dataset && el.dataset.rel) return el.dataset.rel;
+    const src = el && el.getAttribute ? el.getAttribute('src') : el;
     if(!src) return src;
-    // media/slug/xx.jpg -> só o nome do arquivo (o site adiciona o resto)
-    const m = src.match(new RegExp(`media/${slug}/([^/]+)$`));
+    const m = src.match(/media\/[^/]+\/([^/?#]+)$/);
     return m ? m[1] : src;
+  }
+  function widthMod(el){
+    const w = el.dataset.w || el.dataset.size;
+    return w ? ` | w=${w}` : '';
   }
 
   Array.from(rootEl.children).forEach(el => {
@@ -602,23 +743,22 @@ function htmlToMd(rootEl, slug){
       return;
     }
     if(tag === 'img'){
-      const src = relImg(el.getAttribute('src'));
+      const src = relImg(el);
       const alt = el.getAttribute('alt') || '';
-      const size = el.dataset.size;
-      lines.push(`![${alt}](${src})${size ? `{size=${size}}` : ''}`);
+      const w = el.dataset.w || el.dataset.size;
+      lines.push(`![${alt}](${src})${w ? `{w=${w}}` : ''}`);
       return;
     }
     if(tag === 'div' && el.classList.contains('video-embed')){
       const url = el.dataset.src || '';
       const mod = el.classList.contains('vertical') ? ' | vertical' : '';
-      const size = el.dataset.size ? ` | size=${el.dataset.size}` : '';
-      if(url) lines.push(`::video ${url}${mod}${size}`);
+      if(url) lines.push(`::video ${url}${mod}${widthMod(el)}`);
       return;
     }
     if(tag === 'div' && el.classList.contains('md-grid')){
-      const files = Array.from(el.querySelectorAll('img')).map(img => relImg(img.getAttribute('src')));
-      const size = el.dataset.size ? ` | size=${el.dataset.size}` : '';
-      if(files.length) lines.push(`::grid ${files.join(' | ')}${size}`);
+      const files = Array.from(el.querySelectorAll('img')).map(img => relImg(img));
+      const cols = el.dataset.cols ? ` | cols=${el.dataset.cols}` : '';
+      if(files.length) lines.push(`::grid ${files.join(' | ')}${widthMod(el)}${cols}`);
       return;
     }
     if(tag === 'p'){
@@ -832,12 +972,18 @@ editSelect.addEventListener('change', async () => {
     document.getElementById('fTags').value = (p.tags || []).join(', ');
     refreshChipStates();
 
-    if('video' in p){
-      setType('video');
+    /* base pras fotos já publicadas aparecerem no editor */
+    editingRawBase = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/`;
+
+    const temVideo = ('video' in p) && !!p.video;
+    const temFoto  = p.photos != null && (Array.isArray(p.photos) ? p.photos.length : Number(p.photos)) > 0;
+    setType(temVideo && temFoto ? 'both' : temVideo ? 'video' : 'photo');
+
+    if(temVideo){
       document.getElementById('fVideo').value = p.video || '';
       if(p.ratio === '9/16'){ ratioV.click(); } else { ratioH.click(); }
-    } else {
-      setType('photo');
+    }
+    if(temFoto){
       existingPhotoCount = Array.isArray(p.photos) ? p.photos.length : (Number(p.photos) || 0);
       await loadExistingPhotoPreviews(slug);
     }
@@ -871,6 +1017,10 @@ function resetFormToNew(){
   editingSlug = null;
   existingPhotoCount = 0;
   existingMdSha = null;
+  editingRawBase = '';
+  selectedMedia = null;
+  if(typeof syncMediaBar === 'function') syncMediaBar();
+  setType('photo');
   files = [];
   renderPhotoList();
   document.getElementById('fTitle').value = '';
@@ -1063,6 +1213,7 @@ function insertImage(file){
   img.src = url;
   img.alt = '';
   img.dataset.pending = filename;
+  img.dataset.rel = filename;
   insertNode(img);
 }
 
@@ -1084,6 +1235,7 @@ function insertGrid(files){
   const grid = document.createElement('div');
   grid.className = 'md-grid';
   grid.contentEditable = 'false';
+  applyGridCols(grid, Math.min(files.length, 3));
   files.forEach(file => {
     const filename = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}-${file.name.toLowerCase().replace(/[^a-z0-9.]+/g,'-')}`;
     const url = URL.createObjectURL(file);
@@ -1092,6 +1244,7 @@ function insertGrid(files){
     img.src = url;
     img.alt = '';
     img.dataset.pending = filename;
+    img.dataset.rel = filename;
     grid.appendChild(img);
   });
   insertNode(grid);
@@ -1176,60 +1329,160 @@ editorToolbar.addEventListener('click', e => {
   }
 });
 
-/* --- selecionar uma imagem/vídeo já inserido, pra poder redimensionar --- */
+/* ===========================================================
+   SELEÇÃO DE MÍDIA + BARRA DE TAMANHO
+   clica numa foto, vídeo ou grade e a barra acima do texto passa
+   a controlar a largura dela (presets, slider e número exato).
+   numa grade, o clique seleciona a grade inteira — ela cresce e
+   diminui como um grupo, mantendo as proporções.
+   =========================================================== */
 let selectedMedia = null;
+
+const mediaBar   = document.getElementById('mediaBar');
+const mbLabel    = document.getElementById('mbLabel');
+const mbRange    = document.getElementById('mbRange');
+const mbNum      = document.getElementById('mbNum');
+const mbCols     = document.getElementById('mbCols');
+const mbColsWrap = document.getElementById('mbColsWrap');
+
+function selectMedia(el){
+  editorArea.querySelectorAll('.is-selected').forEach(x => x.classList.remove('is-selected'));
+  selectedMedia = el || null;
+  if(el) el.classList.add('is-selected');
+  syncMediaBar();
+}
+
+function syncMediaBar(){
+  if(!selectedMedia){ mediaBar.hidden = true; return; }
+  mediaBar.hidden = false;
+  const isGrid  = selectedMedia.classList.contains('md-grid');
+  const isVideo = selectedMedia.classList.contains('video-embed');
+  mbLabel.textContent = isGrid ? `grade (${selectedMedia.querySelectorAll('img').length} fotos)`
+                      : isVideo ? 'vídeo' : 'foto';
+  const w = sizeToPercent(selectedMedia.dataset.w || selectedMedia.dataset.size) ?? 100;
+  mbRange.value = w;
+  mbNum.value = w;
+  mbColsWrap.hidden = !isGrid;
+  if(isGrid) mbCols.value = selectedMedia.dataset.cols || Math.min(selectedMedia.querySelectorAll('img').length, 3);
+}
+
+function setMediaWidth(v){
+  if(!selectedMedia) return;
+  const pct = Math.min(100, Math.max(10, Math.round(Number(v) || 100)));
+  applyMediaWidth(selectedMedia, pct);
+  mbRange.value = pct;
+  mbNum.value = pct;
+  editorArea.dispatchEvent(new Event('input'));
+}
+
 editorArea.addEventListener('click', e => {
-  editorArea.querySelectorAll('.is-selected').forEach(el => el.classList.remove('is-selected'));
-  const media = e.target.closest('img, .video-embed, .md-grid');
-  if(media){
-    media.classList.add('is-selected');
-    selectedMedia = media;
-  } else {
-    selectedMedia = null;
-  }
+  const grid = e.target.closest('.md-grid');
+  const media = grid || e.target.closest('img, .video-embed');
+  selectMedia(media && editorArea.contains(media) ? media : null);
 });
 
-const sizeSelect = document.getElementById('sizeSelect');
-sizeSelect.addEventListener('change', () => {
-  const val = sizeSelect.value;
-
-  /* se uma imagem, vídeo ou grade está selecionada, o tamanho
-     redimensiona ela (menor/maior), em vez de mexer em texto */
-  if(selectedMedia){
-    if(val === 'md') delete selectedMedia.dataset.size;
-    else selectedMedia.dataset.size = val;
-    sizeSelect.value = 'md';
+mediaBar.addEventListener('mousedown', e => {
+  if(e.target.closest('button')) e.preventDefault();
+});
+mediaBar.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(!btn || !selectedMedia) return;
+  if(btn.dataset.mw){ setMediaWidth(btn.dataset.mw); return; }
+  if(btn.id === 'mbReset'){
+    applyMediaWidth(selectedMedia, null);
+    delete selectedMedia.dataset.size;
+    syncMediaBar();
     editorArea.dispatchEvent(new Event('input'));
     return;
   }
-
-  focusEditor();
-  restoreSavedRange(); // o <select> rouba o foco de verdade, esse é o único caso que precisa disso
-  const sel = window.getSelection();
-
-  // sempre limpa qualquer data-size que a seleção já tenha, primeiro
-  if(sel.rangeCount){
-    const range = sel.getRangeAt(0);
-    editorArea.querySelectorAll('span[data-size]').forEach(span => {
-      if(range.intersectsNode(span)){
-        const parent = span.parentNode;
-        while(span.firstChild) parent.insertBefore(span.firstChild, span);
-        parent.removeChild(span);
-      }
-    });
+  if(btn.id === 'mbDel'){
+    const el = selectedMedia;
+    selectMedia(null);
+    el.remove();
+    editorArea.dispatchEvent(new Event('input'));
+    return;
   }
+});
+mbRange.addEventListener('input', () => setMediaWidth(mbRange.value));
+mbNum.addEventListener('input', () => setMediaWidth(mbNum.value));
+mbCols.addEventListener('input', () => {
+  if(!selectedMedia || !selectedMedia.classList.contains('md-grid')) return;
+  applyGridCols(selectedMedia, mbCols.value);
+  editorArea.dispatchEvent(new Event('input'));
+});
 
-  if(val === 'md'){ sizeSelect.value = 'md'; return; } // "normal" só limpa, não envolve
+/* setas ← → aumentam/diminuem a mídia selecionada de 5 em 5 */
+document.addEventListener('keydown', e => {
+  if(!selectedMedia || document.activeElement === mbNum || document.activeElement === mbCols) return;
+  if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+    e.preventDefault();
+    setMediaWidth(Number(mbRange.value) + (e.key === 'ArrowRight' ? 5 : -5));
+  }
+  if(e.key === 'Escape') selectMedia(null);
+});
 
-  if(!sel.rangeCount || sel.isCollapsed){ sizeSelect.value = 'md'; return; }
+/* ===========================================================
+   TAMANHO DO TEXTO — presets + número exato em %.
+   (o antigo <select> não disparava nada ao escolher "Normal",
+   porque ele já estava nesse valor; agora são botões.)
+   =========================================================== */
+function unwrapSizesInSelection(){
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  editorArea.querySelectorAll('span[data-size]').forEach(span => {
+    if(range.intersectsNode(span)){
+      const parent = span.parentNode;
+      while(span.firstChild) parent.insertBefore(span.firstChild, span);
+      parent.removeChild(span);
+    }
+  });
+}
+
+function applyTextSize(val){
+  focusEditor();
+  restoreSavedRange();
+  const sel = window.getSelection();
+  unwrapSizesInSelection();
+
+  if(val === 'md' || val === '' || val == null){
+    editorArea.dispatchEvent(new Event('input'));
+    return;
+  }
+  if(!sel.rangeCount || sel.isCollapsed) return;
+
   const span = document.createElement('span');
   span.dataset.size = val;
-  span.textContent = sel.toString();
+  const f = sizeToFont(val);
+  if(f) span.style.fontSize = f;
   const range = sel.getRangeAt(0);
-  range.deleteContents();
+  span.appendChild(range.extractContents());   /* preserva negrito, link etc */
   range.insertNode(span);
-  sizeSelect.value = 'md';
+  /* deixa a seleção em cima do que acabou de ser formatado */
+  const r2 = document.createRange();
+  r2.selectNodeContents(span);
+  sel.removeAllRanges();
+  sel.addRange(r2);
+  saveCurrentRange();
   editorArea.dispatchEvent(new Event('input'));
+}
+
+const textSizeGroup = document.getElementById('textSizeGroup');
+const textSizeNum = document.getElementById('textSizeNum');
+textSizeGroup.addEventListener('mousedown', e => {
+  if(e.target.closest('button')) e.preventDefault();
+});
+textSizeGroup.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tsize]');
+  if(!btn) return;
+  applyTextSize(btn.dataset.tsize);
+});
+textSizeNum.addEventListener('change', () => {
+  const v = textSizeNum.value.trim();
+  if(v) applyTextSize(v);
+});
+textSizeNum.addEventListener('keydown', e => {
+  if(e.key === 'Enter'){ e.preventDefault(); textSizeNum.dispatchEvent(new Event('change')); }
 });
 
 let pendingGridMode = false;
@@ -1322,7 +1575,7 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
     await ghPutFile('posts.js', utf8ToB64(updatedText), `${editingSlug ? 'atualiza' : 'novo'} post: ${slug}`, current.sha);
     log(`posts.js atualizado.`, 'ok');
 
-    if(type === 'photo' && files.length){
+    if(hasPhotoPart() && files.length){
       for(let i = 0; i < files.length; i++){
         const n = existingPhotoCount + i + 1;
         const name = `${String(n).padStart(2,'0')}.jpg`;
@@ -1350,6 +1603,7 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
         await ghPutFile(`media/${slug}/${filename}`, await blobToB64(big), `foto embutida — ${slug}`);
         /* aponta o src pro caminho real e limpa a marca pendente */
         img.setAttribute('src', `media/${slug}/${filename}`);
+        img.dataset.rel = filename;
         img.removeAttribute('data-pending');
       }
       if(uploadedCount) log(`${uploadedCount} foto(s) embutida(s) enviada(s).`, 'ok');
@@ -1477,8 +1731,8 @@ function buildPost(){
   const page = document.getElementById('fPage').checked;
 
   if(!title || !date){ alert('preencha pelo menos título e data.'); return null; }
-  if(type === 'photo' && !files.length && !existingPhotoCount){ alert('adicione pelo menos uma foto.'); return null; }
-  if(type === 'video' && !document.getElementById('fVideo').value.trim()){ alert('cole o link do vídeo.'); return null; }
+  if(hasPhotoPart() && !files.length && !existingPhotoCount){ alert('adicione pelo menos uma foto.'); return null; }
+  if(hasVideoPart() && !document.getElementById('fVideo').value.trim()){ alert('cole o link do vídeo.'); return null; }
 
   const slug = editingSlug || slugify(title);
   currentSlug = slug;
@@ -1486,9 +1740,10 @@ function buildPost(){
   const totalPhotos = existingPhotoCount + files.length;
 
   let block = `{\n    slug: "${slug}",\n    title: "${title.toUpperCase()}",\n    date: "${date}",\n    location: "${location}",\n    tags: ${tagsStr},\n`;
-  if(type === 'photo'){
+  if(hasPhotoPart()){
     block += `    photos: ${totalPhotos},\n`;
-  } else {
+  }
+  if(hasVideoPart()){
     block += `    video: "${document.getElementById('fVideo').value.trim()}",\n    ratio: "${ratio}",\n`;
   }
   if(page) block += `    page: true,\n`;
@@ -1505,7 +1760,7 @@ document.getElementById('btnGenerate').addEventListener('click', () => {
   document.getElementById('codeBlock').textContent = '  ' + block;
   document.getElementById('output').classList.add('show');
 
-  document.getElementById('photoDownloadSection').style.display = type === 'photo' ? '' : 'none';
+  document.getElementById('photoDownloadSection').style.display = hasPhotoPart() ? '' : 'none';
   document.getElementById('mdDownloadSection').style.display = page ? '' : 'none';
   document.getElementById('mdFileName').textContent = `posts/${slug}.md`;
 });
