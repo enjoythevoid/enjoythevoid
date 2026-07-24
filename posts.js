@@ -34,4 +34,16 @@ const POSTS = [
 
   
 
+  {
+    slug: "adrielli",
+    title: "ADRIELLI",
+    date: "2017-06-03",
+    location: "São Paulo",
+    tags: ["T5I", "Color grading"],
+    photos: 5,
+    videos: ["https://www.youtube.com/watch?v=N_Wjpe0mooo"],
+    ratio: "16/9",
+    order: ["photo", "photo", "photo", "photo", "photo", "video:0"],
+  },
+
 ];
