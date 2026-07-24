@@ -4,10 +4,6 @@
 
 const indexGroups = document.getElementById('indexGroups');
 let activeFilter = {type:'all', value:null};
-/* preenchido pelo bloco de zoom lá embaixo — chamado aqui em cima
-   pra garantir que toda troca de foto (seta, tira, swipe) sempre
-   volta o zoom pro estado normal */
-let resetPhotoZoom = () => {};
 
 function matchesFilter(p){
   if(activeFilter.type === 'all') return true;
@@ -169,7 +165,6 @@ function renderPhoto(id, keepIndex){
   currentId = id;
   if(!keepIndex) galleryIndex = 0;
 
-  resetPhotoZoom(); /* nova foto sempre começa sem zoom */
   photoFrame.className = 'frame';
   photoFrame.style.removeProperty('--vr');
 
@@ -265,83 +260,17 @@ document.querySelector('.photo-stage').addEventListener('click', e => {
 document.getElementById('prevBtn').addEventListener('click', () => stepPhoto(-1));
 document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1));
 
-/* arrastar o dedo pra esquerda/direita troca de foto — e duplo
-   toque na imagem faz zoom com pan; com zoom ativo o mesmo arrasto
-   passa a mover a imagem em vez de trocar de foto. duplo toque de
-   novo desfaz o zoom e volta o arrasto a trocar de foto. */
+/* arrastar o dedo pra esquerda/direita também troca de foto —
+   útil no mobile além dos botões pequenos embaixo */
 (function(){
   const stage = document.querySelector('.photo-stage');
-  const ZOOM_SCALE = 2.4;
   let dragging = false, startX = 0, startY = 0, horizontal = null;
-  let scale = 1, panX = 0, panY = 0, startPanX = 0, startPanY = 0;
-  let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
-
-  function isZoomed(){ return scale > 1; }
-  function currentImg(){ return photoFrame.querySelector('img'); }
-
-  function applyTransform(animate){
-    const img = currentImg();
-    if(!img) return;
-    img.style.transition = animate ? 'transform .25s ease' : 'none';
-    img.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
-  }
-  function clampPan(){
-    const rect = photoFrame.getBoundingClientRect();
-    const maxX = (rect.width * (scale - 1)) / 2;
-    const maxY = (rect.height * (scale - 1)) / 2;
-    panX = Math.max(-maxX, Math.min(maxX, panX));
-    panY = Math.max(-maxY, Math.min(maxY, panY));
-  }
-  resetPhotoZoom = function(){
-    scale = 1; panX = 0; panY = 0;
-    photoFrame.classList.remove('is-zoomed');
-    const img = currentImg();
-    if(img){ img.style.transition = ''; img.style.transform = ''; }
-  };
-  function toggleZoom(clientX, clientY){
-    if(!currentImg()) return;
-    if(isZoomed()){
-      scale = 1; panX = 0; panY = 0;
-      photoFrame.classList.remove('is-zoomed');
-    } else {
-      const rect = photoFrame.getBoundingClientRect();
-      /* zoom centrado no ponto tocado, não no centro da imagem */
-      panX = (rect.width / 2 - (clientX - rect.left)) * (ZOOM_SCALE - 1);
-      panY = (rect.height / 2 - (clientY - rect.top)) * (ZOOM_SCALE - 1);
-      scale = ZOOM_SCALE;
-      clampPan();
-      photoFrame.classList.add('is-zoomed');
-    }
-    applyTransform(true);
-  }
-
   stage.addEventListener('pointerdown', e => {
     dragging = true; horizontal = null; startX = e.clientX; startY = e.clientY;
-    startPanX = panX; startPanY = panY;
-
-    /* duplo toque detectado à mão — 'dblclick' sozinho não é
-       confiável em todo navegador mobile quando o duplo toque
-       também tenta disparar o zoom nativo da página */
-    if(e.target.closest('.frame') && currentImg()){
-      const now = Date.now();
-      const dx = e.clientX - lastTapX, dy = e.clientY - lastTapY;
-      if(now - lastTapTime < 320 && Math.abs(dx) < 30 && Math.abs(dy) < 30){
-        toggleZoom(e.clientX, e.clientY);
-        lastTapTime = 0;
-      } else {
-        lastTapTime = now; lastTapX = e.clientX; lastTapY = e.clientY;
-      }
-    }
   });
   stage.addEventListener('pointermove', e => {
     if(!dragging) return;
     const dx = e.clientX - startX, dy = e.clientY - startY;
-    if(isZoomed()){
-      panX = startPanX + dx; panY = startPanY + dy;
-      clampPan();
-      applyTransform(false);
-      return;
-    }
     if(horizontal === null){
       if(Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       horizontal = Math.abs(dx) > Math.abs(dy);
@@ -350,7 +279,6 @@ document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1))
   function endDrag(e){
     if(!dragging) return;
     dragging = false;
-    if(isZoomed()) return; /* com zoom, soltar só termina o pan, não troca de foto */
     if(horizontal){
       const dx = (e.clientX ?? startX) - startX;
       if(Math.abs(dx) >= 50){
@@ -403,14 +331,11 @@ window.addEventListener('orientationchange', fitFrameBox);
    no mobile) pra colocar o espaçamento certo abaixo dele, sem
    sobra de espaço vazio */
 function syncTopbarHeight(){
-  /* offsetHeight arredonda e mentia meio pixel — o rect dá a altura
-     real. arredondando pra cima, a barra sempre cobre a fresta. */
-  const h = document.querySelector('.topbar').getBoundingClientRect().height;
-  document.documentElement.style.setProperty('--topbar-h', Math.ceil(h) + 'px');
+  const h = document.querySelector('.topbar').offsetHeight;
+  document.documentElement.style.setProperty('--topbar-h', h + 'px');
 }
 window.addEventListener('resize', syncTopbarHeight);
 window.addEventListener('orientationchange', syncTopbarHeight);
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(syncTopbarHeight);
 syncTopbarHeight();
 
 /* ---------- ABOUT ---------- */
