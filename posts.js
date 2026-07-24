@@ -55,4 +55,13 @@ const POSTS = [
     photos: 1,
   },
 
+  {
+    slug: "pico-do-jaragua",
+    title: "PICO DO JARAGUÁ",
+    date: "2017-09-08",
+    location: "PICO DO JARAGUÁ - São Paulo",
+    tags: ["T5I"],
+    photos: 1,
+  },
+
 ];
