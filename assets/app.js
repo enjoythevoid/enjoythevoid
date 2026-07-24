@@ -38,8 +38,8 @@ function renderIndex(){
     const section = document.createElement('section');
     section.className = 'year-section';
     section.innerHTML =
-      `<div class="year-head"><div class="year-head-inner"><span class="year-num">${k}</span>` +
-      `<span class="year-num count-num">${groups[k].length}</span></div></div>`;
+      `<div class="year-head"><span class="year-num">${k}</span>` +
+      `<span class="year-num count-num">${groups[k].length}</span></div>`;
 
     const row = document.createElement('div');
     row.className = 'entry-grid';
