@@ -183,6 +183,7 @@ function renderPhoto(id, keepIndex){
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" alt="${p.title}">`;
   }
+  fitFrameBox();
 
   const hasGallery = items.length > 1;
   if(hasGallery){
@@ -281,6 +282,31 @@ document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1))
   stage.addEventListener('pointerup', endDrag);
   stage.addEventListener('pointercancel', endDrag);
 })();
+
+/* ---------- TAMANHO DO VÍDEO/EMPTY NO VISOR ----------
+   antes o CSS tentava height fixa + max-width + aspect-ratio ao
+   mesmo tempo, e esses três valores entravam em conflito: o vídeo
+   ficava mais largo que o espaço disponível, o navegador cortava a
+   largura sem recalcular a altura, e o resultado saía com a
+   proporção errada — o vídeo aparecia cortado/espremido dentro do
+   player. aqui a proporção é calculada e aplicada em pixels, então
+   ela sempre bate certo com o espaço disponível. */
+function fitFrameBox(){
+  const isVideoOrEmpty = photoFrame.classList.contains('is-video') || photoFrame.classList.contains('is-empty');
+  if(!isVideoOrEmpty){ photoFrame.style.width = ''; photoFrame.style.height = ''; return; }
+  const vr = photoFrame.style.getPropertyValue('--vr') || '16 / 9';
+  const parts = vr.split('/').map(n => parseFloat(n));
+  const ar = (parts[0] && parts[1]) ? parts[0] / parts[1] : 16/9;
+  const cs = getComputedStyle(photoFrame);
+  const maxW = parseFloat(cs.maxWidth)  || photoFrame.parentElement.clientWidth;
+  const maxH = parseFloat(cs.maxHeight) || window.innerHeight * 0.7;
+  let w = maxW, h = w / ar;
+  if(h > maxH){ h = maxH; w = h * ar; }
+  photoFrame.style.width = `${Math.round(w)}px`;
+  photoFrame.style.height = `${Math.round(h)}px`;
+}
+window.addEventListener('resize', fitFrameBox);
+window.addEventListener('orientationchange', fitFrameBox);
 
 /* mede a altura real do topbar (varia conforme ele quebra linha
    no mobile) pra colocar o espaçamento certo abaixo dele, sem

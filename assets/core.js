@@ -115,8 +115,14 @@ function bindTheme(btn){
    vêm em seguida, tudo na mesma tira de miniaturas. --- */
 function mediaItems(p){
   const items = [];
-  if(p.video) items.push({ kind:'video', thumb: videoCover(p.video) });
-  p.photos.forEach(src => items.push({ kind:'photo', src, thumb: src }));
+  /* videoAt: quantas fotos vêm ANTES do vídeo na tira do visor.
+     0 (padrão) = vídeo primeiro, igual antes. undefined também vira 0. */
+  const at = p.video ? Math.max(0, Math.min(p.photos.length, Number(p.videoAt) || 0)) : -1;
+  p.photos.forEach((src,i) => {
+    if(p.video && i === at) items.push({ kind:'video', thumb: videoCover(p.video) });
+    items.push({ kind:'photo', src, thumb: src });
+  });
+  if(p.video && at >= p.photos.length) items.push({ kind:'video', thumb: videoCover(p.video) });
   return items;
 }
 

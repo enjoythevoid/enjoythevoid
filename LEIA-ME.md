@@ -316,3 +316,32 @@ o certificado HTTPS sozinho. Dá pra fazer depois, sem refazer nada.
 - no markdown isso vira `{w=65}` nas imagens e `| w=65 | cols=3`
   nas grades e vídeos. Os arquivos antigos com `size=lg` continuam
   funcionando.
+
+
+---
+
+## atualização 2 — publicação mais confiável, ordem de exibição, vídeo sem corte
+
+- **erro "sha wasn't supplied":** acontecia ao salvar por cima de uma
+  foto ou texto que já existia no repositório. Agora toda gravação
+  busca o sha sozinha quando precisa — o erro não deve mais aparecer.
+- **publicar não trava mais tudo se uma etapa falhar:** antes, se o
+  envio das fotos desse erro, o texto da página completa nem chegava
+  a ser enviado. Agora cada etapa (posts.js, fotos, texto) roda
+  separada — se uma falhar, as outras ainda são tentadas, e o log
+  mostra exatamente o que deu certo e o que não deu.
+- **ordem de fotos + vídeo:** na aba "fotos + vídeo", o vídeo agora
+  aparece como mais um item dentro da lista de fotos que você
+  arrasta — arraste ele pra qualquer posição entre as fotos novas
+  pra decidir onde ele entra na tira do visor. (fotos já publicadas,
+  de um post em edição, continuam sempre antes das novas — ainda não
+  dá pra reordenar essas por aqui.)
+- **vídeo cortado no preview:** o player calculava altura fixa e
+  largura máxima ao mesmo tempo, e os dois entravam em conflito —
+  o vídeo saía com a proporção errada e parecia cortado. Agora o
+  tamanho é calculado certinho pra caber no espaço disponível sem
+  perder a proporção 16:9 (ou 9:16, no formato reels).
+- **tamanho do texto:** o slider e o número agora ajustam aos poucos
+  (1% de cada vez) e não perdem mais o texto que você tinha
+  selecionado no meio do ajuste — clique num texto já redimensionado
+  pra continuar ajustando ele.
