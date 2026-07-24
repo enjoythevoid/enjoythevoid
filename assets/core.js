@@ -70,7 +70,8 @@ const ARCHIVE = POSTS
     const videos = rawVideos.map(parseVideo).filter(Boolean);
     const video  = videos[0] || null; // compatibilidade com código que ainda lê post.video
     const photos = photoList(p);
-    const cover  = p.cover ? resolvePath(p, p.cover) : (photos[0] || videoCover(video));
+    const videoThumb0 = (p.videoCovers && p.videoCovers[0]) || videoCover(video);
+    const cover  = p.cover ? resolvePath(p, p.cover) : (photos[0] || videoThumb0);
     return {
       ...p,
       id: i+1,
@@ -120,6 +121,9 @@ function bindTheme(btn){
    vêm em seguida, tudo na mesma tira de miniaturas. --- */
 function mediaItems(p){
   const items = [];
+  /* thumb customizada de um vídeo (escolhida no admin), com fallback
+     pro frame automático do YouTube/Vimeo */
+  const thumbFor = (v, idx) => (p.videoCovers && p.videoCovers[idx]) || videoCover(v);
 
   /* posts novos: "order" descreve a sequência exata, misturando
      quantas fotos e vídeos quiser em qualquer ordem —
@@ -134,7 +138,7 @@ function mediaItems(p){
       } else if(typeof tok === 'string' && tok.startsWith('video')){
         const idx = tok.includes(':') ? Number(tok.split(':')[1]) : 0;
         const v = p.videos[idx];
-        if(v) items.push({ kind:'video', video:v, thumb: videoCover(v) });
+        if(v) items.push({ kind:'video', video:v, thumb: thumbFor(v, idx) });
       }
     });
     /* sobra alguma foto fora do "order" (não deveria acontecer se o
@@ -149,10 +153,10 @@ function mediaItems(p){
   const v0 = p.videos[0];
   const at = v0 ? Math.max(0, Math.min(p.photos.length, Number(p.videoAt) || 0)) : -1;
   p.photos.forEach((src,i) => {
-    if(v0 && i === at) items.push({ kind:'video', video:v0, thumb: videoCover(v0) });
+    if(v0 && i === at) items.push({ kind:'video', video:v0, thumb: thumbFor(v0, 0) });
     items.push({ kind:'photo', src, thumb: src });
   });
-  if(v0 && at >= p.photos.length) items.push({ kind:'video', video:v0, thumb: videoCover(v0) });
+  if(v0 && at >= p.photos.length) items.push({ kind:'video', video:v0, thumb: thumbFor(v0, 0) });
   return items;
 }
 

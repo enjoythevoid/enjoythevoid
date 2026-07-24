@@ -6,7 +6,7 @@
 <title>enjoythevoid — criar post</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/style.css?v=2">
 <style>
   .admin-wrap{max-width:640px;margin:0 auto;padding:calc(var(--s6) + var(--s2)) var(--s4) var(--s6)}
   .admin-wrap h1{font-family:'Archivo',sans-serif;font-weight:400;font-size:clamp(28px,5vw,44px);letter-spacing:-.03em;margin-bottom:6px}
@@ -158,6 +158,12 @@
   .pitem img{width:100%;height:100%;object-fit:cover;display:block}
   .pitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px;z-index:1}
   .pitem .rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:12px;width:18px;height:18px;cursor:pointer;z-index:1}
+  .pitem .thumb-pick,.pitem .thumb-reset{
+    position:absolute;bottom:4px;background:rgba(0,0,0,.6);color:#fff;border:none;
+    font-size:11px;width:20px;height:20px;cursor:pointer;z-index:1;line-height:1;
+  }
+  .pitem .thumb-pick{left:4px}
+  .pitem .thumb-reset{left:26px}
   .pitem.dragging{opacity:.35}
   .pitem.pitem-video{outline:1px solid var(--accent);outline-offset:-1px}
   .pitem.pitem-existing::after{
@@ -350,6 +356,7 @@
     <label id="photosFieldLabel">ordem de exibição — arraste pra reordenar (inclusive o que já está publicado)</label>
     <div id="photoList" class="pitem-grid"></div>
     <p class="hint" id="photoHint"></p>
+    <input type="file" id="videoThumbInput" accept="image/*" style="display:none">
   </div>
 
   <div class="field">
@@ -528,6 +535,14 @@ function embedURL(v){
 }
 function youtubeCover(v){
   return v && v.kind === 'youtube' ? `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` : '';
+}
+/* nome do arquivo de thumb customizada de um vídeo — baseado no
+   vídeo em si (plataforma + id), não na posição dele na lista, pra
+   nunca precisar renomear nada quando a ordem muda */
+function videoThumbName(url){
+  const v = parseVideo(url);
+  if(!v) return 'video';
+  return `${v.kind === 'youtube' ? 'yt' : 'vm'}-${v.id}`;
 }
 
 /* ===========================================================
@@ -1120,6 +1135,7 @@ async function loadExistingMediaIntoOrder(slug, p, pVideos, photoCount){
   }
 
   const items = [];
+  const coverFor = idx => (p.videoCovers && p.videoCovers[idx]) ? { existingCoverPath: p.videoCovers[idx] } : {};
   if(Array.isArray(p.order) && p.order.length){
     let pi = 0;
     p.order.forEach(tok => {
@@ -1129,7 +1145,7 @@ async function loadExistingMediaIntoOrder(slug, p, pVideos, photoCount){
       } else if(typeof tok === 'string' && tok.startsWith('video')){
         const idx = tok.includes(':') ? Number(tok.split(':')[1]) : 0;
         const url = pVideos[idx];
-        if(url) items.push({ kind:'video', new:false, url });
+        if(url) items.push({ kind:'video', new:false, url, ...coverFor(idx) });
       }
     });
     while(pi < photoFiles.length){ items.push({ kind:'photo', new:false, name:photoFiles[pi].name, url:photoFiles[pi].url }); pi++; }
@@ -1139,11 +1155,11 @@ async function loadExistingMediaIntoOrder(slug, p, pVideos, photoCount){
     const v0 = pVideos[0];
     const at = v0 ? Math.max(0, Math.min(photoFiles.length, Number(p.videoAt) || 0)) : -1;
     photoFiles.forEach((f, i) => {
-      if(v0 && i === at) items.push({ kind:'video', new:false, url:v0 });
+      if(v0 && i === at) items.push({ kind:'video', new:false, url:v0, ...coverFor(0) });
       items.push({ kind:'photo', new:false, name:f.name, url:f.url });
     });
-    if(v0 && at >= photoFiles.length) items.push({ kind:'video', new:false, url:v0 });
-    pVideos.slice(1).forEach(url => items.push({ kind:'video', new:false, url }));
+    if(v0 && at >= photoFiles.length) items.push({ kind:'video', new:false, url:v0, ...coverFor(0) });
+    pVideos.slice(1).forEach((url, i) => items.push({ kind:'video', new:false, url, ...coverFor(i+1) }));
   }
 
   order = items.concat(order); // preserva o que já tinha sido adicionado antes de trocar o post no seletor
@@ -1281,11 +1297,35 @@ function setBlock(tag){
   const sel = window.getSelection();
   if(!sel.rangeCount) return;
 
-  let node = sel.getRangeAt(0).startContainer;
+  const rawNode = sel.getRangeAt(0).startContainer; // sem reparentar — usado no caso de texto solto
+  let node = rawNode;
   if(node.nodeType === 3) node = node.parentNode;
   let block = node.closest ? node.closest('p, h2, h3, blockquote, li') : null;
   if(!block || !editorArea.contains(block)) block = currentBlock();
-  if(!block || block.tagName.toLowerCase() === tag) return;
+
+  if(!block){
+    /* texto digitado direto dentro do editor, sem nenhum bloco em
+       volta ainda — acontece logo no início, antes do primeiro
+       Enter, porque o navegador só cria um <p> depois disso. Sem
+       esse trecho, clicar em Seção/Sub/Corpo nesse momento não
+       fazia nada, porque não existia bloco nenhum pra converter. */
+    if(!editorArea.contains(rawNode) || rawNode === editorArea) return;
+    let top = rawNode;
+    while(top.parentNode && top.parentNode !== editorArea) top = top.parentNode;
+    if(top === editorArea) return;
+
+    const wrapper = document.createElement('p');
+    editorArea.insertBefore(wrapper, top);
+    let sib = top;
+    while(sib && !['P','H2','H3','BLOCKQUOTE','UL','OL','HR'].includes(sib.tagName)){
+      const next = sib.nextSibling;
+      wrapper.appendChild(sib);
+      sib = next;
+    }
+    block = wrapper;
+  }
+
+  if(block.tagName.toLowerCase() === tag) return;
 
   const scrollTop  = editorArea.scrollTop;
   const pageScroll = window.scrollY;
@@ -1741,7 +1781,7 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
 
   const built = buildPost();
   if(!built) return;
-  const { slug, block, page } = built;
+  const { slug, block, page, photoSeq, videoSeq } = built;
 
   btn.disabled = true;
   let hadError = false;
@@ -1774,7 +1814,6 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
      cada etapa cai no catch dela mesma, então uma falha aqui (ex.:
      erro de sha numa foto) não impede o texto da página completa
      de ser enviado depois */
-  const photoSeq = photoEntries();
   if(photoSeq.length){
     try{
       await syncPhotosToOrder(slug, photoSeq);
@@ -1783,6 +1822,23 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
       hadError = true;
       log(`erro ao sincronizar fotos: ${e.message}`, 'err');
       log(`o post já está publicado com o que deu certo até aqui — pode tentar salvar de novo pra reenviar só o que faltou.`, 'err');
+    }
+  }
+
+  /* thumbs escolhidas pra vídeo — só sobe as que forem arquivo novo */
+  const newCovers = videoSeq.filter(v => v.coverFile);
+  if(newCovers.length){
+    try{
+      for(let i = 0; i < newCovers.length; i++){
+        const v = newCovers[i];
+        log(`enviando thumb do vídeo ${i+1} / ${newCovers.length}...`);
+        const small = await resizeImage(v.coverFile, 600, 0.85);
+        await ghPutSmart(`media/${slug}/video-thumbs/${videoThumbName(v.url)}.jpg`, await blobToB64(small), `thumb de vídeo — ${slug}`);
+      }
+      log(`${newCovers.length} thumb(s) de vídeo enviada(s).`, 'ok');
+    }catch(e){
+      hadError = true;
+      log(`erro ao enviar thumb de vídeo: ${e.message}`, 'err');
     }
   }
 
@@ -1868,6 +1924,20 @@ const photoList = document.getElementById('photoList');
 const photoHint = document.getElementById('photoHint');
 const fVideoInput = document.getElementById('fVideoInput');
 const btnAddVideo = document.getElementById('btnAddVideo');
+const videoThumbInput = document.getElementById('videoThumbInput');
+
+videoThumbInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  const idx = Number(videoThumbInput.dataset.targetIdx);
+  videoThumbInput.value = '';
+  if(!file || !order[idx] || order[idx].kind !== 'video') return;
+  const item = order[idx];
+  if(item.coverUrl) URL.revokeObjectURL(item.coverUrl);
+  item.coverFile = file;
+  item.coverUrl = URL.createObjectURL(file);
+  delete item.existingCoverPath; // a nova imagem substitui a antiga
+  renderPhotoList();
+});
 
 /* só as fotos da sequência, na ordem final — usado pra montar os
    arquivos 01.jpg, 02.jpg... */
@@ -1908,12 +1978,16 @@ function renderPhotoList(){
     el.dataset.i = i;
     if(item.kind === 'video'){
       videoNum++;
-      const cover = youtubeCover(parseVideo(item.url));
+      const customCover = item.coverUrl || (item.existingCoverPath ? rawURL(item.existingCoverPath) : '');
+      const cover = customCover || youtubeCover(parseVideo(item.url));
+      const hasCustom = !!(item.coverFile || item.existingCoverPath);
       el.className = 'pitem pitem-video' + (item.new ? '' : ' pitem-existing');
       el.title = item.new ? 'vídeo novo' : 'vídeo já publicado — arraste pra reordenar ou × pra remover';
       el.innerHTML = `<span class="num">▶ ${videoNum}</span>
         <button type="button" class="rm" data-i="${i}">×</button>` +
-        (cover ? `<img src="${cover}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:11px">vídeo</div>`);
+        (cover ? `<img src="${cover}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:11px">vídeo</div>`) +
+        `<button type="button" class="thumb-pick" data-i="${i}" title="${hasCustom ? 'trocar a thumb' : 'escolher a thumb desse vídeo'}">🖼</button>` +
+        (hasCustom ? `<button type="button" class="thumb-reset" data-i="${i}" title="usar a thumb automática de novo">↺</button>` : '');
     } else {
       photoNum++;
       el.className = 'pitem' + (item.new ? '' : ' pitem-existing');
@@ -1929,13 +2003,33 @@ function renderPhotoList(){
   if(photoNum) bits.push(`${photoNum} foto(s)`);
   if(videoNum) bits.push(`${videoNum} vídeo(s)`);
   photoHint.textContent = bits.length
-    ? `${bits.join(', ')} no total. arraste pra reordenar — vale pro que já está publicado também. a primeira foto vira a capa no grid.`
+    ? `${bits.join(', ')} no total. arraste pra reordenar — vale pro que já está publicado também. a primeira foto vira a capa no grid. no ícone 🖼 de cada vídeo dá pra escolher a thumb dele.`
     : '';
 
   photoList.querySelectorAll('.rm').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       order.splice(+btn.dataset.i, 1);
+      renderPhotoList();
+    });
+  });
+
+  photoList.querySelectorAll('.thumb-pick').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const idx = +btn.dataset.i;
+      videoThumbInput.dataset.targetIdx = idx;
+      videoThumbInput.click();
+    });
+  });
+  photoList.querySelectorAll('.thumb-reset').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const item = order[+btn.dataset.i];
+      if(!item) return;
+      delete item.coverFile;
+      delete item.coverUrl;
+      delete item.existingCoverPath;
       renderPhotoList();
     });
   });
@@ -2069,6 +2163,16 @@ function buildPost(){
     const videoIndexOf = new Map(videoSeq.map((v, i) => [v, i]));
     const tokens = order.map(item => item.kind === 'photo' ? 'photo' : `video:${videoIndexOf.get(item)}`);
     block += `    order: [${tokens.map(t => JSON.stringify(t)).join(', ')}],\n`;
+
+    /* thumb customizada de cada vídeo (opcional) — o caminho é
+       previsível a partir do próprio link do vídeo, então dá pra
+       escrever aqui sem precisar subir a imagem antes */
+    if(videoSeq.some(v => v.coverFile || v.existingCoverPath)){
+      const coversStr = videoSeq
+        .map(v => (v.coverFile || v.existingCoverPath) ? `media/${slug}/video-thumbs/${videoThumbName(v.url)}.jpg` : '')
+        .map(c => JSON.stringify(c));
+      block += `    videoCovers: [${coversStr.join(', ')}],\n`;
+    }
   }
   if(page) block += `    page: true,\n`;
   block += `  },`;

@@ -407,3 +407,86 @@ o certificado HTTPS sozinho. Dá pra fazer depois, sem refazer nada.
   NOVAS (as publicadas não têm o arquivo original disponível aqui
   no navegador pra reprocessar) — reordenar as antigas só funciona
   publicando direto pelo github.
+
+
+---
+
+## atualização 6 — vídeo no mobile, redes sociais como ícone
+
+- **vídeo minúsculo no mobile:** a correção anterior calculava o
+  tamanho do vídeo lendo de volta o max-width/max-height do CSS
+  (que usa vw/vh dentro de min()) — e isso não vinha confiável no
+  Chrome do Android, dando um vídeo bem menor do que deveria. agora
+  o tamanho vem direto de window.innerWidth/innerHeight, sem
+  depender de ler nada do CSS de volta.
+- **redes sociais:** saíram de dentro do menu do # e viraram ícones
+  (Instagram, LinkedIn, Letterboxd) do lado dele, na barra de
+  navegação. pra trocar os links, edita o `index.html` e procura
+  por `id="socialLinks"` — são só 3 `<a href="...">`.
+
+
+---
+
+## atualização 7 — escolher a thumb de um vídeo
+
+- cada vídeo na lista de ordem agora tem um ícone 🖼 — clique pra
+  escolher uma foto do seu computador pra usar como thumb dele, em
+  vez do frame automático que o YouTube gera. aparece um ↺ do lado
+  pra voltar a usar o automático.
+- funciona tanto pra vídeo novo quanto pra vídeo já publicado.
+- isso fica salvo como `videoCovers` no posts.js, uma lista paralela
+  a `videos` (mesma posição = mesmo vídeo). o nome do arquivo da
+  thumb é baseado no próprio vídeo (não na posição dele), então
+  reordenar os vídeos nunca bagunça qual thumb pertence a qual.
+
+
+---
+
+## atualização 8 — ajustes finos no mobile
+
+- **light/dark colado no logo:** o `margin-left:auto` que empurrava
+  o botão pro canto direito só tinha sido cancelado do lado do logo,
+  não do lado do próprio botão — por isso ele continuava indo pro
+  canto oposto. corrigido.
+- **ícones sociais menores no mobile.**
+- **espaço entre anos reduzido no mobile:** de 56px pra 20px de
+  respiro entre uma seção de ano e a próxima.
+- **linha pontilhada/serrilhada perto do cabeçalho do ano:** é um bug
+  conhecido do Safari/WebKit em elementos `position:sticky` com fundo
+  transparente — o navegador às vezes desenha uma costura na borda
+  da camada de composição. adicionei as propriedades que forçam uma
+  promoção de camada "limpa" (`translateZ(0)` + `backface-visibility`),
+  que é a correção padrão pra esse bug específico.
+- **thumb de vídeo ao editar um post já publicado:** já funciona —
+  o ícone 🖼 aparece em qualquer vídeo, publicado ou novo, desde a
+  atualização anterior.
+
+
+---
+
+## atualização 9 — cache do navegador (importante)
+
+Descobrimos que o "serrilhado" continuava aparecendo no modo normal do
+navegador mas sumia no modo anônimo — isso não era mais um bug de CSS,
+era o **navegador guardando uma cópia antiga** do `style.css`/`app.js`
+em cache e não buscando a versão nova, mesmo depois de você atualizar
+os arquivos no GitHub.
+
+Corrigido adicionando um "carimbo de versão" no final do link desses
+arquivos, em `index.html`, `post.html` e `admin.html`:
+
+```html
+<link rel="stylesheet" href="assets/style.css?v=1">
+<script src="assets/core.js?v=1"></script>
+<script src="assets/app.js?v=1"></script>
+```
+
+**Sempre que você (ou eu) atualizar `style.css`, `core.js`, `app.js`
+ou `post.js`, precisa subir esse número** (`v=1` → `v=2` → `v=3`...)
+nos três arquivos HTML que carregam eles. Só trocar o número já força
+o navegador de qualquer pessoa a buscar a versão nova, sem precisar de
+Ctrl+Shift+R ou modo anônimo.
+
+Se esquecer de subir o número, o efeito é exatamente esse: a mudança
+funciona pra quem nunca visitou o site (ou testa em anônimo), mas quem
+já visitou antes continua vendo a versão antiga até limpar o cache.

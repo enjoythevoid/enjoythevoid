@@ -126,30 +126,6 @@ uniqueTags.forEach(tag => {
   tagsDropdown.appendChild(a);
 });
 
-/* redes sociais — entram no mesmo menu do #, com o mesmo tamanho de
-   fonte dos filtros de tag (é a mesma regra de CSS, .topbar a).
-   troque os links abaixo pelos seus. */
-const SOCIALS = [
-  { label: 'instagram',  url: 'https://instagram.com/enjoythevoid' },
-  { label: 'linkedin',   url: 'https://linkedin.com/in/enjoythevoid' },
-  { label: 'letterboxd', url: 'https://letterboxd.com/enjoythevoid' },
-];
-if(SOCIALS.length){
-  if(uniqueTags.length){
-    const sep = document.createElement('div');
-    sep.className = 'tags-dropdown-sep';
-    tagsDropdown.appendChild(sep);
-  }
-  SOCIALS.forEach(s => {
-    const a = document.createElement('a');
-    a.href = s.url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.textContent = s.label;
-    tagsDropdown.appendChild(a);
-  });
-}
-
 tagsToggle.addEventListener('click', e => { e.stopPropagation(); tagsMenu.classList.toggle('open'); });
 document.addEventListener('click', () => tagsMenu.classList.remove('open'));
 
@@ -315,17 +291,27 @@ document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1))
    ficava mais largo que o espaço disponível, o navegador cortava a
    largura sem recalcular a altura, e o resultado saía com a
    proporção errada — o vídeo aparecia cortado/espremido dentro do
-   player. aqui a proporção é calculada e aplicada em pixels, então
-   ela sempre bate certo com o espaço disponível. */
+   player.
+
+   a primeira correção lia o max-width/max-height de volta do CSS
+   (getComputedStyle) pra calcular o tamanho certo em pixels — mas
+   isso dependia do navegador resolver corretamente unidades de
+   viewport (vw/vh) dentro de min(), e no mobile isso não vinha
+   confiável, resultando num vídeo minúsculo. agora os limites vêm
+   direto de window.innerWidth/innerHeight, sem ler nada do CSS de
+   volta — os mesmos números que o CSS usa (84vw/980px no desktop,
+   ~94vw/56vh no mobile), só que calculados aqui, garantidos. */
 function fitFrameBox(){
   const isVideoOrEmpty = photoFrame.classList.contains('is-video') || photoFrame.classList.contains('is-empty');
   if(!isVideoOrEmpty){ photoFrame.style.width = ''; photoFrame.style.height = ''; return; }
   const vr = photoFrame.style.getPropertyValue('--vr') || '16 / 9';
   const parts = vr.split('/').map(n => parseFloat(n));
   const ar = (parts[0] && parts[1]) ? parts[0] / parts[1] : 16/9;
-  const cs = getComputedStyle(photoFrame);
-  const maxW = parseFloat(cs.maxWidth)  || photoFrame.parentElement.clientWidth;
-  const maxH = parseFloat(cs.maxHeight) || window.innerHeight * 0.7;
+
+  const isMobile = window.innerWidth <= 640;
+  const maxW = isMobile ? window.innerWidth * 0.92  : Math.min(window.innerWidth * 0.84, 980);
+  const maxH = isMobile ? window.innerHeight * 0.56 : Math.min(window.innerHeight * 0.70, 700);
+
   let w = maxW, h = w / ar;
   if(h > maxH){ h = maxH; w = h * ar; }
   photoFrame.style.width = `${Math.round(w)}px`;
