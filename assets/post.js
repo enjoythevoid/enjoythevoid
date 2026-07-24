@@ -10,14 +10,15 @@ const elHead = document.getElementById('postHead');
 const elBody = document.getElementById('postBody');
 const elFoot = document.getElementById('postFoot');
 
-/* ---------- inline: negrito, itálico, sublinhado, tachado, cor, link ---------- */
+/* ---------- inline: negrito, itálico, sublinhado, tachado, cor, tamanho, link ---------- */
 function inline(s){
   return s
-    /* protege as tags customizadas que queremos manter (u, s, span cor) */
+    /* protege as tags customizadas que queremos manter (u, s, span cor/tamanho) */
     .replace(/</g,'\u0001').replace(/>/g,'\u0002').replace(/&/g,'&amp;')
     .replace(/\u0001u\u0002([\s\S]*?)\u0001\/u\u0002/g, '<u>$1</u>')
     .replace(/\u0001s\u0002([\s\S]*?)\u0001\/s\u0002/g, '<s>$1</s>')
     .replace(/\u0001span data-color="([^"]+)"\u0002([\s\S]*?)\u0001\/span\u0002/g, '<span data-color="$1">$2</span>')
+    .replace(/\u0001span data-size="([^"]+)"\u0002([\s\S]*?)\u0001\/span\u0002/g, '<span data-size="$1">$2</span>')
     /* markdown "normal" */
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')

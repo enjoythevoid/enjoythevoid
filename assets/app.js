@@ -129,7 +129,7 @@ const filmstrip    = document.getElementById('filmstrip');
 const filmstripRow = document.getElementById('filmstripRow');
 const fsPrev       = document.getElementById('fsPrev');
 const fsNext       = document.getElementById('fsNext');
-const keyHint      = document.getElementById('keyHint');
+const postNavRow  = document.querySelector('.post-nav-row');
 
 const NAV_ORDER = ARCHIVE.slice().sort((a,b) => new Date(b.date) - new Date(a.date));
 let currentId = null, galleryIndex = 0, closeTimer = null;
@@ -205,7 +205,7 @@ function openPhoto(id){
   photoView.setAttribute('aria-hidden','false');
   renderPhoto(id);
   lockScroll();
-  showKeyHint();
+  postNavRow.classList.add('show');
 }
 function closePhoto(){
   if(!photoView.classList.contains('open')) return;
@@ -215,6 +215,7 @@ function closePhoto(){
   closeTimer = setTimeout(() => {
     photoView.classList.remove('open','closing');
     photoView.setAttribute('aria-hidden','true');
+    postNavRow.classList.remove('show');
     unlockScroll();
   }, 420);
 }
@@ -274,14 +275,6 @@ function syncTopbarHeight(){
 window.addEventListener('resize', syncTopbarHeight);
 window.addEventListener('orientationchange', syncTopbarHeight);
 syncTopbarHeight();
-
-let hintShown = false;
-function showKeyHint(){
-  if(hintShown) return;
-  hintShown = true;
-  keyHint.classList.add('show');
-  setTimeout(() => keyHint.classList.remove('show'), 3200);
-}
 
 /* ---------- ABOUT ---------- */
 const aboutPanel = document.getElementById('aboutPanel');
