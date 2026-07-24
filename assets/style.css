@@ -39,6 +39,20 @@ a{color:inherit;text-decoration:none}
   font-family:'Inter',sans-serif;
   font-size:11px;font-weight:500;
   background:var(--bg);
+  -webkit-backface-visibility:hidden;
+  backface-visibility:hidden;
+}
+/* a "linha serrilhada" do iOS (Safari e Chrome) é uma fresta de meio
+   pixel na borda de baixo da barra fixa: a altura real dela é
+   fracionada (ex 73.6px) e o número gigante do ano, que rola por
+   trás, vaza nesse sobrinho de pixel. este sangramento sólido de 3px
+   cobre a fresta em qualquer arredondamento. */
+.topbar::after{
+  content:"";
+  position:absolute;left:0;right:0;top:100%;
+  height:3px;
+  background:var(--bg);
+  pointer-events:none;
 }
 .topbar .seg{flex:1;display:flex;align-items:center;gap:14px}
 .topbar .seg:first-child{flex:0 0 auto;margin-right:var(--s5)}
@@ -185,7 +199,12 @@ a{color:inherit;text-decoration:none}
   width:auto;height:auto;
   object-fit:contain;display:block;
   background:var(--thumb);
+  touch-action:manipulation; /* tira o zoom nativo de duplo toque do navegador — o duplo toque é tratado por JS */
+  transform-origin:center center;
+  will-change:transform;
 }
+.photo-stage .frame.is-zoomed img{cursor:grab}
+.photo-stage .frame.is-zoomed img:active{cursor:grabbing}
 .photo-stage .frame.is-video,
 .photo-stage .frame.is-empty{
   /* largura/altura reais em px são calculadas em JS (fitFrameBox em
@@ -196,6 +215,9 @@ a{color:inherit;text-decoration:none}
 }
 .photo-stage .frame .ph{font-size:11px;letter-spacing:.1em;color:var(--ink-dim)}
 .frame iframe{width:100%;height:100%;border:none;display:block}
+.swipe-edge{position:absolute;top:0;bottom:0;width:16%;z-index:2;touch-action:pan-y}
+.swipe-edge-left{left:0}
+.swipe-edge-right{right:0}
 
 .post-nav-row{
   flex:0 0 auto;
@@ -391,21 +413,41 @@ a{color:inherit;text-decoration:none}
   .entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:640px){
-  .topbar{flex-wrap:wrap;gap:4px 0;padding:var(--s1) var(--s3)}
-  .topbar .seg{flex:0 0 auto;font-size:10px;gap:12px}
-  .topbar .seg:first-child{margin-right:auto}
-  .topbar .seg.nav-main{order:5;flex:1 0 100%;margin-top:4px;flex-wrap:wrap;row-gap:6px}
+  /* tudo numa linha só: em vez de quebrar (era o que fazia o menu
+     ir pra segunda linha), a barra vira uma linha compacta e, se o
+     conteúdo não couber, o grupo do menu principal rola na
+     horizontal por baixo do dedo — sem cortar nada e sem quebrar. */
+  .topbar{flex-wrap:nowrap;padding:8px var(--s3);gap:8px}
+  .topbar .seg{flex:0 0 auto;font-size:10px;gap:9px}
+  .topbar .seg:first-child{margin-right:0;flex-shrink:0}
+  .topbar .seg.nav-main{
+    order:initial;flex:1 1 auto;min-width:0;margin-top:0;
+    flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+    justify-content:flex-start;gap:9px;
+  }
+  .topbar .seg.nav-main::-webkit-scrollbar{display:none}
+  .topbar .seg.nav-main > *{flex:0 0 auto;white-space:nowrap}
+  .topbar .seg:last-child{flex-shrink:0}
   .topbar button,.topbar a{font-size:10px}
 
-  .social-links{margin-left:3px;gap:4px}
-  .social-links svg{width:8px;height:8px}
+  /* ícones sociais: alvo de toque de ~32px cada, separados o
+     suficiente pra não acertar dois de uma vez, e um pouco mais
+     claros pra dar pra enxergar o desenho */
+  .social-links{margin-left:2px;gap:2px}
+  .social-links a{
+    padding:8px;margin:-8px 0;
+    color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .social-links svg{width:16px;height:16px;stroke-width:1.5}
 
   /* a grade de fotos estava começando bem baixo na tela — comprimi
      a barra de topo (acima) e o cabeçalho do ano (abaixo) pra ela
      subir bastante */
   #indexView{padding:calc(var(--topbar-h, 74px) + 7px) 0 var(--s5)}
   .year-section{margin-bottom:30px}
-  .year-head{top:var(--topbar-h, 74px)}
+  .year-head{top:calc(var(--topbar-h, 74px) - 1px)}
   .year-head-inner{padding:4px var(--s3)}
   .year-num{font-size:clamp(32px,13vw,52px)}
   .entry-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2) 6px;padding:0 var(--s3);margin-top:4px}
