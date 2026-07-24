@@ -1281,11 +1281,35 @@ function setBlock(tag){
   const sel = window.getSelection();
   if(!sel.rangeCount) return;
 
-  let node = sel.getRangeAt(0).startContainer;
+  const rawNode = sel.getRangeAt(0).startContainer; // sem reparentar — usado no caso de texto solto
+  let node = rawNode;
   if(node.nodeType === 3) node = node.parentNode;
   let block = node.closest ? node.closest('p, h2, h3, blockquote, li') : null;
   if(!block || !editorArea.contains(block)) block = currentBlock();
-  if(!block || block.tagName.toLowerCase() === tag) return;
+
+  if(!block){
+    /* texto digitado direto dentro do editor, sem nenhum bloco em
+       volta ainda — acontece logo no início, antes do primeiro
+       Enter, porque o navegador só cria um <p> depois disso. Sem
+       esse trecho, clicar em Seção/Sub/Corpo nesse momento não
+       fazia nada, porque não existia bloco nenhum pra converter. */
+    if(!editorArea.contains(rawNode) || rawNode === editorArea) return;
+    let top = rawNode;
+    while(top.parentNode && top.parentNode !== editorArea) top = top.parentNode;
+    if(top === editorArea) return;
+
+    const wrapper = document.createElement('p');
+    editorArea.insertBefore(wrapper, top);
+    let sib = top;
+    while(sib && !['P','H2','H3','BLOCKQUOTE','UL','OL','HR'].includes(sib.tagName)){
+      const next = sib.nextSibling;
+      wrapper.appendChild(sib);
+      sib = next;
+    }
+    block = wrapper;
+  }
+
+  if(block.tagName.toLowerCase() === tag) return;
 
   const scrollTop  = editorArea.scrollTop;
   const pageScroll = window.scrollY;
