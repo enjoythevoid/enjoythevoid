@@ -167,8 +167,8 @@ a{color:inherit;text-decoration:none}
 
 .photo-stage{
   flex:1;
-  display:flex;align-items:center;justify-content:center;
-  padding:48px var(--s5) 0;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:48px var(--s5) var(--s3);
   position:relative;
 }
 /* foto: o tamanho vem da própria imagem, dentro de um limite.
@@ -178,6 +178,7 @@ a{color:inherit;text-decoration:none}
   max-height:min(70vh,700px);
   display:flex;align-items:center;justify-content:center;
   position:relative;
+  touch-action:none; /* o zoom por pinça é feito na mão, em JS — isso evita o navegador tentar fazer o dele por cima */
 }
 .photo-stage .frame img{
   max-width:min(84vw,980px);
@@ -185,6 +186,8 @@ a{color:inherit;text-decoration:none}
   width:auto;height:auto;
   object-fit:contain;display:block;
   background:var(--thumb);
+  transform-origin:center center;
+  will-change:transform;
 }
 .photo-stage .frame.is-video,
 .photo-stage .frame.is-empty{
@@ -196,7 +199,7 @@ a{color:inherit;text-decoration:none}
 }
 .photo-stage .frame .ph{font-size:11px;letter-spacing:.1em;color:var(--ink-dim)}
 .frame iframe{width:100%;height:100%;border:none;display:block}
-.swipe-edge{position:absolute;top:0;bottom:0;width:16%;z-index:2;touch-action:pan-y}
+.swipe-edge{position:absolute;top:0;bottom:0;width:28%;z-index:2;touch-action:pan-y}
 .swipe-edge-left{left:0}
 .swipe-edge-right{right:0}
 
@@ -218,7 +221,7 @@ a{color:inherit;text-decoration:none}
 .filmstrip-row{
   height:48px;flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;
-  gap:8px;padding:0 var(--s4);
+  gap:22px;padding:0 var(--s4);
   opacity:0;pointer-events:none;transition:opacity .15s;
 }
 .filmstrip-row.has-gallery{opacity:1;pointer-events:auto}
@@ -236,7 +239,7 @@ a{color:inherit;text-decoration:none}
 .filmstrip .fs-thumb:hover{opacity:1}
 .fs-arrow{
   flex:0 0 auto;background:none;border:none;color:var(--ink-dim);
-  cursor:pointer;font-size:14px;padding:4px;transition:color .2s;
+  cursor:pointer;font-size:24px;padding:8px;transition:color .2s;
 }
 .fs-arrow:hover{color:var(--ink)}
 .fs-arrow[hidden]{display:none}
@@ -392,12 +395,17 @@ a{color:inherit;text-decoration:none}
 /* ---------- RESPONSIVO ---------- */
 @media(max-width:900px) and (min-width:641px){
   .entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* tablet fica do jeito que estava antes dos ajustes de seta/tira
+     de miniaturas feitos pro desktop e mobile */
+  .photo-stage{align-items:center;padding:48px var(--s5) 0}
+  .filmstrip-row{gap:8px}
+  .fs-arrow{font-size:14px;padding:4px}
 }
 @media(max-width:640px){
   .topbar{flex-wrap:wrap;gap:4px 0;padding:20px var(--s3) var(--s1)}
   .topbar .seg{flex:0 0 auto;font-size:10px;gap:12px}
   .topbar .seg:first-child{margin-right:auto}
-  .topbar .seg.nav-main{order:5;flex:1 0 100%;margin-top:0px;flex-wrap:wrap;row-gap:6px;justify-content:space-between}
+  .topbar .seg.nav-main{order:5;flex:1 0 100%;margin-top:4px;flex-wrap:wrap;row-gap:6px;justify-content:space-between}
   .topbar button,.topbar a{font-size:10px}
 
   .social-links{margin-left:auto;margin-right:-6px;gap:2px}

@@ -165,6 +165,8 @@ function renderPhoto(id, keepIndex){
   currentId = id;
   if(!keepIndex) galleryIndex = 0;
 
+  if(typeof window.resetPhotoZoom === 'function') window.resetPhotoZoom();
+
   photoFrame.className = 'frame';
   photoFrame.style.removeProperty('--vr');
 
@@ -260,33 +262,102 @@ document.querySelector('.photo-stage').addEventListener('click', e => {
 document.getElementById('prevBtn').addEventListener('click', () => stepPhoto(-1));
 document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1));
 
-/* arrastar o dedo pra esquerda/direita também troca de foto —
-   útil no mobile além dos botões pequenos embaixo */
+/* arrastar o dedo pra esquerda/direita também troca de foto — útil
+   no mobile além dos botões pequenos embaixo. junto com isso: dar
+   zoom com pinça numa foto, arrastar com zoom dá pan (move a
+   imagem em vez de trocar), e duplo toque alterna zoom rápido. */
 (function(){
   const stage = document.querySelector('.photo-stage');
+  const pointers = new Map(); // pointerId -> {x,y}
   let dragging = false, startX = 0, startY = 0, horizontal = null;
+  let pinching = false, pinchStartDist = 1, pinchStartScale = 1;
+  let scale = 1, panX = 0, panY = 0, panStartX = 0, panStartY = 0;
+  let lastTapTime = 0;
+
+  function activeImg(){
+    return photoFrame.classList.contains('is-video') ? null : photoFrame.querySelector('img');
+  }
+  function applyTransform(){
+    const img = activeImg();
+    if(img) img.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  }
+  /* chamada de fora (renderPhoto) sempre que troca de mídia, pra
+     não carregar o zoom de uma foto pra outra */
+  function resetZoom(){
+    scale = 1; panX = 0; panY = 0;
+    const img = activeImg();
+    if(img) img.style.transform = '';
+  }
+  window.resetPhotoZoom = resetZoom;
+
   stage.addEventListener('pointerdown', e => {
-    dragging = true; horizontal = null; startX = e.clientX; startY = e.clientY;
+    pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+
+    if(pointers.size === 2){
+      pinching = true; dragging = false;
+      const pts = [...pointers.values()];
+      pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      pinchStartScale = scale;
+      return;
+    }
+
+    if(pointers.size === 1 && !pinching){
+      dragging = true; horizontal = null;
+      startX = e.clientX; startY = e.clientY;
+      panStartX = panX; panStartY = panY;
+
+      const now = Date.now();
+      if(now - lastTapTime < 300 && activeImg()){
+        scale = scale > 1 ? 1 : 2.5;
+        panX = 0; panY = 0;
+        applyTransform();
+      }
+      lastTapTime = now;
+    }
   });
+
   stage.addEventListener('pointermove', e => {
-    if(!dragging) return;
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+
+    if(pinching && pointers.size === 2){
+      const pts = [...pointers.values()];
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      scale = Math.min(4, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
+      applyTransform();
+      return;
+    }
+
+    if(!dragging || pointers.size !== 1) return;
     const dx = e.clientX - startX, dy = e.clientY - startY;
+
+    if(scale > 1){
+      /* já tá com zoom: arrastar move a foto em vez de trocar */
+      panX = panStartX + dx; panY = panStartY + dy;
+      applyTransform();
+      return;
+    }
+
     if(horizontal === null){
       if(Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
       horizontal = Math.abs(dx) > Math.abs(dy);
     }
   });
+
   function endDrag(e){
-    if(!dragging) return;
-    dragging = false;
-    if(horizontal){
+    pointers.delete(e.pointerId);
+    if(pointers.size < 2) pinching = false;
+    if(pointers.size > 0) return;
+
+    if(scale <= 1 && dragging && horizontal){
       const dx = (e.clientX ?? startX) - startX;
       if(Math.abs(dx) >= 50){
         justSwiped = true;
         stepPhoto(dx < 0 ? 1 : -1);
       }
     }
-    horizontal = null;
+    dragging = false; horizontal = null;
+    if(scale <= 1.02) resetZoom();
   }
   stage.addEventListener('pointerup', endDrag);
   stage.addEventListener('pointercancel', endDrag);
