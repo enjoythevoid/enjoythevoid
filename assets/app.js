@@ -261,6 +261,7 @@ document.querySelector('.photo-stage').addEventListener('click', e => {
 });
 document.getElementById('prevBtn').addEventListener('click', () => stepPhoto(-1));
 document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1));
+document.getElementById('photoClose').addEventListener('click', closePhoto);
 
 /* arrastar o dedo pra esquerda/direita também troca de foto — útil
    no mobile além dos botões pequenos embaixo. junto com isso: dar
