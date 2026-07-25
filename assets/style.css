@@ -165,10 +165,19 @@ a{color:inherit;text-decoration:none}
 #photoView.open{opacity:1;pointer-events:auto}
 #photoView.open.closing{opacity:0;pointer-events:auto}
 
-.photo-stage{
+/* agrupa foto/vídeo + tira de miniaturas + legenda como um bloco só
+   e centraliza esse bloco inteiro na tela — antes cada parte tinha
+   seu próprio espaço reservado, e sobrava vazio entre elas conforme
+   o tamanho da tela. assim elas ficam sempre juntas, e só o bloco
+   como um todo é que fica mais pra cima ou mais pra baixo. */
+.photo-body{
   flex:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:0;
+}
+.photo-stage{
   display:flex;align-items:center;justify-content:center;
-  padding:48px var(--s5) var(--s3);
+  padding:0 var(--s5);
   position:relative;
 }
 /* foto: o tamanho vem da própria imagem, dentro de um limite.
@@ -397,7 +406,8 @@ a{color:inherit;text-decoration:none}
   .entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   /* tablet fica do jeito que estava antes dos ajustes de seta/tira
      de miniaturas feitos pro desktop e mobile */
-  .photo-stage{align-items:center;padding:48px var(--s5) 0}
+  .photo-body{display:contents}
+  .photo-stage{flex:1;align-items:center;padding:48px var(--s5) 0}
   .photo-stage .frame,.photo-stage .frame img{max-width:min(84vw,980px);max-height:min(70vh,700px)}
   .filmstrip-row{gap:8px}
   .fs-arrow{font-size:14px;padding:4px}
@@ -425,7 +435,7 @@ a{color:inherit;text-decoration:none}
   .entry .cap{font-size:11px}
 
   .photo-stage{
-    padding:calc(var(--s5) + var(--s3)) var(--s3) var(--s3);
+    padding:0 var(--s3);
     touch-action:pan-y;
   }
   .photo-stage .frame,.photo-stage .frame img{max-width:100%;max-height:62vh}

@@ -165,6 +165,11 @@
   }
   .pitem .thumb-pick{left:4px}
   .pitem .thumb-reset{left:26px}
+  .pitem .cover-pick{
+    position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;
+    font-size:13px;width:20px;height:20px;cursor:pointer;z-index:1;line-height:1;
+  }
+  .pitem .cover-pick.is-cover{color:#f2c94c}
   .pitem.dragging{opacity:.35}
   .pitem.pitem-video{outline:1px solid var(--accent);outline-offset:-1px}
   .pitem.pitem-existing::after{
@@ -358,6 +363,17 @@
     <div id="photoList" class="pitem-grid"></div>
     <p class="hint" id="photoHint"></p>
     <input type="file" id="videoThumbInput" accept="image/*" style="display:none">
+  </div>
+
+  <div class="field">
+    <label>capa do post (opcional)</label>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="customCoverPreview" style="width:56px;height:56px;background:var(--thumb);flex:0 0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:9px;color:var(--ink-dim);text-align:center">sem capa</div>
+      <button type="button" class="btn ghost" id="btnCustomCover">enviar imagem pra capa</button>
+      <button type="button" class="btn ghost" id="btnCustomCoverClear" style="display:none">remover</button>
+    </div>
+    <input type="file" id="customCoverInput" accept="image/*" style="display:none">
+    <p class="hint">se você não escolher nada aqui nem marcar uma estrela ★ na lista acima, a capa do grid vira a primeira foto, automático. subir uma imagem aqui tem prioridade sobre a estrela.</p>
   </div>
 
   <div class="field">
@@ -1099,6 +1115,10 @@ function resetFormToNew(){
   selectedMedia = null;
   if(typeof syncMediaBar === 'function') syncMediaBar();
   order = [];
+  coverItem = null;
+  if(customCoverUrl) URL.revokeObjectURL(customCoverUrl);
+  customCoverFile = null; customCoverUrl = ''; existingCustomCoverPath = '';
+  if(typeof syncCustomCoverUI === 'function') syncCustomCoverUI();
   setType('photo');
   renderPhotoList();
   document.getElementById('fTitle').value = '';
@@ -1164,6 +1184,23 @@ async function loadExistingMediaIntoOrder(slug, p, pVideos, photoCount){
   }
 
   order = items.concat(order); // preserva o que já tinha sido adicionado antes de trocar o post no seletor
+
+  /* tenta reconhecer se algum desses itens já era a capa escolhida
+     (post.cover aponta pro nome de uma foto, ou pra thumb de um
+     vídeo) — só cosmético, se não achar não tem problema, cai no
+     padrão (primeira foto) igual antes. se post.cover existir mas
+     não bater com nada da galeria, é porque é uma capa própria,
+     separada (subida direto, não faz parte das fotos do post). */
+  coverItem = null;
+  existingCustomCoverPath = '';
+  if(p.cover){
+    coverItem = items.find(it => it.kind === 'photo' && (p.cover === it.name || p.cover.endsWith('/' + it.name)))
+      || items.find(it => it.kind === 'video' && it.existingCoverPath && (p.cover === it.existingCoverPath || p.cover.endsWith(it.existingCoverPath)))
+      || null;
+    if(!coverItem) existingCustomCoverPath = p.cover;
+  }
+  if(typeof syncCustomCoverUI === 'function') syncCustomCoverUI();
+
   renderPhotoList();
 }
 
@@ -1843,6 +1880,19 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
     }
   }
 
+  /* capa personalizada (imagem separada, fora da galeria) */
+  if(customCoverFile){
+    try{
+      log(`enviando imagem da capa...`);
+      const small = await resizeImage(customCoverFile, 800, 0.85);
+      await ghPutSmart(`media/${slug}/cover.jpg`, await blobToB64(small), `capa — ${slug}`);
+      log(`capa enviada.`, 'ok');
+    }catch(e){
+      hadError = true;
+      log(`erro ao enviar a capa: ${e.message}`, 'err');
+    }
+  }
+
   if(page){
     /* 1) sobe as fotos inseridas dentro do editor pra pasta do post */
     try{
@@ -1919,6 +1969,10 @@ function slugify(s){
    pra bater com essa ordem, mesmo que isso signifique renomear foto
    já publicada. */
 let order = [];
+let coverItem = null; // item de "order" escolhido como capa do post no grid, ou null pro padrão (primeira foto)
+let customCoverFile = null;         // arquivo novo escolhido pra capa (separado da galeria)
+let customCoverUrl = '';            // preview local desse arquivo
+let existingCustomCoverPath = '';   // capa personalizada já publicada (ao editar um post)
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const photoList = document.getElementById('photoList');
@@ -1938,6 +1992,43 @@ videoThumbInput.addEventListener('change', e => {
   item.coverUrl = URL.createObjectURL(file);
   delete item.existingCoverPath; // a nova imagem substitui a antiga
   renderPhotoList();
+});
+
+/* --- capa personalizada: uma imagem própria pra thumb do post,
+   separada da galeria — pra quando você quer subir uma foto só pra
+   isso, sem ela aparecer entre as fotos do post --- */
+const customCoverInput   = document.getElementById('customCoverInput');
+const btnCustomCover     = document.getElementById('btnCustomCover');
+const btnCustomCoverClear = document.getElementById('btnCustomCoverClear');
+const customCoverPreview = document.getElementById('customCoverPreview');
+
+function syncCustomCoverUI(){
+  const url = customCoverUrl || (existingCustomCoverPath ? rawURL(existingCustomCoverPath) : '');
+  if(url){
+    customCoverPreview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
+    btnCustomCoverClear.style.display = '';
+    btnCustomCover.textContent = 'trocar imagem';
+  } else {
+    customCoverPreview.innerHTML = 'sem capa';
+    btnCustomCoverClear.style.display = 'none';
+    btnCustomCover.textContent = 'enviar imagem pra capa';
+  }
+}
+btnCustomCover.addEventListener('click', () => customCoverInput.click());
+customCoverInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  customCoverInput.value = '';
+  if(!file) return;
+  if(customCoverUrl) URL.revokeObjectURL(customCoverUrl);
+  customCoverFile = file;
+  customCoverUrl = URL.createObjectURL(file);
+  existingCustomCoverPath = '';
+  syncCustomCoverUI();
+});
+btnCustomCoverClear.addEventListener('click', () => {
+  if(customCoverUrl) URL.revokeObjectURL(customCoverUrl);
+  customCoverFile = null; customCoverUrl = ''; existingCustomCoverPath = '';
+  syncCustomCoverUI();
 });
 
 /* só as fotos da sequência, na ordem final — usado pra montar os
@@ -1977,6 +2068,8 @@ function renderPhotoList(){
     const el = document.createElement('div');
     el.draggable = true;
     el.dataset.i = i;
+    const isCover = coverItem === item;
+    const starBtn = `<button type="button" class="cover-pick${isCover ? ' is-cover' : ''}" data-i="${i}" title="${isCover ? 'essa é a capa do post no grid' : 'usar como capa do post no grid'}">${isCover ? '★' : '☆'}</button>`;
     if(item.kind === 'video'){
       videoNum++;
       const customCover = item.coverUrl || (item.existingCoverPath ? rawURL(item.existingCoverPath) : '');
@@ -1988,14 +2081,16 @@ function renderPhotoList(){
         <button type="button" class="rm" data-i="${i}">×</button>` +
         (cover ? `<img src="${cover}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:11px">vídeo</div>`) +
         `<button type="button" class="thumb-pick" data-i="${i}" title="${hasCustom ? 'trocar a thumb' : 'escolher a thumb desse vídeo'}">🖼</button>` +
-        (hasCustom ? `<button type="button" class="thumb-reset" data-i="${i}" title="usar a thumb automática de novo">↺</button>` : '');
+        (hasCustom ? `<button type="button" class="thumb-reset" data-i="${i}" title="usar a thumb automática de novo">↺</button>` : '') +
+        starBtn;
     } else {
       photoNum++;
       el.className = 'pitem' + (item.new ? '' : ' pitem-existing');
       el.title = item.new ? 'foto nova' : 'foto já publicada — arraste pra reordenar ou × pra remover';
       el.innerHTML = `<span class="num">${String(photoNum).padStart(2,'0')}</span>
         <button type="button" class="rm" data-i="${i}">×</button>
-        <img src="${item.url}">`;
+        <img src="${item.url}">` +
+        starBtn;
     }
     photoList.appendChild(el);
   });
@@ -2004,13 +2099,25 @@ function renderPhotoList(){
   if(photoNum) bits.push(`${photoNum} foto(s)`);
   if(videoNum) bits.push(`${videoNum} vídeo(s)`);
   photoHint.textContent = bits.length
-    ? `${bits.join(', ')} no total. arraste pra reordenar — vale pro que já está publicado também. a primeira foto vira a capa no grid. no ícone 🖼 de cada vídeo dá pra escolher a thumb dele.`
+    ? `${bits.join(', ')} no total. arraste pra reordenar — vale pro que já está publicado também. clique na estrela ☆ de qualquer item pra escolher a capa do post no grid (sem escolher, usa a primeira foto). no ícone 🖼 de cada vídeo dá pra escolher a thumb dele.`
     : '';
 
   photoList.querySelectorAll('.rm').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
+      const removed = order[+btn.dataset.i];
+      if(removed === coverItem) coverItem = null;
       order.splice(+btn.dataset.i, 1);
+      renderPhotoList();
+    });
+  });
+
+  photoList.querySelectorAll('.cover-pick').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const item = order[+btn.dataset.i];
+      if(!item) return;
+      coverItem = (coverItem === item) ? null : item;
       renderPhotoList();
     });
   });
@@ -2174,6 +2281,17 @@ function buildPost(){
         .map(c => JSON.stringify(c));
       block += `    videoCovers: [${coversStr.join(', ')}],\n`;
     }
+  }
+  if(customCoverFile || existingCustomCoverPath){
+    const coverPath = customCoverFile ? `media/${slug}/cover.jpg` : existingCustomCoverPath;
+    block += `    cover: ${JSON.stringify(coverPath)},\n`;
+  } else if(coverItem){
+    const coverPath = coverItem.kind === 'photo'
+      ? `${String(photoSeq.indexOf(coverItem) + 1).padStart(2,'0')}.jpg`
+      : (coverItem.coverFile || coverItem.existingCoverPath
+          ? `media/${slug}/video-thumbs/${videoThumbName(coverItem.url)}.jpg`
+          : youtubeCover(parseVideo(coverItem.url)));
+    if(coverPath) block += `    cover: ${JSON.stringify(coverPath)},\n`;
   }
   if(page) block += `    page: true,\n`;
   block += `  },`;

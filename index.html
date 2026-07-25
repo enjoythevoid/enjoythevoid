@@ -65,27 +65,29 @@
 
 <!-- ===================== VISOR ===================== -->
 <div id="photoView" aria-hidden="true">
-  <div class="photo-stage">
-    <div class="frame" id="photoFrame"><span class="ph">imagem</span></div>
-  </div>
-  <div class="filmstrip-row" id="filmstripRow">
-    <button class="fs-arrow fs-prev" id="fsPrev" hidden aria-label="Anterior">&lt;</button>
-    <div class="filmstrip" id="filmstrip"></div>
-    <button class="fs-arrow fs-next" id="fsNext" hidden aria-label="Próxima">&gt;</button>
-  </div>
-  <div class="photo-cap">
-    <div class="meta">
-      <span class="no" id="capNo">No.001</span>
-      <span class="ti" id="capTitle">—</span>
-      <span class="lo" id="capLoc">—</span>
-      <a class="post-link" id="postLink" href="#">
-        <span>ver post completo</span>
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-          <path d="M2 8L8 2M8 2H3M8 2V7" stroke="currentColor" stroke-width="1.2"/>
-        </svg>
-      </a>
+  <div class="photo-body">
+    <div class="photo-stage">
+      <div class="frame" id="photoFrame"><span class="ph">imagem</span></div>
     </div>
-    <div class="pos" id="capPos">01 / 12</div>
+    <div class="filmstrip-row" id="filmstripRow">
+      <button class="fs-arrow fs-prev" id="fsPrev" hidden aria-label="Anterior">&lt;</button>
+      <div class="filmstrip" id="filmstrip"></div>
+      <button class="fs-arrow fs-next" id="fsNext" hidden aria-label="Próxima">&gt;</button>
+    </div>
+    <div class="photo-cap">
+      <div class="meta">
+        <span class="no" id="capNo">No.001</span>
+        <span class="ti" id="capTitle">—</span>
+        <span class="lo" id="capLoc">—</span>
+        <a class="post-link" id="postLink" href="#">
+          <span>ver post completo</span>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <path d="M2 8L8 2M8 2H3M8 2V7" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </a>
+      </div>
+      <div class="pos" id="capPos">01 / 12</div>
+    </div>
   </div>
   <div class="post-nav-row">
     <button class="post-nav-btn" id="prevBtn">‹ previous post</button>
