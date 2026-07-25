@@ -7,12 +7,7 @@ let activeFilter = {type:'all', value:null};
 
 function matchesFilter(p){
   if(activeFilter.type === 'all') return true;
-  if(activeFilter.type === 'category'){
-    /* um post com foto E vídeo aparece nas duas abas */
-    if(activeFilter.value === 'video') return p.hasVideo;
-    if(activeFilter.value === 'photo') return p.hasPhotos;
-    return p.type === activeFilter.value;
-  }
+  if(activeFilter.type === 'category') return p.type === activeFilter.value;
   if(activeFilter.type === 'tag') return p.tags.some(t => t.toLowerCase() === activeFilter.value.toLowerCase());
   return true;
 }
@@ -38,8 +33,8 @@ function renderIndex(){
     const section = document.createElement('section');
     section.className = 'year-section';
     section.innerHTML =
-      `<div class="year-head"><div class="year-head-inner"><span class="year-num">${k}</span>` +
-      `<span class="year-num count-num">${groups[k].length}</span></div></div>`;
+      `<div class="year-head"><span class="year-num">${k}</span>` +
+      `<span class="year-num count-num">${groups[k].length}</span></div>`;
 
     const row = document.createElement('div');
     row.className = 'entry-grid';
@@ -51,14 +46,8 @@ function renderIndex(){
 
       /* selo: play pra vídeo, contagem pra galeria */
       let badge = '';
-      const nMedia = p.photos.length + p.videos.length;
-      if(p.hasVideo && nMedia > 1){
-        badge = `<span class="badge">${ICON_PLAY}<span>${nMedia}</span></span>`;
-      } else if(p.hasVideo){
-        badge = `<span class="badge only-icon">${ICON_PLAY}</span>`;
-      } else if(p.photos.length > 1){
-        badge = `<span class="badge">${p.photos.length}</span>`;
-      }
+      if(p.type === 'video') badge = `<span class="badge only-icon">${ICON_PLAY}</span>`;
+      else if(p.photos.length > 1) badge = `<span class="badge">${p.photos.length}</span>`;
 
       el.innerHTML = `
         <div class="thumb">
@@ -125,7 +114,6 @@ uniqueTags.forEach(tag => {
   });
   tagsDropdown.appendChild(a);
 });
-
 tagsToggle.addEventListener('click', e => { e.stopPropagation(); tagsMenu.classList.toggle('open'); });
 document.addEventListener('click', () => tagsMenu.classList.remove('open'));
 
@@ -141,17 +129,15 @@ const filmstrip    = document.getElementById('filmstrip');
 const filmstripRow = document.getElementById('filmstripRow');
 const fsPrev       = document.getElementById('fsPrev');
 const fsNext       = document.getElementById('fsNext');
-const postNavRow  = document.querySelector('.post-nav-row');
+const keyHint      = document.getElementById('keyHint');
 
 const NAV_ORDER = ARCHIVE.slice().sort((a,b) => new Date(b.date) - new Date(a.date));
 let currentId = null, galleryIndex = 0, closeTimer = null;
 
 function stepGallery(dir){
   const p = byId(currentId);
-  if(!p) return;
-  const items = mediaItems(p);
-  if(items.length < 2) return;
-  galleryIndex = (galleryIndex + dir + items.length) % items.length;
+  if(!p || p.photos.length < 2) return;
+  galleryIndex = (galleryIndex + dir + p.photos.length) % p.photos.length;
   renderPhoto(currentId, true);
   const active = filmstrip.querySelector('.fs-thumb.is-active');
   if(active) active.scrollIntoView({block:'nearest', inline:'nearest', behavior:'smooth'});
@@ -165,45 +151,30 @@ function renderPhoto(id, keepIndex){
   currentId = id;
   if(!keepIndex) galleryIndex = 0;
 
-  if(typeof window.resetPhotoZoom === 'function') window.resetPhotoZoom();
-
   photoFrame.className = 'frame';
   photoFrame.style.removeProperty('--vr');
 
-  /* o visor trata vídeo e fotos como itens da mesma lista, então
-     um post pode ter os dois e navegar entre eles na tira */
-  const items = mediaItems(p);
-  if(galleryIndex >= items.length) galleryIndex = 0;
-  const item = items[galleryIndex];
-
-  if(!item){
-    photoFrame.classList.add('is-empty');
-    photoFrame.style.setProperty('--vr', p.type === 'video' ? p.ratio.replace('/',' / ') : '4 / 5');
-    photoFrame.innerHTML = `<span class="ph">${p.type === 'video' ? 'vídeo (YouTube/Vimeo)' : 'imagem'}</span>`;
-  } else if(item.kind === 'video'){
-    photoFrame.classList.add('is-video');
+  if(p.type === 'video'){
+    photoFrame.classList.add(p.video ? 'is-video' : 'is-empty');
     photoFrame.style.setProperty('--vr', p.ratio.replace('/',' / '));
-    /* o toque em cima do <iframe> do YouTube/Vimeo fica "preso" lá
-       dentro — ele é uma janela separada, então o gesto de arrastar
-       nunca chega a virar um pointermove/pointerup no resto da
-       página. essas duas faixas nas bordas ficam por cima do
-       iframe só ali, capturando o arrasto pra trocar de foto;
-       o centro do vídeo (onde fica o play) continua livre. */
-    photoFrame.innerHTML = `<iframe src="${embedURL(item.video)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${p.title}"></iframe>` +
-      `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`;
+    photoFrame.innerHTML = p.video
+      ? `<iframe src="${embedURL(p.video)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${p.title}"></iframe>`
+      : `<span class="ph">vídeo (YouTube/Vimeo)</span>`;
   } else {
-    photoFrame.innerHTML = `<img src="${item.src}" alt="${p.title}">`;
+    const src = p.photos[galleryIndex];
+    if(src){
+      photoFrame.innerHTML = `<img src="${src}" alt="${p.title}">`;
+    } else {
+      photoFrame.classList.add('is-empty');
+      photoFrame.style.setProperty('--vr','4 / 5');
+      photoFrame.innerHTML = `<span class="ph">imagem</span>`;
+    }
   }
-  fitFrameBox();
 
-  const hasGallery = items.length > 1;
+  const hasGallery = p.type !== 'video' && p.photos.length > 1;
   if(hasGallery){
-    filmstrip.innerHTML = items.map((it,i) =>
-      `<div class="fs-thumb ${it.kind === 'video' ? 'is-video-thumb' : ''} ${i===galleryIndex?'is-active':''}" data-i="${i}">` +
-      (it.kind === 'video'
-        ? `<img src="${it.thumb}" alt="vídeo"><span class="fs-play">${ICON_PLAY}</span>`
-        : imgWithFallback(it.src, '')) +
-      `</div>`).join('');
+    filmstrip.innerHTML = p.photos.map((src,i) =>
+      `<div class="fs-thumb ${i===galleryIndex?'is-active':''}" data-i="${i}">${imgWithFallback(src, '')}</div>`).join('');
     filmstrip.querySelectorAll('.fs-thumb').forEach(fs => {
       fs.addEventListener('click', () => { galleryIndex = +fs.dataset.i; renderPhoto(id, true); });
     });
@@ -234,7 +205,7 @@ function openPhoto(id){
   photoView.setAttribute('aria-hidden','false');
   renderPhoto(id);
   lockScroll();
-  postNavRow.classList.add('show');
+  showKeyHint();
 }
 function closePhoto(){
   if(!photoView.classList.contains('open')) return;
@@ -244,7 +215,6 @@ function closePhoto(){
   closeTimer = setTimeout(() => {
     photoView.classList.remove('open','closing');
     photoView.setAttribute('aria-hidden','true');
-    postNavRow.classList.remove('show');
     unlockScroll();
   }, 420);
 }
@@ -253,161 +223,20 @@ function stepPhoto(dir){
   renderPhoto(NAV_ORDER[(idx + dir + NAV_ORDER.length) % NAV_ORDER.length].id);
 }
 
-let justSwiped = false;
 document.querySelector('.photo-stage').addEventListener('click', e => {
-  if(justSwiped){ justSwiped = false; return; }
-  if(e.target.closest('.frame')) return;
+  if(e.target.closest('.frame') || e.target.closest('.photo-nav')) return;
   closePhoto();
 });
 document.getElementById('prevBtn').addEventListener('click', () => stepPhoto(-1));
 document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1));
 
-/* arrastar o dedo pra esquerda/direita também troca de foto — útil
-   no mobile além dos botões pequenos embaixo. junto com isso: dar
-   zoom com pinça numa foto, arrastar com zoom dá pan (move a
-   imagem em vez de trocar), e duplo toque alterna zoom rápido. */
-(function(){
-  const stage = document.querySelector('.photo-stage');
-  const pointers = new Map(); // pointerId -> {x,y}
-  let dragging = false, startX = 0, startY = 0, horizontal = null;
-  let pinching = false, pinchStartDist = 1, pinchStartScale = 1;
-  let scale = 1, panX = 0, panY = 0, panStartX = 0, panStartY = 0;
-  let lastTapTime = 0;
-
-  function activeImg(){
-    return photoFrame.classList.contains('is-video') ? null : photoFrame.querySelector('img');
-  }
-  function applyTransform(){
-    const img = activeImg();
-    if(img) img.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
-  }
-  /* chamada de fora (renderPhoto) sempre que troca de mídia, pra
-     não carregar o zoom de uma foto pra outra */
-  function resetZoom(){
-    scale = 1; panX = 0; panY = 0;
-    const img = activeImg();
-    if(img) img.style.transform = '';
-  }
-  window.resetPhotoZoom = resetZoom;
-
-  stage.addEventListener('pointerdown', e => {
-    pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
-
-    if(pointers.size === 2){
-      pinching = true; dragging = false;
-      const pts = [...pointers.values()];
-      pinchStartDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
-      pinchStartScale = scale;
-      return;
-    }
-
-    if(pointers.size === 1 && !pinching){
-      dragging = true; horizontal = null;
-      startX = e.clientX; startY = e.clientY;
-      panStartX = panX; panStartY = panY;
-
-      const now = Date.now();
-      if(now - lastTapTime < 300 && activeImg()){
-        scale = scale > 1 ? 1 : 2.5;
-        panX = 0; panY = 0;
-        applyTransform();
-      }
-      lastTapTime = now;
-    }
-  });
-
-  stage.addEventListener('pointermove', e => {
-    if(!pointers.has(e.pointerId)) return;
-    pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
-
-    if(pinching && pointers.size === 2){
-      const pts = [...pointers.values()];
-      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      scale = Math.min(4, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
-      applyTransform();
-      return;
-    }
-
-    if(!dragging || pointers.size !== 1) return;
-    const dx = e.clientX - startX, dy = e.clientY - startY;
-
-    if(scale > 1){
-      /* já tá com zoom: arrastar move a foto em vez de trocar */
-      panX = panStartX + dx; panY = panStartY + dy;
-      applyTransform();
-      return;
-    }
-
-    if(horizontal === null){
-      if(Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      horizontal = Math.abs(dx) > Math.abs(dy);
-    }
-  });
-
-  function endDrag(e){
-    pointers.delete(e.pointerId);
-    if(pointers.size < 2) pinching = false;
-    if(pointers.size > 0) return;
-
-    if(scale <= 1 && dragging && horizontal){
-      const dx = (e.clientX ?? startX) - startX;
-      if(Math.abs(dx) >= 50){
-        justSwiped = true;
-        stepPhoto(dx < 0 ? 1 : -1);
-      }
-    }
-    dragging = false; horizontal = null;
-    if(scale <= 1.02) resetZoom();
-  }
-  stage.addEventListener('pointerup', endDrag);
-  stage.addEventListener('pointercancel', endDrag);
-})();
-
-/* ---------- TAMANHO DO VÍDEO/EMPTY NO VISOR ----------
-   antes o CSS tentava height fixa + max-width + aspect-ratio ao
-   mesmo tempo, e esses três valores entravam em conflito: o vídeo
-   ficava mais largo que o espaço disponível, o navegador cortava a
-   largura sem recalcular a altura, e o resultado saía com a
-   proporção errada — o vídeo aparecia cortado/espremido dentro do
-   player.
-
-   a primeira correção lia o max-width/max-height de volta do CSS
-   (getComputedStyle) pra calcular o tamanho certo em pixels — mas
-   isso dependia do navegador resolver corretamente unidades de
-   viewport (vw/vh) dentro de min(), e no mobile isso não vinha
-   confiável, resultando num vídeo minúsculo. agora os limites vêm
-   direto de window.innerWidth/innerHeight, sem ler nada do CSS de
-   volta — os mesmos números que o CSS usa (84vw/980px no desktop,
-   ~94vw/56vh no mobile), só que calculados aqui, garantidos. */
-function fitFrameBox(){
-  const isVideoOrEmpty = photoFrame.classList.contains('is-video') || photoFrame.classList.contains('is-empty');
-  if(!isVideoOrEmpty){ photoFrame.style.width = ''; photoFrame.style.height = ''; return; }
-  const vr = photoFrame.style.getPropertyValue('--vr') || '16 / 9';
-  const parts = vr.split('/').map(n => parseFloat(n));
-  const ar = (parts[0] && parts[1]) ? parts[0] / parts[1] : 16/9;
-
-  const isMobile = window.innerWidth <= 640;
-  const maxW = isMobile ? window.innerWidth * 0.92 : Math.min(window.innerWidth * 0.84, 980);
-  const maxH = isMobile ? window.innerHeight * 0.56 : Math.min(window.innerHeight * 0.70, 700);
-
-  let w = maxW, h = w / ar;
-  if(h > maxH){ h = maxH; w = h * ar; }
-  photoFrame.style.width = `${Math.round(w)}px`;
-  photoFrame.style.height = `${Math.round(h)}px`;
+let hintShown = false;
+function showKeyHint(){
+  if(hintShown) return;
+  hintShown = true;
+  keyHint.classList.add('show');
+  setTimeout(() => keyHint.classList.remove('show'), 3200);
 }
-window.addEventListener('resize', fitFrameBox);
-window.addEventListener('orientationchange', fitFrameBox);
-
-/* mede a altura real do topbar (varia conforme ele quebra linha
-   no mobile) pra colocar o espaçamento certo abaixo dele, sem
-   sobra de espaço vazio */
-function syncTopbarHeight(){
-  const h = document.querySelector('.topbar').offsetHeight;
-  document.documentElement.style.setProperty('--topbar-h', h + 'px');
-}
-window.addEventListener('resize', syncTopbarHeight);
-window.addEventListener('orientationchange', syncTopbarHeight);
-syncTopbarHeight();
 
 /* ---------- ABOUT ---------- */
 const aboutPanel = document.getElementById('aboutPanel');

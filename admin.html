@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
 <title>enjoythevoid — criar post</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
-<script>document.write('<link rel="stylesheet" href="assets/style.css?v=' + Date.now() + '">')</script>
+<link rel="stylesheet" href="assets/style.css">
 <style>
   .admin-wrap{max-width:640px;margin:0 auto;padding:calc(var(--s6) + var(--s2)) var(--s4) var(--s6)}
   .admin-wrap h1{font-family:'Archivo',sans-serif;font-weight:400;font-size:clamp(28px,5vw,44px);letter-spacing:-.03em;margin-bottom:6px}
@@ -15,23 +14,13 @@
 
   .field{margin-bottom:var(--s4)}
   .field label{display:block;font-size:11px;letter-spacing:.08em;color:var(--ink-dim);margin-bottom:6px;text-transform:uppercase}
-  .field input[type=text],.field input[type=date],.field textarea,.field select{
+  .field input[type=text],.field input[type=date],.field textarea{
     width:100%;background:transparent;border:1px solid var(--line);color:var(--ink);
     font-family:'Space Mono',monospace;font-size:14px;padding:10px 12px;
   }
-  .field select{background:var(--bg)}
-  .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--ink-dim)}
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--ink-dim)}
   .field .hint{font-size:11px;color:var(--ink-dim);margin-top:5px}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3)}
-
-  .tagchips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-  .tagchip{
-    background:none;border:1px solid var(--line);color:var(--ink-dim);
-    font-family:'Space Mono',monospace;font-size:11px;padding:4px 10px;
-    cursor:pointer;transition:border-color .2s,color .2s;
-  }
-  .tagchip:hover{border-color:var(--ink);color:var(--ink)}
-  .tagchip.is-used{border-color:var(--ink);color:var(--ink);background:rgba(255,255,255,.04)}
 
   .typetabs{display:flex;gap:0;border:1px solid var(--line);width:max-content}
   .typetabs button{
@@ -48,136 +37,11 @@
   .dropzone input{display:none}
 
   #photoList{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:var(--s3)}
-  .pitem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:var(--s2)}
-  .pitem-grid .exitem{position:relative;aspect-ratio:1;background:var(--thumb);overflow:hidden}
-  .pitem-grid .exitem img{width:100%;height:100%;object-fit:cover;display:block;opacity:.85}
-  .pitem-grid .exitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px}
-  .videopreview{position:relative;width:100%;max-width:320px;aspect-ratio:16/9;background:var(--thumb)}
-  .videopreview.vertical{aspect-ratio:9/16;max-width:180px}
-  .videopreview iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-
-  /* ---------- editor WYSIWYG ---------- */
-  .editor{border:1px solid var(--line);background:var(--bg)}
-  .toolbar{
-    display:flex;flex-wrap:wrap;align-items:center;gap:4px;
-    padding:6px 8px;border-bottom:1px solid var(--line);
-  }
-  .tgroup{display:flex;gap:2px}
-  .tsep{width:1px;height:20px;background:var(--line);margin:0 4px}
-  .toolbar button{
-    background:none;border:1px solid transparent;color:var(--ink-dim);
-    font-family:'Space Mono',monospace;font-size:11px;
-    height:28px;padding:0 10px;cursor:pointer;transition:all .15s;
-    white-space:nowrap;
-  }
-  .toolbar button:hover{border-color:var(--line);color:var(--ink)}
-  .toolbar button.is-active{border-color:var(--ink);color:var(--ink);background:rgba(255,255,255,.04)}
-  .color-group{display:flex;gap:3px;align-items:center}
-  .color-btn{
-    width:20px;height:20px;min-width:20px;padding:0;
-    border:1px solid var(--line);cursor:pointer;
-  }
-  .color-btn:hover{border-color:var(--ink)}
-  .color-btn[data-val="clear"]{background:var(--bg);color:var(--ink-dim);font-size:14px}
-  .toolbar select{
-    background:var(--bg);border:1px solid var(--line);color:var(--ink-dim);
-    font-family:'Space Mono',monospace;font-size:11px;height:28px;
-    padding:0 6px;cursor:pointer;
-  }
-  .toolbar select:hover{color:var(--ink);border-color:var(--ink-dim)}
-
-  .editor-area{
-    padding:var(--s3);min-height:220px;
-    font-family:'Newsreader',serif;font-size:17px;line-height:1.7;
-    color:var(--ink);outline:none;overflow-wrap:break-word;
-  }
-  .editor-area:empty::before{content:attr(data-placeholder);color:var(--ink-dim);font-style:italic}
-  .editor-area h2{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin:1.6em 0 .6em}
-  .editor-area h3{font-family:'Space Mono',monospace;font-size:11px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);margin:1.2em 0 .4em}
-  .editor-area p{margin:0 0 .8em}
-  .editor-area blockquote{border-left:1px solid var(--line);padding-left:var(--s3);margin:.8em 0;color:var(--ink-dim);font-style:italic}
-  .editor-area ul,.editor-area ol{margin:0 0 .8em 1.4em}
-  .editor-area hr{border:none;border-top:1px solid var(--line);margin:1.4em 0}
-  .editor-area a{color:var(--accent);border-bottom:1px solid rgba(138,20,20,.4)}
-  .editor-area img{max-width:100%;height:auto;display:block;margin:.8em 0;background:var(--thumb)}
-  .editor-area .video-embed{position:relative;width:100%;aspect-ratio:16/9;background:var(--thumb);margin:.8em 0}
-  .editor-area .video-embed.vertical{aspect-ratio:9/16;max-width:320px;margin-inline:auto}
-  .editor-area .video-embed iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
-  .editor-area .md-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:.8em 0}
-  .editor-area .md-grid img{width:100%;height:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--thumb);margin:0}
-  .editor-area [data-color="dim"]{color:var(--ink-dim)}
-  .editor-area [data-color="accent"]{color:var(--accent)}
-  .editor-area [data-size="sm"]{font-size:.8em}
-  .editor-area [data-size="lg"]{font-size:1.35em}
-  .editor-area [data-size="xl"]{font-size:1.8em}
-  /* imagem, vídeo e grade usam a MESMA escala pra largura, não fonte */
-  .editor-area img[data-size],
-  .editor-area .video-embed[data-size],
-  .editor-area .md-grid[data-size]{
-    font-size:1em; /* anula a regra de texto acima nesses elementos */
-    margin-left:auto;margin-right:auto;
-  }
-  .editor-area img[data-size="sm"], .editor-area .video-embed[data-size="sm"]{max-width:35%}
-  .editor-area img[data-size="lg"], .editor-area .video-embed[data-size="lg"]{max-width:75%}
-  .editor-area img[data-size="xl"], .editor-area .video-embed[data-size="xl"]{max-width:100%}
-  .editor-area .md-grid[data-size="sm"]{max-width:40%}
-  .editor-area .md-grid[data-size="lg"]{max-width:75%}
-  .editor-area .md-grid[data-size="xl"]{max-width:100%}
-  /* barra de tamanho da mídia selecionada */
-  .mediabar{
-    display:flex;flex-wrap:wrap;align-items:center;gap:6px;
-    padding:6px 8px;border-bottom:1px solid var(--line);
-    background:rgba(127,127,127,.06);
-  }
-  .mediabar[hidden]{display:none}
-  .mediabar .mb-label{
-    font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);
-    letter-spacing:.06em;margin-right:4px;
-  }
-  .mediabar input[type=range]{width:120px;accent-color:var(--accent)}
-  .mediabar input[type=number]{
-    width:62px;background:var(--bg);border:1px solid var(--line);color:var(--ink);
-    font-family:'Space Mono',monospace;font-size:11px;padding:5px 6px;
-  }
-  .mediabar .mb-unit{font-size:11px;color:var(--ink-dim);margin-left:-2px}
-  .mediabar .mb-cols{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink-dim)}
-  .mediabar button{
-    background:none;border:1px solid var(--line);color:var(--ink-dim);
-    font-family:'Space Mono',monospace;font-size:11px;height:26px;padding:0 9px;cursor:pointer;
-  }
-  .mediabar button:hover{border-color:var(--ink);color:var(--ink)}
-  .mediabar button.danger{border-color:var(--accent);color:var(--accent)}
-  .toolbar input[type=number].tsize{
-    width:58px;background:var(--bg);border:1px solid var(--line);color:var(--ink);
-    font-family:'Space Mono',monospace;font-size:11px;height:28px;padding:0 6px;
-  }
-  .editor-area img.is-selected,
-  .editor-area .video-embed.is-selected,
-  .editor-area .md-grid.is-selected{outline:2px solid var(--accent);outline-offset:3px;cursor:pointer}
-  .editor-area span[data-size].is-size-active{outline:1px dashed var(--accent);outline-offset:1px;background:rgba(138,20,20,.08)}
   .pitem{position:relative;aspect-ratio:1;background:var(--thumb);cursor:grab}
   .pitem img{width:100%;height:100%;object-fit:cover;display:block}
-  .pitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px;z-index:1}
-  .pitem .rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:12px;width:18px;height:18px;cursor:pointer;z-index:1}
-  .pitem .thumb-pick,.pitem .thumb-reset{
-    position:absolute;bottom:4px;background:rgba(0,0,0,.6);color:#fff;border:none;
-    font-size:11px;width:20px;height:20px;cursor:pointer;z-index:1;line-height:1;
-  }
-  .pitem .thumb-pick{left:4px}
-  .pitem .thumb-reset{left:26px}
-  .pitem .cover-pick{
-    position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;
-    font-size:13px;width:20px;height:20px;cursor:pointer;z-index:1;line-height:1;
-  }
-  .pitem .cover-pick.is-cover{color:#f2c94c}
+  .pitem .num{position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;padding:2px 6px}
+  .pitem .rm{position:absolute;top:4px;right:4px;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:12px;width:18px;height:18px;cursor:pointer}
   .pitem.dragging{opacity:.35}
-  .pitem.pitem-video{outline:1px solid var(--accent);outline-offset:-1px}
-  .pitem.pitem-existing::after{
-    content:"publicado";position:absolute;left:4px;bottom:4px;
-    background:rgba(0,0,0,.6);color:#fff;font-size:9px;padding:2px 6px;
-    letter-spacing:.03em;pointer-events:none;z-index:1;
-  }
-  .pitem.pitem-video .num{background:var(--accent)}
 
   .toggle{display:flex;align-items:center;gap:10px;cursor:pointer}
   .toggle input{width:16px;height:16px}
@@ -283,17 +147,6 @@
     </div>
   </details>
 
-  <div class="field" id="editWrap">
-    <label>editar um post já publicado (opcional)</label>
-    <div class="row2" style="align-items:end">
-      <select id="editSelect">
-        <option value="">— criar post novo —</option>
-      </select>
-      <button class="btn ghost" id="btnLoadPosts" type="button">carregar lista</button>
-    </div>
-    <p class="hint" id="editHint"></p>
-  </div>
-
   <div class="field">
     <label>título</label>
     <input type="text" id="fTitle" placeholder="PRAIA NEGRA">
@@ -313,39 +166,36 @@
   <div class="field">
     <label>tags (separadas por vírgula)</label>
     <input type="text" id="fTags" placeholder="Photo, Analog">
-    <div id="tagSuggestions" class="tagchips"></div>
-    <p class="hint">clica numa tag já usada pra adicionar, ou digita uma nova. use "Article" numa tag pra aparecer no menu articles.</p>
+    <p class="hint">use "Article" numa tag pra aparecer no menu articles.</p>
   </div>
 
   <div class="field">
     <label>tipo de post</label>
     <div class="typetabs">
       <button type="button" id="tabPhoto" class="active">fotos</button>
-      <button type="button" id="tabVideo">vídeo</button>
-      <button type="button" id="tabBoth">fotos + vídeo</button>
+      <button type="button" id="tabVideo">vídeo (YouTube)</button>
     </div>
   </div>
 
   <!-- ===== FOTOS ===== -->
   <div id="panelPhoto">
     <div class="field">
-      <label>adicionar fotos</label>
+      <label>fotos — arraste pra reordenar, a primeira é a capa</label>
       <div class="dropzone" id="dropzone">
         arraste as fotos aqui, ou clique pra escolher
         <input type="file" id="fileInput" accept="image/*" multiple>
       </div>
+      <div id="photoList"></div>
+      <p class="hint" id="photoHint"></p>
     </div>
   </div>
 
   <!-- ===== VÍDEO ===== -->
   <div id="panelVideo" style="display:none">
     <div class="field">
-      <label>adicionar vídeo (YouTube ou Vimeo)</label>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="fVideoInput" placeholder="https://youtu.be/XXXXXXXXXXX" style="flex:1">
-        <button type="button" class="btn ghost" id="btnAddVideo" style="white-space:nowrap">+ adicionar</button>
-      </div>
-      <p class="hint">cole o link e clique em adicionar. pode adicionar quantos vídeos quiser — cada um vira um item na lista de ordem, junto com as fotos.</p>
+      <label>link do YouTube</label>
+      <input type="text" id="fVideo" placeholder="https://youtu.be/XXXXXXXXXXX">
+      <p class="hint">cola o link como aparece na barra do navegador. o site converte pro player limpo sozinho.</p>
     </div>
     <div class="field">
       <label>formato</label>
@@ -353,27 +203,7 @@
         <button type="button" id="ratioH" class="active">16 / 9 — horizontal</button>
         <button type="button" id="ratioV">9 / 16 — reels</button>
       </div>
-      <p class="hint">vale pra todos os vídeos desse post.</p>
     </div>
-  </div>
-
-  <!-- ===== ORDEM: fotos e vídeos, publicados ou novos, misturados do jeito que quiser ===== -->
-  <div class="field" id="mediaOrderWrap">
-    <label id="photosFieldLabel">ordem de exibição — arraste pra reordenar (inclusive o que já está publicado)</label>
-    <div id="photoList" class="pitem-grid"></div>
-    <p class="hint" id="photoHint"></p>
-    <input type="file" id="videoThumbInput" accept="image/*" style="display:none">
-  </div>
-
-  <div class="field">
-    <label>capa do post (opcional)</label>
-    <div style="display:flex;align-items:center;gap:10px">
-      <div id="customCoverPreview" style="width:56px;height:56px;background:var(--thumb);flex:0 0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:9px;color:var(--ink-dim);text-align:center">sem capa</div>
-      <button type="button" class="btn ghost" id="btnCustomCover">enviar imagem pra capa</button>
-      <button type="button" class="btn ghost" id="btnCustomCoverClear" style="display:none">remover</button>
-    </div>
-    <input type="file" id="customCoverInput" accept="image/*" style="display:none">
-    <p class="hint">se você não escolher nada aqui nem marcar uma estrela ★ na lista acima, a capa do grid vira a primeira foto, automático. subir uma imagem aqui tem prioridade sobre a estrela.</p>
   </div>
 
   <div class="field">
@@ -384,83 +214,20 @@
   </div>
 
   <div class="field" id="mdFieldWrap" style="display:none">
-    <label>conteúdo da página completa</label>
-    <div class="editor">
-      <div class="toolbar" id="editorToolbar">
-        <div class="tgroup">
-          <button type="button" data-cmd="block" data-val="p" title="Corpo">¶</button>
-          <button type="button" data-cmd="block" data-val="h2" title="Seção">Seção</button>
-          <button type="button" data-cmd="block" data-val="h3" title="Sub-seção">Sub</button>
-          <button type="button" data-cmd="block" data-val="blockquote" title="Citação">”</button>
-        </div>
-        <div class="tsep"></div>
-        <div class="tgroup">
-          <button type="button" data-cmd="bold" title="Negrito"><b>B</b></button>
-          <button type="button" data-cmd="italic" title="Itálico"><i>I</i></button>
-          <button type="button" data-cmd="underline" title="Sublinhado"><u>U</u></button>
-          <button type="button" data-cmd="strike" title="Tachado"><s>S</s></button>
-        </div>
-        <div class="tsep"></div>
-        <div class="tgroup">
-          <button type="button" data-cmd="ul" title="Lista">•</button>
-          <button type="button" data-cmd="ol" title="Numerada">1.</button>
-        </div>
-        <div class="tsep"></div>
-        <div class="tgroup" id="textSizeGroup">
-          <button type="button" data-tsize="80" title="Texto pequeno">P</button>
-          <button type="button" data-tsize="100" title="Texto normal">Normal</button>
-          <button type="button" data-tsize="135" title="Texto grande">G</button>
-          <button type="button" data-tsize="180" title="Texto extra grande">GG</button>
-          <input type="range" id="textSizeRange" min="30" max="400" step="1" value="100" title="arraste pra ajustar aos poucos" style="width:90px;accent-color:var(--accent)">
-          <input type="number" class="tsize" id="textSizeNum" min="30" max="400" step="1" placeholder="%" title="Tamanho exato do texto, em %">
-        </div>
-        <div class="tsep"></div>
-        <div class="tgroup color-group">
-          <button type="button" class="color-btn" data-cmd="color" data-val="default" title="Cor padrão" style="background:var(--ink)"></button>
-          <button type="button" class="color-btn" data-cmd="color" data-val="dim" title="Cinza" style="background:var(--ink-dim)"></button>
-          <button type="button" class="color-btn" data-cmd="color" data-val="accent" title="Vermelho" style="background:var(--accent)"></button>
-          <button type="button" class="color-btn" data-cmd="color" data-val="clear" title="Remover cor">×</button>
-        </div>
-        <div class="tsep"></div>
-        <div class="tgroup">
-          <button type="button" data-cmd="link" title="Link">↗</button>
-          <button type="button" data-cmd="hr" title="Separador">—</button>
-        </div>
-        <div class="tsep"></div>
-        <div class="tgroup">
-          <button type="button" data-cmd="image" title="Inserir foto">🖼</button>
-          <button type="button" data-cmd="grid" title="Inserir grade de fotos">▦</button>
-          <button type="button" data-cmd="video" title="Inserir vídeo">▶</button>
-        </div>
-        <div class="tsep"></div>
-        <div class="tgroup">
-          <button type="button" data-cmd="undo" title="Desfazer">↶</button>
-          <button type="button" data-cmd="redo" title="Refazer">↷</button>
-        </div>
-      </div>
-      <div class="mediabar" id="mediaBar" hidden>
-        <span class="mb-label" id="mbLabel">imagem</span>
-        <button type="button" data-mw="25">25%</button>
-        <button type="button" data-mw="50">50%</button>
-        <button type="button" data-mw="75">75%</button>
-        <button type="button" data-mw="100">100%</button>
-        <input type="range" id="mbRange" min="10" max="100" step="1" value="100" title="arraste pra redimensionar">
-        <input type="number" id="mbNum" min="10" max="100" step="1" value="100"><span class="mb-unit">%</span>
-        <span class="mb-cols" id="mbColsWrap" hidden>colunas <input type="number" id="mbCols" min="1" max="6" step="1" value="3"></span>
-        <button type="button" id="mbReset">limpar</button>
-        <button type="button" class="danger" id="mbDel">remover</button>
-      </div>
-      <div class="editor-area" id="editorArea" contenteditable="true"
-           data-placeholder="Escreva aqui. Use os botões acima pra formatar, inserir foto ou vídeo."></div>
-      <input type="file" id="editorImageInput" accept="image/*" multiple style="display:none">
-    </div>
-    <p class="hint">as fotos inseridas aqui sobem junto quando você publicar. o texto salva como página completa do post.</p>
+    <label>texto da página completa (opcional escrever agora)</label>
+    <textarea id="fMd" rows="8" placeholder="Primeiro parágrafo...
+
+## um subtítulo
+
+Outro parágrafo, com *itálico* e **negrito**.
+
+![Legenda](02.jpg)"></textarea>
+    <p class="hint">se publicar direto no github, esse texto já sobe como posts/SLUG.md. se deixar em branco, dá pra escrever depois.</p>
   </div>
 
   <div class="publish-bar">
     <button class="btn primary" id="btnPublish">publicar no github</button>
     <button class="btn ghost" id="btnGenerate">só gerar o bloco (sem publicar)</button>
-    <button class="btn ghost" id="btnDelete" style="display:none;border-color:var(--accent);color:var(--accent)">apagar este post</button>
   </div>
   <div class="log" id="log"></div>
 
@@ -506,24 +273,17 @@ document.getElementById('themeToggle').addEventListener('click', () => {
   try{ localStorage.setItem('etv-theme', next); }catch(e){}
 });
 
-/* 'photo' | 'video' | 'both' — 'both' publica foto E vídeo no mesmo post */
 let type = 'photo';
 const tabPhoto = document.getElementById('tabPhoto');
 const tabVideo = document.getElementById('tabVideo');
-const tabBoth  = document.getElementById('tabBoth');
 tabPhoto.addEventListener('click', () => setType('photo'));
 tabVideo.addEventListener('click', () => setType('video'));
-tabBoth.addEventListener('click',  () => setType('both'));
-function hasPhotoPart(){ return type === 'photo' || type === 'both'; }
-function hasVideoPart(){ return type === 'video' || type === 'both'; }
 function setType(t){
   type = t;
   tabPhoto.classList.toggle('active', t === 'photo');
   tabVideo.classList.toggle('active', t === 'video');
-  tabBoth.classList.toggle('active',  t === 'both');
-  document.getElementById('panelPhoto').style.display = hasPhotoPart() ? '' : 'none';
-  document.getElementById('panelVideo').style.display = hasVideoPart() ? '' : 'none';
-  if(typeof renderPhotoList === 'function') renderPhotoList();
+  document.getElementById('panelPhoto').style.display = t === 'photo' ? '' : 'none';
+  document.getElementById('panelVideo').style.display = t === 'video' ? '' : 'none';
 }
 
 /* ===========================================================
@@ -531,292 +291,6 @@ function setType(t){
    nenhum outro programa. Usa a API oficial do GitHub a partir
    do próprio navegador, com o token que você cola no painel.
    =========================================================== */
-
-/* --- reconhece link de YouTube/Vimeo e monta o embed limpo ---
-   (mesma lógica do assets/core.js, copiada aqui porque o admin.html
-   roda sozinho, sem carregar o resto do site) */
-function parseVideo(url){
-  if(!url) return null;
-  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
-  if(yt) return {kind:'youtube', id:yt[1]};
-  const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-  if(vm) return {kind:'vimeo', id:vm[1]};
-  return null;
-}
-function embedURL(v){
-  if(!v) return '';
-  if(v.kind === 'youtube'){
-    return `https://www.youtube.com/embed/${v.id}?enablejsapi=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3`;
-  }
-  return `https://player.vimeo.com/video/${v.id}?title=0&byline=0&portrait=0`;
-}
-function youtubeCover(v){
-  return v && v.kind === 'youtube' ? `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` : '';
-}
-/* nome do arquivo de thumb customizada de um vídeo — baseado no
-   vídeo em si (plataforma + id), não na posição dele na lista, pra
-   nunca precisar renomear nada quando a ordem muda */
-function videoThumbName(url){
-  const v = parseVideo(url);
-  if(!v) return 'video';
-  return `${v.kind === 'youtube' ? 'yt' : 'vm'}-${v.id}`;
-}
-
-/* ===========================================================
-   EDITOR — WYSIWYG pra página completa. Salva no formato antigo
-   (markdown) pra compatibilizar com posts que já existem, mas o
-   usuário mexe com botões visuais.
-   =========================================================== */
-
-/* --- tamanhos: presets antigos (sm/md/lg/xl) + número em % --- */
-const LEGACY_W = { sm:35, md:60, lg:75, xl:100 };
-const LEGACY_F = { sm:'0.8em', md:'1em', lg:'1.35em', xl:'1.8em' };
-function sizeToPercent(val){
-  if(val == null || val === '') return null;
-  if(LEGACY_W[val] != null) return LEGACY_W[val];
-  const n = parseFloat(val);
-  return isFinite(n) ? Math.min(100, Math.max(5, Math.round(n))) : null;
-}
-/* igual à de cima, mas pro texto: vai até 400%, não 100% — usada só
-   pra mostrar o número certo no slider/campo do tamanho de texto */
-function sizeToTextPercent(val){
-  if(val == null || val === '') return 100;
-  if(LEGACY_F[val]) return Math.round(parseFloat(LEGACY_F[val]) * 100);
-  const n = parseFloat(val);
-  return isFinite(n) ? Math.min(400, Math.max(30, Math.round(n))) : 100;
-}
-function sizeToFont(val){
-  if(val == null || val === '') return null;
-  if(LEGACY_F[val]) return LEGACY_F[val];
-  const n = parseFloat(val);
-  return isFinite(n) ? `${Math.min(400, Math.max(30, Math.round(n)))}%` : null;
-}
-function pickWidth(mods){
-  const m = mods.find(x => /^(w|size)=/.test(x));
-  if(!m) return { raw:'', pct:null };
-  const raw = m.split('=')[1];
-  return { raw, pct: sizeToPercent(raw) };
-}
-function pickCols(mods){
-  const m = mods.find(x => /^cols=\d+$/.test(x));
-  return m ? Number(m.split('=')[1]) : null;
-}
-/* aplica largura/colunas num elemento do editor */
-function applyMediaWidth(el, raw){
-  const pct = sizeToPercent(raw);
-  if(pct == null){
-    delete el.dataset.w;
-    el.style.removeProperty('width');
-    el.style.removeProperty('max-width');
-    el.style.removeProperty('margin-left');
-    el.style.removeProperty('margin-right');
-    return;
-  }
-  el.dataset.w = String(pct);
-  el.style.width = pct + '%';
-  el.style.maxWidth = '100%';
-  el.style.marginLeft = 'auto';
-  el.style.marginRight = 'auto';
-}
-function applyGridCols(el, n){
-  n = Math.max(1, Math.min(6, Number(n) || 1));
-  el.dataset.cols = String(n);
-  el.style.gridTemplateColumns = `repeat(${n},1fr)`;
-}
-
-/* base pra abrir as fotos de um post que já está publicado */
-let editingRawBase = '';
-function rawURL(rel){
-  return editingRawBase ? editingRawBase + rel : rel;
-}
-
-/* --- markdown -> html (só o suficiente pra popular o editor
-   quando carrega um post antigo salvo em .md) --- */
-function mdToHtml(md, slug){
-  if(!md) return '';
-  const out = [];
-  const blocks = md.replace(/\r/g,'').split(/\n{2,}/);
-  const inline = s => s
-    .replace(/</g,'\u0001').replace(/>/g,'\u0002').replace(/&/g,'&amp;')
-    .replace(/\u0001u\u0002([\s\S]*?)\u0001\/u\u0002/g, '<u>$1</u>')
-    .replace(/\u0001s\u0002([\s\S]*?)\u0001\/s\u0002/g, '<s>$1</s>')
-    .replace(/\u0001span data-color="([^"]+)"\u0002([\s\S]*?)\u0001\/span\u0002/g, '<span data-color="$1">$2</span>')
-    .replace(/\u0001span data-size="([^"]+)"\u0002([\s\S]*?)\u0001\/span\u0002/g,
-      (m, sz, txt) => { const f = sizeToFont(sz); return `<span data-size="${sz}"${f ? ` style="font-size:${f}"` : ''}>${txt}</span>`; })
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/~~([^~]+)~~/g, '<s>$1</s>')
-    .replace(/\u0001/g,'&lt;').replace(/\u0002/g,'&gt;');
-  /* devolve {url, rel}: url é o que o editor mostra (aponta pro
-     github quando estamos editando um post já publicado, senão a
-     foto apareceria quebrada), rel é o nome que volta pro markdown */
-  const mediaSrc = (name) => {
-    name = name.trim();
-    if(/^(https?:)?\/\//.test(name)) return { url:name, rel:name };
-    const rel = name.startsWith('media/') ? name.split('/').pop() : name;
-    return { url: rawURL(`media/${slug}/${rel}`), rel };
-  };
-  blocks.forEach(raw => {
-    const b = raw.trim();
-    if(!b) return;
-    if(b.startsWith('::video')){
-      const parts = b.replace('::video','').split('|').map(s => s.trim());
-      const url = parts[0];
-      const mods = parts.slice(1);
-      const vertical = mods.includes('vertical');
-      const w = pickWidth(mods);
-      const st = w.pct ? ` style="width:${w.pct}%;max-width:100%;margin-left:auto;margin-right:auto"` : '';
-      const v = parseVideo(url);
-      if(v) out.push(`<div class="video-embed${vertical?' vertical':''}" data-src="${url}" contenteditable="false"${w.pct?` data-w="${w.pct}"`:''}${st}><iframe src="${embedURL(v)}" allow="fullscreen"></iframe></div>`);
-      return;
-    }
-    if(b.startsWith('::grid')){
-      const parts = b.replace('::grid','').split('|').map(s => s.trim()).filter(Boolean);
-      const mods = parts.filter(x => /^(w|size|cols)=/.test(x));
-      const files = parts.filter(x => !/^(w|size|cols)=/.test(x));
-      const w = pickWidth(mods);
-      const cols = pickCols(mods) || Math.min(files.length, 3);
-      const st = `grid-template-columns:repeat(${cols},1fr);` +
-        (w.pct ? `width:${w.pct}%;max-width:100%;margin-left:auto;margin-right:auto;` : '');
-      out.push(`<div class="md-grid" contenteditable="false" data-cols="${cols}"${w.pct?` data-w="${w.pct}"`:''} style="${st}">` +
-        files.map(f => { const m = mediaSrc(f); return `<img src="${m.url}" data-rel="${m.rel}" alt="">`; }).join('') + `</div>`);
-      return;
-    }
-    const img = b.match(/^!\[([^\]]*)\]\(([^)]+)\)(?:\{(?:size|w)=([^}]+)\})?$/);
-    if(img){
-      const m = mediaSrc(img[2]);
-      const pct = sizeToPercent(img[3] || '');
-      const st = pct ? ` style="width:${pct}%;max-width:100%;margin-left:auto;margin-right:auto"` : '';
-      out.push(`<img src="${m.url}" data-rel="${m.rel}" alt="${img[1]}"${pct?` data-w="${pct}"`:''}${st}>`);
-      return;
-    }
-    if(b === '---'){ out.push('<hr>'); return; }
-    if(b.startsWith('## ')){ out.push(`<h2>${inline(b.slice(3))}</h2>`); return; }
-    if(b.startsWith('### ')){ out.push(`<h3>${inline(b.slice(4))}</h3>`); return; }
-    if(b.startsWith('> ')){ out.push(`<blockquote>${inline(b.replace(/^> ?/gm,''))}</blockquote>`); return; }
-    if(/^-\s/.test(b) && b.split('\n').every(l => /^-\s/.test(l.trim()))){
-      const items = b.split('\n').map(l => `<li>${inline(l.replace(/^\s*-\s/, ''))}</li>`).join('');
-      out.push(`<ul>${items}</ul>`); return;
-    }
-    if(/^\d+\.\s/.test(b) && b.split('\n').every(l => /^\d+\.\s/.test(l.trim()))){
-      const items = b.split('\n').map(l => `<li>${inline(l.replace(/^\s*\d+\.\s/, ''))}</li>`).join('');
-      out.push(`<ol>${items}</ol>`); return;
-    }
-    out.push(`<p>${inline(b).replace(/\n/g,'<br>')}</p>`);
-  });
-  return out.join('');
-}
-
-/* --- html do editor -> markdown pra salvar. mantemos negrito,
-   itálico, título, subtítulo, cor, imagem, vídeo, link. --- */
-/* tira imagens/vídeos/grades de dentro de parágrafos — o
-   contenteditable às vezes engole a mídia dentro de um <p>, e era
-   por isso que a foto sumia quando o post era editado de novo */
-function liftMedia(rootEl){
-  const lastRef = new Map();
-  Array.from(rootEl.querySelectorAll('img, .video-embed, .md-grid')).forEach(el => {
-    if(el.tagName === 'IMG' && el.closest('.md-grid')) return;
-    let top = el;
-    while(top.parentNode && top.parentNode !== rootEl) top = top.parentNode;
-    if(top === el) return;
-    const ref = lastRef.get(top) || top.nextSibling;
-    rootEl.insertBefore(el, ref);
-    lastRef.set(top, el.nextSibling);
-  });
-  /* limpa parágrafos que ficaram vazios */
-  Array.from(rootEl.children).forEach(el => {
-    if(el.tagName === 'P' && !el.textContent.trim() && !el.querySelector('img,iframe,br')) el.remove();
-  });
-}
-
-function htmlToMd(rootEl, slug){
-  liftMedia(rootEl);
-  const lines = [];
-
-  function inlineOf(node){
-    let s = '';
-    node.childNodes.forEach(c => {
-      if(c.nodeType === 3){ s += c.textContent; return; }
-      if(c.nodeType !== 1) return;
-      const tag = c.tagName.toLowerCase();
-      const inner = inlineOf(c);
-      if(tag === 'br'){ s += '  \n'; return; }
-      if(tag === 'strong' || tag === 'b'){ s += `**${inner}**`; return; }
-      if(tag === 'em' || tag === 'i'){ s += `*${inner}*`; return; }
-      if(tag === 'u'){ s += `<u>${inner}</u>`; return; }
-      if(tag === 's' || tag === 'strike' || tag === 'del'){ s += `~~${inner}~~`; return; }
-      if(tag === 'a'){ s += `[${inner}](${c.getAttribute('href') || ''})`; return; }
-      if(tag === 'span' && c.dataset.color){ s += `<span data-color="${c.dataset.color}">${inner}</span>`; return; }
-      if(tag === 'span' && c.dataset.size){ s += `<span data-size="${c.dataset.size}">${inner}</span>`; return; }
-      s += inner;
-    });
-    return s;
-  }
-
-  function relImg(el){
-    /* data-rel guarda o nome original mesmo quando o src aponta
-       pro github (caso de post já publicado sendo editado) */
-    if(el && el.dataset && el.dataset.rel) return el.dataset.rel;
-    const src = el && el.getAttribute ? el.getAttribute('src') : el;
-    if(!src) return src;
-    const m = src.match(/media\/[^/]+\/([^/?#]+)$/);
-    return m ? m[1] : src;
-  }
-  function widthMod(el){
-    const w = el.dataset.w || el.dataset.size;
-    return w ? ` | w=${w}` : '';
-  }
-
-  Array.from(rootEl.children).forEach(el => {
-    const tag = el.tagName.toLowerCase();
-    if(tag === 'h2'){ lines.push(`## ${inlineOf(el)}`); return; }
-    if(tag === 'h3'){ lines.push(`### ${inlineOf(el)}`); return; }
-    if(tag === 'blockquote'){
-      inlineOf(el).split('\n').forEach(l => lines.push(`> ${l}`));
-      return;
-    }
-    if(tag === 'hr'){ lines.push('---'); return; }
-    if(tag === 'ul'){
-      el.querySelectorAll(':scope > li').forEach(li => lines.push(`- ${inlineOf(li)}`));
-      return;
-    }
-    if(tag === 'ol'){
-      let i = 1;
-      el.querySelectorAll(':scope > li').forEach(li => lines.push(`${i++}. ${inlineOf(li)}`));
-      return;
-    }
-    if(tag === 'img'){
-      const src = relImg(el);
-      const alt = el.getAttribute('alt') || '';
-      const w = el.dataset.w || el.dataset.size;
-      lines.push(`![${alt}](${src})${w ? `{w=${w}}` : ''}`);
-      return;
-    }
-    if(tag === 'div' && el.classList.contains('video-embed')){
-      const url = el.dataset.src || '';
-      const mod = el.classList.contains('vertical') ? ' | vertical' : '';
-      if(url) lines.push(`::video ${url}${mod}${widthMod(el)}`);
-      return;
-    }
-    if(tag === 'div' && el.classList.contains('md-grid')){
-      const files = Array.from(el.querySelectorAll('img')).map(img => relImg(img));
-      const cols = el.dataset.cols ? ` | cols=${el.dataset.cols}` : '';
-      if(files.length) lines.push(`::grid ${files.join(' | ')}${widthMod(el)}${cols}`);
-      return;
-    }
-    if(tag === 'p'){
-      const t = inlineOf(el).trim();
-      if(t) lines.push(t);
-      return;
-    }
-    // fallback: qualquer outra coisa vira parágrafo simples
-    const t = inlineOf(el).trim();
-    if(t) lines.push(t);
-  });
-
-  return lines.join('\n\n');
-}
 
 let ratio = '16/9';
 
@@ -897,70 +371,8 @@ async function ghGetFile(path){
   if(res.status === 404) return null;
   if(!res.ok) throw new Error(`falha ao ler ${path} (${res.status})`);
   const data = await res.json();
-  return {
-    sha: data.sha,
-    contentB64: data.content,
-    truncated: !!data.truncated,      // arquivo grande — o campo "content" pode não ter vindo inteiro
-    download_url: data.download_url,
-  };
+  return { sha: data.sha, contentB64: data.content };
 }
-
-/* baixa o conteúdo de um arquivo já existente no repo, mesmo que
-   seja grande demais pro campo "content" da API vir completo —
-   nesse caso busca direto do download_url (raw.githubusercontent). */
-async function ghGetFileB64(path){
-  const meta = await ghGetFile(path);
-  if(!meta) return null;
-  if(meta.contentB64 && !meta.truncated) return { b64: meta.contentB64, sha: meta.sha };
-  const url = meta.download_url || `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/${path}`;
-  const blob = await fetch(url).then(r => { if(!r.ok) throw new Error(`falha ao baixar ${path}`); return r.blob(); });
-  return { b64: await blobToB64(blob), sha: meta.sha };
-}
-
-/* apaga um arquivo do repositório */
-async function ghDeleteFile(path, sha, message){
-  const res = await fetch(
-    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
-    {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${GH.token}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ message, sha, branch: GH.branch })
-    }
-  );
-  if(!res.ok){
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || `falha ao apagar ${path} (${res.status})`);
-  }
-  return res.json();
-}
-async function ghListDir(path){
-  const res = await fetch(
-    `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}?ref=${GH.branch}`,
-    { headers: { 'Authorization': `Bearer ${GH.token}`, 'Accept': 'application/vnd.github+json' } }
-  );
-  if(res.status === 404) return [];
-  if(!res.ok) throw new Error(`falha ao listar ${path} (${res.status})`);
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
-}
-/* grava um arquivo, buscando o sha sozinho se não foi passado —
-   é isso que evitava o erro "sha wasn't supplied" ao salvar por
-   cima de uma foto ou texto que já existia no repositório. */
-async function ghPutSmart(path, contentB64, message, knownSha){
-  let sha = knownSha;
-  if(sha === undefined){
-    try{
-      const existing = await ghGetFile(path);
-      if(existing) sha = existing.sha;
-    }catch(e){ /* se a checagem falhar, tenta gravar mesmo assim */ }
-  }
-  return ghPutFile(path, contentB64, message, sha);
-}
-
 async function ghPutFile(path, contentB64, message, sha){
   const res = await fetch(
     `https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${path}`,
@@ -988,818 +400,8 @@ function insertPostBlock(postsJsText, block){
   return postsJsText.slice(0, idx) + '\n  ' + block.trim() + '\n' + postsJsText.slice(idx);
 }
 
-/* --- encontra e substitui o bloco de um slug específico ---
-   funciona porque todo bloco gerado por esta ferramenta segue
-   sempre o mesmo formato, terminando em "\n  }," */
-function findPostBlockRange(postsJsText, slug){
-  const startMarker = new RegExp(`\\{\\s*\\n?\\s*slug:\\s*"${slug}"`);
-  const m = startMarker.exec(postsJsText);
-  if(!m) return null;
-  const start = postsJsText.lastIndexOf('{', m.index + m[0].length);
-  const end = postsJsText.indexOf('\n  },', m.index);
-  if(start === -1 || end === -1) return null;
-  return { start, end: end + 5 }; // inclui "\n  },"
-}
-function replacePostBlock(postsJsText, slug, newBlock){
-  const range = findPostBlockRange(postsJsText, slug);
-  if(!range) throw new Error(`não encontrei o post "${slug}" no posts.js pra atualizar.`);
-  return postsJsText.slice(0, range.start) + newBlock.trim() + postsJsText.slice(range.end);
-}
-function removePostBlock(postsJsText, slug){
-  const range = findPostBlockRange(postsJsText, slug);
-  if(!range) throw new Error(`não encontrei o post "${slug}" no posts.js pra apagar.`);
-  return postsJsText.slice(0, range.start) + postsJsText.slice(range.end);
-}
-
-/* --- avalia o posts.js buscado do repositório pra virar um array de verdade --- */
-function parseRemotePosts(postsJsText){
-  const fn = new Function(postsJsText + '\n;return typeof POSTS !== "undefined" ? POSTS : [];');
-  return fn();
-}
-
-/* ===========================================================
-   EDITAR POST EXISTENTE — busca a lista do repositório,
-   preenche o formulário ao escolher, e faz publicar/apagar
-   saberem se é uma edição ou um post novo.
-   =========================================================== */
-
-let editingSlug = null;     // null = criando post novo
-let existingMdSha = null;   // sha do posts/slug.md, se já existir
-
-const editSelect = document.getElementById('editSelect');
-const editHint = document.getElementById('editHint');
-const btnDelete = document.getElementById('btnDelete');
-
-document.getElementById('btnLoadPosts').addEventListener('click', async () => {
-  const ok = await ghTest();
-  if(!ok){ editHint.textContent = 'configure e teste a conexão com o github primeiro.'; return; }
-  editHint.textContent = 'carregando...';
-  try{
-    const file = await ghGetFile('posts.js');
-    if(!file) throw new Error('posts.js não encontrado no repositório.');
-    const list = parseRemotePosts(b64ToUtf8(file.contentB64))
-      .slice().sort((a,b) => new Date(b.date) - new Date(a.date));
-    editSelect.innerHTML = '<option value="">— criar post novo —</option>' +
-      list.map(p => `<option value="${p.slug}">${p.title} — ${p.date}</option>`).join('');
-    editHint.textContent = `${list.length} post(s) encontrado(s).`;
-    renderTagChips(list.flatMap(p => p.tags || []));
-  }catch(e){
-    editHint.textContent = `erro: ${e.message}`;
-  }
-});
-
-editSelect.addEventListener('change', async () => {
-  const slug = editSelect.value;
-  resetFormToNew();
-  if(!slug) return;
-
-  editHint.textContent = 'carregando post...';
-  try{
-    const file = await ghGetFile('posts.js');
-    const list = parseRemotePosts(b64ToUtf8(file.contentB64));
-    const p = list.find(x => x.slug === slug);
-    if(!p) throw new Error('post não encontrado na lista carregada.');
-
-    editingSlug = slug;
-    document.getElementById('fTitle').value = p.title;
-    document.getElementById('fDate').value = p.date;
-    document.getElementById('fLocation').value = p.location || '';
-    document.getElementById('fTags').value = (p.tags || []).join(', ');
-    refreshChipStates();
-
-    /* base pras fotos já publicadas aparecerem no editor */
-    editingRawBase = `https://raw.githubusercontent.com/${GH.owner}/${GH.repo}/${GH.branch}/`;
-
-    const pVideos = Array.isArray(p.videos) ? p.videos : (p.video ? [p.video] : []);
-    const photoCount = p.photos != null ? (Array.isArray(p.photos) ? p.photos.length : Number(p.photos) || 0) : 0;
-
-    setType(pVideos.length && photoCount ? 'both' : pVideos.length ? 'video' : 'photo');
-    if(pVideos.length && p.ratio === '9/16'){ ratioV.click(); } else { ratioH.click(); }
-
-    editHint.textContent = 'carregando fotos e vídeos publicados...';
-    await loadExistingMediaIntoOrder(slug, p, pVideos, photoCount);
-
-    const pageChk = document.getElementById('fPage');
-    pageChk.checked = !!p.page;
-    pageChk.dispatchEvent(new Event('change'));
-
-    if(p.page){
-      try{
-        const md = await ghGetFile(`posts/${slug}.md`);
-        if(md){
-          const raw = b64ToUtf8(md.contentB64);
-          editorArea.innerHTML = mdToHtml(raw, slug);
-          existingMdSha = md.sha;
-        }
-      }catch(e){ /* sem texto ainda, tudo bem */ }
-    }
-
-    btnDelete.style.display = '';
-    document.getElementById('btnPublish').textContent = 'salvar alterações';
-    const bits = [];
-    if(photoCount) bits.push(`${photoCount} foto(s)`);
-    if(pVideos.length) bits.push(`${pVideos.length} vídeo(s)`);
-    editHint.textContent = bits.length
-      ? `editando "${p.title}" — já tem ${bits.join(' e ')}. arraste os itens abaixo (inclusive os já publicados) pra reordenar.`
-      : `editando "${p.title}".`;
-  }catch(e){
-    editHint.textContent = `erro ao carregar: ${e.message}`;
-  }
-});
-
-
-function resetFormToNew(){
-  editingSlug = null;
-  existingMdSha = null;
-  editingRawBase = '';
-  selectedMedia = null;
-  if(typeof syncMediaBar === 'function') syncMediaBar();
-  order = [];
-  coverItem = null;
-  if(customCoverUrl) URL.revokeObjectURL(customCoverUrl);
-  customCoverFile = null; customCoverUrl = ''; existingCustomCoverPath = '';
-  if(typeof syncCustomCoverUI === 'function') syncCustomCoverUI();
-  setType('photo');
-  renderPhotoList();
-  document.getElementById('fTitle').value = '';
-  document.getElementById('fDate').value = '';
-  document.getElementById('fLocation').value = '';
-  document.getElementById('fTags').value = '';
-  document.getElementById('fVideoInput').value = '';
-  editorArea.innerHTML = '';
-  editorImages = [];
-  document.getElementById('fPage').checked = false;
-  document.getElementById('mdFieldWrap').style.display = 'none';
-  refreshChipStates();
-  btnDelete.style.display = 'none';
-  document.getElementById('btnPublish').textContent = 'publicar no github';
-  editHint.textContent = '';
-}
-
-/* --- carrega as fotos e vídeos já publicados de um post direto
-   dentro de "order", junto com o que for adicionado agora — dá pra
-   arrastar, reordenar e até remover o que já está no ar. reconstrói
-   a sequência original a partir de p.order (posts novos) ou do
-   esquema antigo (video + videoAt, só fotos, etc). --- */
-async function loadExistingMediaIntoOrder(slug, p, pVideos, photoCount){
-  let photoFiles = [];
-  if(photoCount){
-    try{
-      const items = await ghListDir(`media/${slug}`);
-      photoFiles = items
-        .filter(it => it.type === 'file' && /^\d+\.(jpe?g|png|webp)$/i.test(it.name))
-        .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-        .map(it => ({ name: it.name, url: it.download_url }));
-    }catch(e){
-      editHint.textContent = ` (não consegui listar as fotos publicadas: ${e.message})`;
-    }
-  }
-
-  const items = [];
-  const coverFor = idx => (p.videoCovers && p.videoCovers[idx]) ? { existingCoverPath: p.videoCovers[idx] } : {};
-  if(Array.isArray(p.order) && p.order.length){
-    let pi = 0;
-    p.order.forEach(tok => {
-      if(tok === 'photo'){
-        const f = photoFiles[pi++];
-        if(f) items.push({ kind:'photo', new:false, name:f.name, url:f.url });
-      } else if(typeof tok === 'string' && tok.startsWith('video')){
-        const idx = tok.includes(':') ? Number(tok.split(':')[1]) : 0;
-        const url = pVideos[idx];
-        if(url) items.push({ kind:'video', new:false, url, ...coverFor(idx) });
-      }
-    });
-    while(pi < photoFiles.length){ items.push({ kind:'photo', new:false, name:photoFiles[pi].name, url:photoFiles[pi].url }); pi++; }
-  } else {
-    /* post antigo, sem "order": vídeo(s) na posição de videoAt (só
-       o primeiro vídeo tinha posição definida nesse esquema) */
-    const v0 = pVideos[0];
-    const at = v0 ? Math.max(0, Math.min(photoFiles.length, Number(p.videoAt) || 0)) : -1;
-    photoFiles.forEach((f, i) => {
-      if(v0 && i === at) items.push({ kind:'video', new:false, url:v0, ...coverFor(0) });
-      items.push({ kind:'photo', new:false, name:f.name, url:f.url });
-    });
-    if(v0 && at >= photoFiles.length) items.push({ kind:'video', new:false, url:v0, ...coverFor(0) });
-    pVideos.slice(1).forEach((url, i) => items.push({ kind:'video', new:false, url, ...coverFor(i+1) }));
-  }
-
-  order = items.concat(order); // preserva o que já tinha sido adicionado antes de trocar o post no seletor
-
-  /* tenta reconhecer se algum desses itens já era a capa escolhida
-     (post.cover aponta pro nome de uma foto, ou pra thumb de um
-     vídeo) — só cosmético, se não achar não tem problema, cai no
-     padrão (primeira foto) igual antes. se post.cover existir mas
-     não bater com nada da galeria, é porque é uma capa própria,
-     separada (subida direto, não faz parte das fotos do post). */
-  coverItem = null;
-  existingCustomCoverPath = '';
-  if(p.cover){
-    coverItem = items.find(it => it.kind === 'photo' && (p.cover === it.name || p.cover.endsWith('/' + it.name)))
-      || items.find(it => it.kind === 'video' && it.existingCoverPath && (p.cover === it.existingCoverPath || p.cover.endsWith(it.existingCoverPath)))
-      || null;
-    if(!coverItem) existingCustomCoverPath = p.cover;
-  }
-  if(typeof syncCustomCoverUI === 'function') syncCustomCoverUI();
-
-  renderPhotoList();
-}
-
-btnDelete.addEventListener('click', async () => {
-  if(!editingSlug) return;
-  if(!confirm(`apagar o post "${editingSlug}" do posts.js? as fotos em media/${editingSlug}/ continuam no repositório — isso só remove a entrada da lista.`)) return;
-
-  const ok = await ghTest();
-  if(!ok) return;
-
-  logEl.innerHTML = '';
-  try{
-    log(`lendo posts.js...`);
-    const current = await ghGetFile('posts.js');
-    const updated = removePostBlock(b64ToUtf8(current.contentB64), editingSlug);
-    log(`gravando posts.js...`);
-    await ghPutFile('posts.js', utf8ToB64(updated), `remove post: ${editingSlug}`, current.sha);
-    log(`post removido do posts.js.`, 'ok');
-    log(`lembre: as fotos em media/${editingSlug}/ não foram apagadas — apague manualmente pelo github se quiser.`);
-    resetFormToNew();
-    editSelect.value = '';
-  }catch(e){
-    log(`erro: ${e.message}`, 'err');
-  }
-});
+/* --- log visual --- */
 const logEl = document.getElementById('log');
-/* --- tags já usadas: aparecem como chips clicáveis --- */
-const tagSuggestionsEl = document.getElementById('tagSuggestions');
-const fTagsInput = document.getElementById('fTags');
-
-function getCurrentTags(){
-  return fTagsInput.value.split(',').map(s => s.trim()).filter(Boolean);
-}
-function setCurrentTags(tags){
-  fTagsInput.value = tags.join(', ');
-}
-function renderTagChips(allTags){
-  const unique = [...new Set(allTags)].sort((a,b) => a.localeCompare(b, 'pt'));
-  tagSuggestionsEl.innerHTML = unique.map(t =>
-    `<button type="button" class="tagchip" data-tag="${t}">${t}</button>`).join('');
-  refreshChipStates();
-  tagSuggestionsEl.querySelectorAll('.tagchip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const tag = chip.dataset.tag;
-      const current = getCurrentTags();
-      const idx = current.findIndex(t => t.toLowerCase() === tag.toLowerCase());
-      if(idx === -1) current.push(tag); else current.splice(idx, 1);
-      setCurrentTags(current);
-      refreshChipStates();
-    });
-  });
-}
-function refreshChipStates(){
-  const current = getCurrentTags().map(t => t.toLowerCase());
-  tagSuggestionsEl.querySelectorAll('.tagchip').forEach(chip => {
-    chip.classList.toggle('is-used', current.includes(chip.dataset.tag.toLowerCase()));
-  });
-}
-fTagsInput.addEventListener('input', refreshChipStates);
-
-async function loadTagSuggestions(){
-  try{
-    const file = await ghGetFile('posts.js');
-    if(!file) return;
-    const list = parseRemotePosts(b64ToUtf8(file.contentB64));
-    renderTagChips(list.flatMap(p => p.tags || []));
-  }catch(e){ /* silencioso — tags são só uma ajuda, não bloqueiam nada */ }
-}
-
-/* --- editor: bot\u00f5es da barra e a\u00e7\u00f5es --- */
-const editorArea = document.getElementById('editorArea');
-const editorToolbar = document.getElementById('editorToolbar');
-const editorImageInput = document.getElementById('editorImageInput');
-
-/* fotos inseridas no editor (blob local + nome final que ganhar\u00e3o no repo) */
-let editorImages = []; // { file, url, filename }
-
-function focusEditor(){ editorArea.focus(); }
-
-/* impede que clicar num botão da barra tire o foco do editor —
-   é isso que fazia a seleção "sumir" entre uma inserção e outra */
-editorToolbar.addEventListener('mousedown', e => {
-  if(e.target.closest('button')) e.preventDefault();
-});
-
-/* guarda a última seleção feita dentro do editor. quando o foco sai
-   pra clicar num botão ou no <select> de tamanho, a seleção se perde —
-   isso restaura ela antes de aplicar o comando. */
-let savedRange = null;
-function saveCurrentRange(){
-  const sel = window.getSelection();
-  if(!sel.rangeCount) return;
-  const range = sel.getRangeAt(0);
-  if(editorArea.contains(range.commonAncestorContainer)) savedRange = range.cloneRange();
-}
-function restoreSavedRange(){
-  if(!savedRange) return;
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(savedRange);
-}
-editorArea.addEventListener('keyup', saveCurrentRange);
-editorArea.addEventListener('mouseup', saveCurrentRange);
-document.addEventListener('selectionchange', () => {
-  if(document.activeElement === editorArea) saveCurrentRange();
-});
-
-function currentBlock(){
-  const sel = window.getSelection();
-  if(!sel.rangeCount) return null;
-  let n = sel.getRangeAt(0).startContainer;
-  while(n && n !== editorArea){
-    if(n.nodeType === 1 && ['P','H2','H3','BLOCKQUOTE','LI'].includes(n.tagName)) return n;
-    n = n.parentNode;
-  }
-  return null;
-}
-
-/* troca o tipo do bloco (parágrafo/título/citação) sem usar
-   execCommand('formatBlock') — essa função do navegador é antiga e
-   tem dois problemas: ela força um scroll pro bloco editado (dando
-   aquele "flick" na tela) e às vezes carrega estilos que não
-   deveriam estar ali. Aqui a troca é feita à mão, then o scroll não
-   se mexe, e ao virar título (Seção/Sub) qualquer cor ou tamanho que
-   tinha sido aplicado só num trecho do texto normal é removido —
-   um título não deveria sair com pedaços em tamanhos/cores
-   diferentes por causa de uma formatação que fazia sentido só no
-   corpo do texto. */
-function setBlock(tag){
-  focusEditor();
-  restoreSavedRange();
-  const sel = window.getSelection();
-  if(!sel.rangeCount) return;
-
-  const rawNode = sel.getRangeAt(0).startContainer; // sem reparentar — usado no caso de texto solto
-  let node = rawNode;
-  if(node.nodeType === 3) node = node.parentNode;
-  let block = node.closest ? node.closest('p, h2, h3, blockquote, li') : null;
-  if(!block || !editorArea.contains(block)) block = currentBlock();
-
-  if(!block){
-    /* texto digitado direto dentro do editor, sem nenhum bloco em
-       volta ainda — acontece logo no início, antes do primeiro
-       Enter, porque o navegador só cria um <p> depois disso. Sem
-       esse trecho, clicar em Seção/Sub/Corpo nesse momento não
-       fazia nada, porque não existia bloco nenhum pra converter. */
-    if(!editorArea.contains(rawNode) || rawNode === editorArea) return;
-    let top = rawNode;
-    while(top.parentNode && top.parentNode !== editorArea) top = top.parentNode;
-    if(top === editorArea) return;
-
-    const wrapper = document.createElement('p');
-    editorArea.insertBefore(wrapper, top);
-    let sib = top;
-    while(sib && !['P','H2','H3','BLOCKQUOTE','UL','OL','HR'].includes(sib.tagName)){
-      const next = sib.nextSibling;
-      wrapper.appendChild(sib);
-      sib = next;
-    }
-    block = wrapper;
-  }
-
-  if(block.tagName.toLowerCase() === tag) return;
-
-  const scrollTop  = editorArea.scrollTop;
-  const pageScroll = window.scrollY;
-
-  const el = document.createElement(tag);
-  while(block.firstChild) el.appendChild(block.firstChild);
-  block.replaceWith(el);
-
-  if(tag === 'h2' || tag === 'h3'){
-    el.querySelectorAll('span[data-size], span[data-color]').forEach(span => {
-      const parent = span.parentNode;
-      while(span.firstChild) parent.insertBefore(span.firstChild, span);
-      parent.removeChild(span);
-    });
-  }
-
-  const r = document.createRange();
-  r.selectNodeContents(el);
-  r.collapse(false);
-  sel.removeAllRanges();
-  sel.addRange(r);
-  saveCurrentRange();
-
-  editorArea.scrollTop = scrollTop;
-  window.scrollTo(window.scrollX, pageScroll);
-
-  editorArea.dispatchEvent(new Event('input'));
-  updateToolbarState();
-}
-
-/* insere um n\u00f3 no ponto do cursor, e move o cursor pra depois dele */
-function insertNode(node){
-  focusEditor();
-  const sel = window.getSelection();
-  if(!sel.rangeCount){
-    editorArea.appendChild(node);
-  } else {
-    const range = sel.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(node);
-    range.setStartAfter(node);
-    range.collapse(true);
-  }
-  editorArea.dispatchEvent(new Event('input'));
-}
-
-function insertImage(file){
-  const filename = `${Date.now().toString(36)}-${file.name.toLowerCase().replace(/[^a-z0-9.]+/g,'-')}`;
-  const url = URL.createObjectURL(file);
-  editorImages.push({ file, url, filename });
-  const img = document.createElement('img');
-  img.src = url;
-  img.alt = '';
-  img.dataset.pending = filename;
-  img.dataset.rel = filename;
-  insertNode(img);
-}
-
-function insertVideo(url){
-  const v = parseVideo(url);
-  if(!v){ alert('link n\u00e3o reconhecido. cole um link do YouTube ou Vimeo.'); return; }
-  const div = document.createElement('div');
-  div.className = 'video-embed';
-  div.dataset.src = url;
-  div.contentEditable = 'false';
-  div.innerHTML = `<iframe src="${embedURL(v)}" allow="fullscreen"></iframe>`;
-  insertNode(div);
-  // adiciona uma linha em branco depois pra n\u00e3o ficar preso
-  insertNode(document.createElement('br'));
-}
-
-function insertGrid(files){
-  if(!files.length) return;
-  const grid = document.createElement('div');
-  grid.className = 'md-grid';
-  grid.contentEditable = 'false';
-  applyGridCols(grid, Math.min(files.length, 3));
-  files.forEach(file => {
-    const filename = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}-${file.name.toLowerCase().replace(/[^a-z0-9.]+/g,'-')}`;
-    const url = URL.createObjectURL(file);
-    editorImages.push({ file, url, filename });
-    const img = document.createElement('img');
-    img.src = url;
-    img.alt = '';
-    img.dataset.pending = filename;
-    img.dataset.rel = filename;
-    grid.appendChild(img);
-  });
-  insertNode(grid);
-  insertNode(document.createElement('br'));
-}
-
-editorToolbar.addEventListener('click', e => {
-  const btn = e.target.closest('button');
-  if(!btn) return;
-  const cmd = btn.dataset.cmd;
-  const val = btn.dataset.val;
-
-  if(cmd === 'block'){ setBlock(val); return; }
-  if(cmd === 'bold'){ focusEditor(); document.execCommand('bold'); return; }
-  if(cmd === 'italic'){ focusEditor(); document.execCommand('italic'); return; }
-  if(cmd === 'underline'){ focusEditor(); document.execCommand('underline'); return; }
-  if(cmd === 'strike'){ focusEditor(); document.execCommand('strikeThrough'); return; }
-  if(cmd === 'ul'){ focusEditor(); document.execCommand('insertUnorderedList'); return; }
-  if(cmd === 'ol'){ focusEditor(); document.execCommand('insertOrderedList'); return; }
-  if(cmd === 'undo'){ focusEditor(); document.execCommand('undo'); return; }
-  if(cmd === 'redo'){ focusEditor(); document.execCommand('redo'); return; }
-
-  if(cmd === 'link'){
-    const url = prompt('link (cole a URL completa, come\u00e7ando com https://)');
-    if(!url) return;
-    focusEditor();
-    document.execCommand('createLink', false, url);
-    return;
-  }
-  if(cmd === 'hr'){
-    focusEditor();
-    document.execCommand('insertHorizontalRule');
-    return;
-  }
-  if(cmd === 'color'){
-    focusEditor();
-    if(val === 'clear'){
-      document.execCommand('removeFormat');
-      // remove tamb\u00e9m spans data-color
-      const sel = window.getSelection();
-      if(sel.rangeCount){
-        const range = sel.getRangeAt(0);
-        editorArea.querySelectorAll('span[data-color]').forEach(span => {
-          if(range.intersectsNode(span)){
-            const parent = span.parentNode;
-            while(span.firstChild) parent.insertBefore(span.firstChild, span);
-            parent.removeChild(span);
-          }
-        });
-      }
-      return;
-    }
-    if(val === 'default'){
-      document.execCommand('removeFormat');
-      return;
-    }
-    // envolve a sele\u00e7\u00e3o em span data-color
-    const sel = window.getSelection();
-    if(!sel.rangeCount || sel.isCollapsed) return;
-    const span = document.createElement('span');
-    span.dataset.color = val;
-    span.textContent = sel.toString();
-    const range = sel.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(span);
-    return;
-  }
-  if(cmd === 'image'){
-    pendingGridMode = false;
-    editorImageInput.click();
-    return;
-  }
-  if(cmd === 'grid'){
-    pendingGridMode = true;
-    editorImageInput.click();
-    return;
-  }
-  if(cmd === 'video'){
-    const url = prompt('cole o link do YouTube ou Vimeo:');
-    if(url) insertVideo(url);
-    return;
-  }
-});
-
-/* ===========================================================
-   SELEÇÃO DE MÍDIA + BARRA DE TAMANHO
-   clica numa foto, vídeo ou grade e a barra acima do texto passa
-   a controlar a largura dela (presets, slider e número exato).
-   numa grade, o clique seleciona a grade inteira — ela cresce e
-   diminui como um grupo, mantendo as proporções.
-   =========================================================== */
-let selectedMedia = null;
-
-const mediaBar   = document.getElementById('mediaBar');
-const mbLabel    = document.getElementById('mbLabel');
-const mbRange    = document.getElementById('mbRange');
-const mbNum      = document.getElementById('mbNum');
-const mbCols     = document.getElementById('mbCols');
-const mbColsWrap = document.getElementById('mbColsWrap');
-
-function selectMedia(el){
-  editorArea.querySelectorAll('.is-selected').forEach(x => x.classList.remove('is-selected'));
-  selectedMedia = el || null;
-  if(el) el.classList.add('is-selected');
-  syncMediaBar();
-}
-
-function syncMediaBar(){
-  if(!selectedMedia){ mediaBar.hidden = true; return; }
-  mediaBar.hidden = false;
-  const isGrid  = selectedMedia.classList.contains('md-grid');
-  const isVideo = selectedMedia.classList.contains('video-embed');
-  mbLabel.textContent = isGrid ? `grade (${selectedMedia.querySelectorAll('img').length} fotos)`
-                      : isVideo ? 'vídeo' : 'foto';
-  const w = sizeToPercent(selectedMedia.dataset.w || selectedMedia.dataset.size) ?? 100;
-  mbRange.value = w;
-  mbNum.value = w;
-  mbColsWrap.hidden = !isGrid;
-  if(isGrid) mbCols.value = selectedMedia.dataset.cols || Math.min(selectedMedia.querySelectorAll('img').length, 3);
-}
-
-function setMediaWidth(v){
-  if(!selectedMedia) return;
-  const pct = Math.min(100, Math.max(10, Math.round(Number(v) || 100)));
-  applyMediaWidth(selectedMedia, pct);
-  mbRange.value = pct;
-  mbNum.value = pct;
-  editorArea.dispatchEvent(new Event('input'));
-}
-
-editorArea.addEventListener('click', e => {
-  const grid = e.target.closest('.md-grid');
-  const media = grid || e.target.closest('img, .video-embed');
-  selectMedia(media && editorArea.contains(media) ? media : null);
-});
-
-mediaBar.addEventListener('mousedown', e => {
-  if(e.target.closest('button')) e.preventDefault();
-});
-mediaBar.addEventListener('click', e => {
-  const btn = e.target.closest('button');
-  if(!btn || !selectedMedia) return;
-  if(btn.dataset.mw){ setMediaWidth(btn.dataset.mw); return; }
-  if(btn.id === 'mbReset'){
-    applyMediaWidth(selectedMedia, null);
-    delete selectedMedia.dataset.size;
-    syncMediaBar();
-    editorArea.dispatchEvent(new Event('input'));
-    return;
-  }
-  if(btn.id === 'mbDel'){
-    const el = selectedMedia;
-    selectMedia(null);
-    el.remove();
-    editorArea.dispatchEvent(new Event('input'));
-    return;
-  }
-});
-mbRange.addEventListener('input', () => setMediaWidth(mbRange.value));
-mbNum.addEventListener('input', () => setMediaWidth(mbNum.value));
-mbCols.addEventListener('input', () => {
-  if(!selectedMedia || !selectedMedia.classList.contains('md-grid')) return;
-  applyGridCols(selectedMedia, mbCols.value);
-  editorArea.dispatchEvent(new Event('input'));
-});
-
-/* setas ← → aumentam/diminuem a mídia selecionada de 5 em 5 */
-document.addEventListener('keydown', e => {
-  if(!selectedMedia || document.activeElement === mbNum || document.activeElement === mbCols) return;
-  if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
-    e.preventDefault();
-    setMediaWidth(Number(mbRange.value) + (e.key === 'ArrowRight' ? 5 : -5));
-  }
-  if(e.key === 'Escape') selectMedia(null);
-});
-
-/* ===========================================================
-   TAMANHO DO TEXTO — presets, slider e número exato em %.
-
-   antes, cada clique/ajuste ia atrás da seleção de texto de novo
-   (window.getSelection()) — e um <input> rouba o foco só de entrar
-   nele, o que apagava a seleção e quebrava tudo no meio do ajuste.
-   agora o primeiro clique cria (ou reaproveita) UM span de tamanho
-   e guarda uma referência direta a ele (igual a barra de mídia
-   guarda a foto/vídeo selecionado); todo ajuste depois disso —
-   slider, número ou os botões — mexe direto nesse span, sem
-   precisar da seleção nunca mais. Por isso fica gradual e não
-   perde o que estava selecionado.
-   =========================================================== */
-let activeSizeSpan = null;
-
-function findExactSizeSpan(){
-  const sel = window.getSelection();
-  if(!sel.rangeCount || sel.isCollapsed) return null;
-  if(!editorArea.contains(sel.anchorNode)) return null;
-  let node = sel.getRangeAt(0).commonAncestorContainer;
-  if(node.nodeType === 3) node = node.parentNode;
-  const span = node.closest && node.closest('span[data-size]');
-  if(span && editorArea.contains(span) && span.textContent === sel.toString()) return span;
-  return null;
-}
-
-function unwrapSpan(span){
-  const parent = span.parentNode;
-  while(span.firstChild) parent.insertBefore(span.firstChild, span);
-  parent.removeChild(span);
-}
-
-function setActiveSizeSpan(span){
-  if(activeSizeSpan) activeSizeSpan.classList.remove('is-size-active');
-  activeSizeSpan = span || null;
-  if(activeSizeSpan) activeSizeSpan.classList.add('is-size-active');
-  syncTextSizeBar();
-}
-
-function syncTextSizeBar(){
-  const w = activeSizeSpan ? sizeToTextPercent(activeSizeSpan.dataset.size) : 100;
-  textSizeRange.value = w;
-  textSizeNum.value = w;
-}
-
-/* aplica um tamanho — clique num preset (val = "80"/"100"/"135"/"180")
-   ou um número exato digitado/arrastado. os quatro presets e o
-   número funcionam todos do mesmo jeito, incluindo "Normal": ele
-   também marca o texto selecionado, exatamente como os outros —
-   não é um caso especial que só limpa formatação. */
-function applyTextSize(val){
-  /* já existe um span ativo (segunda tentativa em diante): só edita ele */
-  if(activeSizeSpan){
-    activeSizeSpan.dataset.size = val;
-    const f = sizeToFont(val);
-    if(f) activeSizeSpan.style.fontSize = f; else activeSizeSpan.style.removeProperty('font-size');
-    syncTextSizeBar();
-    editorArea.dispatchEvent(new Event('input'));
-    return;
-  }
-
-  /* primeira vez: precisa de uma seleção de texto pra envolver */
-  focusEditor();
-  restoreSavedRange();
-  const sel = window.getSelection();
-  if(!sel.rangeCount || sel.isCollapsed) return;
-
-  /* se a seleção já é exatamente um span de tamanho, reaproveita
-     em vez de aninhar um span dentro do outro */
-  const existing = findExactSizeSpan();
-  if(existing){ setActiveSizeSpan(existing); applyTextSize(val); return; }
-
-  /* range.extractContents()/insertNode() têm um jeito chato de
-     invalidar a Selection no meio do caminho — execCommand('insertHTML')
-     deixa o próprio navegador cuidar disso com segurança */
-  const range = sel.getRangeAt(0);
-  const holder = document.createElement('div');
-  holder.appendChild(range.cloneContents());
-  const f = sizeToFont(val);
-  const html = `<span data-size="${val}" data-tmp-new="1"${f ? ` style="font-size:${f}"` : ''}>${holder.innerHTML}</span>`;
-  document.execCommand('insertHTML', false, html);
-
-  const created = editorArea.querySelector('span[data-tmp-new]');
-  if(created){ created.removeAttribute('data-tmp-new'); setActiveSizeSpan(created); }
-  editorArea.dispatchEvent(new Event('input'));
-}
-
-const textSizeGroup = document.getElementById('textSizeGroup');
-const textSizeNum   = document.getElementById('textSizeNum');
-const textSizeRange = document.getElementById('textSizeRange');
-
-textSizeGroup.addEventListener('mousedown', e => {
-  if(e.target.closest('button')) e.preventDefault();
-});
-textSizeGroup.addEventListener('click', e => {
-  const btn = e.target.closest('button[data-tsize]');
-  if(!btn) return;
-  applyTextSize(btn.dataset.tsize);
-});
-textSizeRange.addEventListener('input', () => {
-  if(activeSizeSpan) applyTextSize(String(textSizeRange.value));
-});
-textSizeNum.addEventListener('input', () => {
-  if(activeSizeSpan && textSizeNum.value.trim()) applyTextSize(textSizeNum.value.trim());
-});
-textSizeNum.addEventListener('keydown', e => { if(e.key === 'Enter') e.preventDefault(); });
-
-/* clicar dentro de um texto já redimensionado retoma o ajuste dele;
-   clicar em qualquer outro lugar solta a referência ativa */
-editorArea.addEventListener('mouseup', () => {
-  const span = findExactSizeSpan();
-  if(span) setActiveSizeSpan(span);
-});
-editorArea.addEventListener('click', e => {
-  if(e.target.closest('img, .video-embed, .md-grid')) return; // tratado pela barra de mídia
-  const span = e.target.closest && e.target.closest('span[data-size]');
-  if(span && editorArea.contains(span) && window.getSelection().isCollapsed){
-    setActiveSizeSpan(span);
-  } else if(!findExactSizeSpan()){
-    setActiveSizeSpan(null);
-  }
-});
-
-let pendingGridMode = false;
-editorImageInput.addEventListener('change', e => {
-  const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
-  if(pendingGridMode) insertGrid(files);
-  else files.forEach(insertImage);
-  editorImageInput.value = '';
-  pendingGridMode = false;
-});
-
-/* arrastar imagens direto pra dentro do editor */
-editorArea.addEventListener('dragover', e => { e.preventDefault(); });
-editorArea.addEventListener('drop', e => {
-  const files = [...(e.dataTransfer?.files || [])].filter(f => f.type.startsWith('image/'));
-  if(!files.length) return;
-  e.preventDefault();
-  files.forEach(insertImage);
-});
-
-/* colar texto sem formata\u00e7\u00e3o alien\u00edgena (do Word etc) */
-editorArea.addEventListener('paste', e => {
-  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
-  if(text !== undefined){
-    e.preventDefault();
-    document.execCommand('insertText', false, text);
-  }
-});
-
-/* atualiza estado ativo dos bot\u00f5es enquanto o cursor se move */
-function updateToolbarState(){
-  const qcs = (cmd) => { try{ return document.queryCommandState(cmd); }catch(e){ return false; } };
-  const map = {
-    bold: qcs('bold'),
-    italic: qcs('italic'),
-    underline: qcs('underline'),
-    strike: qcs('strikeThrough'),
-  };
-  editorToolbar.querySelectorAll('button[data-cmd]').forEach(btn => {
-    const c = btn.dataset.cmd;
-    if(c in map) btn.classList.toggle('is-active', !!map[c]);
-  });
-  const blk = currentBlock();
-  editorToolbar.querySelectorAll('button[data-cmd="block"]').forEach(btn => {
-    btn.classList.toggle('is-active', !!blk && blk.tagName.toLowerCase() === btn.dataset.val);
-  });
-}
-editorArea.addEventListener('keyup', updateToolbarState);
-editorArea.addEventListener('mouseup', updateToolbarState);
-document.addEventListener('selectionchange', () => {
-  if(document.activeElement === editorArea) updateToolbarState();
-});
-
 function log(msg, cls){
   logEl.querySelectorAll('.now').forEach(e => e.classList.remove('now'));
   const line = document.createElement('div');
@@ -1819,127 +421,50 @@ document.getElementById('btnPublish').addEventListener('click', async () => {
 
   const built = buildPost();
   if(!built) return;
-  const { slug, block, page, photoSeq, videoSeq } = built;
+  const { slug, block, page, mdText } = built;
 
   btn.disabled = true;
-  let hadError = false;
-
-  /* posts.js primeiro — se isso falhar, não faz sentido continuar */
   try{
     log(`lendo posts.js do repositório...`);
     const current = await ghGetFile('posts.js');
     if(!current) throw new Error('posts.js não encontrado no repositório — confira se ele foi enviado.');
     const currentText = b64ToUtf8(current.contentB64);
 
-    if(!editingSlug && currentText.includes(`slug: "${slug}"`)){
+    if(currentText.includes(`slug: "${slug}"`)){
       throw new Error(`já existe um post com o slug "${slug}". troque o título ou apague o post antigo primeiro.`);
     }
 
-    const updatedText = editingSlug
-      ? replacePostBlock(currentText, slug, block)
-      : insertPostBlock(currentText, block);
-    log(editingSlug ? `atualizando posts.js...` : `gravando posts.js...`);
-    await ghPutSmart('posts.js', utf8ToB64(updatedText), `${editingSlug ? 'atualiza' : 'novo'} post: ${slug}`, current.sha);
+    const updatedText = insertPostBlock(currentText, block);
+    log(`gravando posts.js...`);
+    await ghPutFile('posts.js', utf8ToB64(updatedText), `novo post: ${slug}`, current.sha);
     log(`posts.js atualizado.`, 'ok');
-  }catch(e){
-    log(`erro ao gravar posts.js: ${e.message}`, 'err');
-    log(`nada mais foi publicado — corrija e tente de novo.`, 'err');
-    btn.disabled = false;
-    return;
-  }
 
-  /* fotos — novas E já publicadas, pra baterem com a ordem escolhida.
-     cada etapa cai no catch dela mesma, então uma falha aqui (ex.:
-     erro de sha numa foto) não impede o texto da página completa
-     de ser enviado depois */
-  if(photoSeq.length){
-    try{
-      await syncPhotosToOrder(slug, photoSeq);
-      log(`fotos sincronizadas com a ordem escolhida.`, 'ok');
-    }catch(e){
-      hadError = true;
-      log(`erro ao sincronizar fotos: ${e.message}`, 'err');
-      log(`o post já está publicado com o que deu certo até aqui — pode tentar salvar de novo pra reenviar só o que faltou.`, 'err');
-    }
-  }
-
-  /* thumbs escolhidas pra vídeo — só sobe as que forem arquivo novo */
-  const newCovers = videoSeq.filter(v => v.coverFile);
-  if(newCovers.length){
-    try{
-      for(let i = 0; i < newCovers.length; i++){
-        const v = newCovers[i];
-        log(`enviando thumb do vídeo ${i+1} / ${newCovers.length}...`);
-        const small = await resizeImage(v.coverFile, 600, 0.85);
-        await ghPutSmart(`media/${slug}/video-thumbs/${videoThumbName(v.url)}.jpg`, await blobToB64(small), `thumb de vídeo — ${slug}`);
+    if(type === 'photo'){
+      for(let i = 0; i < files.length; i++){
+        const name = `${String(i+1).padStart(2,'0')}.jpg`;
+        log(`preparando foto ${i+1} / ${files.length}...`);
+        const big = await resizeImage(files[i].file, 2000, 0.88);
+        const small = await resizeImage(files[i].file, 600, 0.85);
+        log(`enviando foto ${i+1} / ${files.length}...`);
+        await ghPutFile(`media/${slug}/${name}`, await blobToB64(big), `foto ${name} — ${slug}`);
+        await ghPutFile(`media/${slug}/thumbs/${name}`, await blobToB64(small), `miniatura ${name} — ${slug}`);
       }
-      log(`${newCovers.length} thumb(s) de vídeo enviada(s).`, 'ok');
-    }catch(e){
-      hadError = true;
-      log(`erro ao enviar thumb de vídeo: ${e.message}`, 'err');
-    }
-  }
-
-  /* capa personalizada (imagem separada, fora da galeria) */
-  if(customCoverFile){
-    try{
-      log(`enviando imagem da capa...`);
-      const small = await resizeImage(customCoverFile, 800, 0.85);
-      await ghPutSmart(`media/${slug}/cover.jpg`, await blobToB64(small), `capa — ${slug}`);
-      log(`capa enviada.`, 'ok');
-    }catch(e){
-      hadError = true;
-      log(`erro ao enviar a capa: ${e.message}`, 'err');
-    }
-  }
-
-  if(page){
-    /* 1) sobe as fotos inseridas dentro do editor pra pasta do post */
-    try{
-      const pending = editorArea.querySelectorAll('img[data-pending]');
-      let uploadedCount = 0;
-      for(const img of pending){
-        const filename = img.dataset.pending;
-        const rec = editorImages.find(r => r.filename === filename);
-        if(!rec) continue;
-        uploadedCount++;
-        log(`enviando foto do texto (${uploadedCount})...`);
-        const big = await resizeImage(rec.file, 2000, 0.88);
-        await ghPutSmart(`media/${slug}/${filename}`, await blobToB64(big), `foto embutida — ${slug}`);
-        /* aponta o src pro caminho real e limpa a marca pendente */
-        img.setAttribute('src', `media/${slug}/${filename}`);
-        img.dataset.rel = filename;
-        img.removeAttribute('data-pending');
-      }
-      if(uploadedCount) log(`${uploadedCount} foto(s) embutida(s) enviada(s).`, 'ok');
-    }catch(e){
-      hadError = true;
-      log(`erro ao enviar foto do texto: ${e.message}`, 'err');
+      log(`${files.length} foto(s) enviada(s).`, 'ok');
     }
 
-    /* 2) converte o HTML pra markdown e sobe — tenta mesmo se as
-       fotos embutidas acima tiverem dado erro, porque o texto em
-       si não depende delas pra ser salvo */
-    try{
-      const mdText = htmlToMd(editorArea, slug);
-      if(mdText.trim()){
-        log(`enviando texto da página completa...`);
-        await ghPutSmart(`posts/${slug}.md`, utf8ToB64(mdText), `texto: ${slug}`, existingMdSha || undefined);
-        log(`posts/${slug}.md enviado.`, 'ok');
-      }
-    }catch(e){
-      hadError = true;
-      log(`erro ao enviar o texto da página: ${e.message}`, 'err');
+    if(page && mdText.trim()){
+      log(`enviando texto da página completa...`);
+      await ghPutFile(`posts/${slug}.md`, utf8ToB64(mdText), `texto: ${slug}`);
+      log(`posts/${slug}.md enviado.`, 'ok');
     }
-  }
 
-  if(hadError){
-    log(`publicado com pendências — veja os erros acima.`, 'err');
-  } else {
     log(`publicado! pode levar 1–2 minutos pro github pages atualizar.`, 'ok');
     log(`https://${GH.owner}.github.io/${GH.repo}/#${slug}`, 'ok');
+  }catch(e){
+    log(`erro: ${e.message}`, 'err');
+  }finally{
+    btn.disabled = false;
   }
-  btn.disabled = false;
 });
 const ratioH = document.getElementById('ratioH'), ratioV = document.getElementById('ratioV');
 ratioH.addEventListener('click', () => { ratio = '16/9'; ratioH.classList.add('active'); ratioV.classList.remove('active'); });
@@ -1957,96 +482,12 @@ function slugify(s){
     .replace(/^-+|-+$/g,'');
 }
 
-/* --- fotos + vídeos: drag & drop, reordenar tudo junto ---
-   "order" guarda a sequência inteira do post: cada item é uma foto
-   ou vídeo, publicado ou novo —
-     {kind:'photo', new:true,  file, url}         foto nova
-     {kind:'photo', new:false, name:'03.jpg', url} foto já publicada
-     {kind:'video', new:true,  url}                vídeo novo
-     {kind:'video', new:false, url}                vídeo já publicado
-   dá pra arrastar e remover QUALQUER item, publicado ou não — ao
-   salvar, o admin recalcula os nomes dos arquivos (01.jpg, 02.jpg...)
-   pra bater com essa ordem, mesmo que isso signifique renomear foto
-   já publicada. */
-let order = [];
-let coverItem = null; // item de "order" escolhido como capa do post no grid, ou null pro padrão (primeira foto)
-let customCoverFile = null;         // arquivo novo escolhido pra capa (separado da galeria)
-let customCoverUrl = '';            // preview local desse arquivo
-let existingCustomCoverPath = '';   // capa personalizada já publicada (ao editar um post)
+/* --- fotos: drag & drop, reordenar, preview --- */
+let files = []; // {file, url}
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const photoList = document.getElementById('photoList');
 const photoHint = document.getElementById('photoHint');
-const fVideoInput = document.getElementById('fVideoInput');
-const btnAddVideo = document.getElementById('btnAddVideo');
-const videoThumbInput = document.getElementById('videoThumbInput');
-
-videoThumbInput.addEventListener('change', e => {
-  const file = e.target.files[0];
-  const idx = Number(videoThumbInput.dataset.targetIdx);
-  videoThumbInput.value = '';
-  if(!file || !order[idx] || order[idx].kind !== 'video') return;
-  const item = order[idx];
-  if(item.coverUrl) URL.revokeObjectURL(item.coverUrl);
-  item.coverFile = file;
-  item.coverUrl = URL.createObjectURL(file);
-  delete item.existingCoverPath; // a nova imagem substitui a antiga
-  renderPhotoList();
-});
-
-/* --- capa personalizada: uma imagem própria pra thumb do post,
-   separada da galeria — pra quando você quer subir uma foto só pra
-   isso, sem ela aparecer entre as fotos do post --- */
-const customCoverInput   = document.getElementById('customCoverInput');
-const btnCustomCover     = document.getElementById('btnCustomCover');
-const btnCustomCoverClear = document.getElementById('btnCustomCoverClear');
-const customCoverPreview = document.getElementById('customCoverPreview');
-
-function syncCustomCoverUI(){
-  const url = customCoverUrl || (existingCustomCoverPath ? rawURL(existingCustomCoverPath) : '');
-  if(url){
-    customCoverPreview.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover">`;
-    btnCustomCoverClear.style.display = '';
-    btnCustomCover.textContent = 'trocar imagem';
-  } else {
-    customCoverPreview.innerHTML = 'sem capa';
-    btnCustomCoverClear.style.display = 'none';
-    btnCustomCover.textContent = 'enviar imagem pra capa';
-  }
-}
-btnCustomCover.addEventListener('click', () => customCoverInput.click());
-customCoverInput.addEventListener('change', e => {
-  const file = e.target.files[0];
-  customCoverInput.value = '';
-  if(!file) return;
-  if(customCoverUrl) URL.revokeObjectURL(customCoverUrl);
-  customCoverFile = file;
-  customCoverUrl = URL.createObjectURL(file);
-  existingCustomCoverPath = '';
-  syncCustomCoverUI();
-});
-btnCustomCoverClear.addEventListener('click', () => {
-  if(customCoverUrl) URL.revokeObjectURL(customCoverUrl);
-  customCoverFile = null; customCoverUrl = ''; existingCustomCoverPath = '';
-  syncCustomCoverUI();
-});
-
-/* só as fotos da sequência, na ordem final — usado pra montar os
-   arquivos 01.jpg, 02.jpg... */
-function photoEntries(){ return order.filter(x => x.kind === 'photo'); }
-/* só os vídeos, na ordem final */
-function videoEntries(){ return order.filter(x => x.kind === 'video'); }
-
-function addVideoFromInput(){
-  const url = fVideoInput.value.trim();
-  if(!url) return;
-  if(!parseVideo(url)){ alert('link não reconhecido. cole um link do YouTube ou Vimeo.'); return; }
-  order.push({ kind:'video', new:true, url });
-  fVideoInput.value = '';
-  renderPhotoList();
-}
-btnAddVideo.addEventListener('click', addVideoFromInput);
-fVideoInput.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); addVideoFromInput(); } });
 
 dropzone.addEventListener('click', () => fileInput.click());
 ['dragenter','dragover'].forEach(ev => dropzone.addEventListener(ev, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
@@ -2056,94 +497,36 @@ fileInput.addEventListener('change', e => addFiles(e.target.files));
 
 function addFiles(list){
   [...list].filter(f => f.type.startsWith('image/')).forEach(f => {
-    order.push({ kind:'photo', new:true, file:f, url:URL.createObjectURL(f) });
+    files.push({ file:f, url:URL.createObjectURL(f) });
   });
   renderPhotoList();
 }
 
 function renderPhotoList(){
   photoList.innerHTML = '';
-  let photoNum = 0, videoNum = 0;
-  order.forEach((item, i) => {
+  files.forEach((item, i) => {
     const el = document.createElement('div');
+    el.className = 'pitem';
     el.draggable = true;
     el.dataset.i = i;
-    const isCover = coverItem === item;
-    const starBtn = `<button type="button" class="cover-pick${isCover ? ' is-cover' : ''}" data-i="${i}" title="${isCover ? 'essa é a capa do post no grid' : 'usar como capa do post no grid'}">${isCover ? '★' : '☆'}</button>`;
-    if(item.kind === 'video'){
-      videoNum++;
-      const customCover = item.coverUrl || (item.existingCoverPath ? rawURL(item.existingCoverPath) : '');
-      const cover = customCover || youtubeCover(parseVideo(item.url));
-      const hasCustom = !!(item.coverFile || item.existingCoverPath);
-      el.className = 'pitem pitem-video' + (item.new ? '' : ' pitem-existing');
-      el.title = item.new ? 'vídeo novo' : 'vídeo já publicado — arraste pra reordenar ou × pra remover';
-      el.innerHTML = `<span class="num">▶ ${videoNum}</span>
-        <button type="button" class="rm" data-i="${i}">×</button>` +
-        (cover ? `<img src="${cover}">` : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--ink-dim);font-size:11px">vídeo</div>`) +
-        `<button type="button" class="thumb-pick" data-i="${i}" title="${hasCustom ? 'trocar a thumb' : 'escolher a thumb desse vídeo'}">🖼</button>` +
-        (hasCustom ? `<button type="button" class="thumb-reset" data-i="${i}" title="usar a thumb automática de novo">↺</button>` : '') +
-        starBtn;
-    } else {
-      photoNum++;
-      el.className = 'pitem' + (item.new ? '' : ' pitem-existing');
-      el.title = item.new ? 'foto nova' : 'foto já publicada — arraste pra reordenar ou × pra remover';
-      el.innerHTML = `<span class="num">${String(photoNum).padStart(2,'0')}</span>
-        <button type="button" class="rm" data-i="${i}">×</button>
-        <img src="${item.url}">` +
-        starBtn;
-    }
+    el.innerHTML = `<span class="num">${String(i+1).padStart(2,'0')}</span>
+      <button type="button" class="rm" data-i="${i}">×</button>
+      <img src="${item.url}">`;
     photoList.appendChild(el);
   });
-
-  const bits = [];
-  if(photoNum) bits.push(`${photoNum} foto(s)`);
-  if(videoNum) bits.push(`${videoNum} vídeo(s)`);
-  photoHint.textContent = bits.length
-    ? `${bits.join(', ')} no total. arraste pra reordenar — vale pro que já está publicado também. clique na estrela ☆ de qualquer item pra escolher a capa do post no grid (sem escolher, usa a primeira foto). no ícone 🖼 de cada vídeo dá pra escolher a thumb dele.`
+  photoHint.textContent = files.length
+    ? `${files.length} foto(s). a primeira (01) vira a capa no grid.`
     : '';
 
   photoList.querySelectorAll('.rm').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
-      const removed = order[+btn.dataset.i];
-      if(removed === coverItem) coverItem = null;
-      order.splice(+btn.dataset.i, 1);
+      files.splice(+btn.dataset.i, 1);
       renderPhotoList();
     });
   });
 
-  photoList.querySelectorAll('.cover-pick').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const item = order[+btn.dataset.i];
-      if(!item) return;
-      coverItem = (coverItem === item) ? null : item;
-      renderPhotoList();
-    });
-  });
-
-  photoList.querySelectorAll('.thumb-pick').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const idx = +btn.dataset.i;
-      videoThumbInput.dataset.targetIdx = idx;
-      videoThumbInput.click();
-    });
-  });
-  photoList.querySelectorAll('.thumb-reset').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const item = order[+btn.dataset.i];
-      if(!item) return;
-      delete item.coverFile;
-      delete item.coverUrl;
-      delete item.existingCoverPath;
-      renderPhotoList();
-    });
-  });
-
-  /* reordenar arrastando — fotos e vídeos, publicados ou novos,
-     todos na mesma lista, em qualquer combinação */
+  /* reordenar arrastando */
   let dragIdx = null;
   photoList.querySelectorAll('.pitem').forEach(el => {
     el.addEventListener('dragstart', () => { dragIdx = +el.dataset.i; el.classList.add('dragging'); });
@@ -2153,8 +536,8 @@ function renderPhotoList(){
       e.preventDefault();
       const dropIdx = +el.dataset.i;
       if(dragIdx === null || dragIdx === dropIdx) return;
-      const moved = order.splice(dragIdx, 1)[0];
-      order.splice(dropIdx, 0, moved);
+      const moved = files.splice(dragIdx, 1)[0];
+      files.splice(dropIdx, 0, moved);
       renderPhotoList();
     });
   });
@@ -2178,65 +561,6 @@ function resizeImage(file, maxSide, quality){
   });
 }
 
-/* ===========================================================
-   SINCRONIZA AS FOTOS COM A ORDEM ESCOLHIDA — inclusive as que já
-   estavam publicadas. Pode envolver renomear (01.jpg vira 03.jpg,
-   por exemplo) ou apagar uma foto que foi removida da lista.
-
-   pra isso funcionar mesmo quando duas fotos trocam de lugar entre
-   si, o conteúdo de TODAS as fotos existentes que vão mudar de nome
-   é lido pra memória ANTES de escrever qualquer coisa — senão dava
-   pra sobrescrever uma foto ainda necessária antes dela ser copiada
-   pro lugar certo.
-   =========================================================== */
-async function syncPhotosToOrder(slug, photoSeq){
-  const targets = photoSeq.map((_, i) => `${String(i+1).padStart(2,'0')}.jpg`);
-
-  const existingContent = new Map(); // nome atual -> {big, thumb} (base64)
-  for(const item of photoSeq){
-    if(item.new || existingContent.has(item.name)) continue;
-    log(`lendo ${item.name}...`);
-    const big = await ghGetFileB64(`media/${slug}/${item.name}`);
-    const thumb = await ghGetFileB64(`media/${slug}/thumbs/${item.name}`).catch(() => null);
-    existingContent.set(item.name, { big: big && big.b64, thumb: thumb && thumb.b64 });
-  }
-
-  for(let i = 0; i < photoSeq.length; i++){
-    const item = photoSeq[i];
-    const target = targets[i];
-    if(item.new){
-      log(`preparando foto nova ${i+1} / ${photoSeq.length}...`);
-      const big = await resizeImage(item.file, 2000, 0.88);
-      const small = await resizeImage(item.file, 600, 0.85);
-      log(`enviando foto ${i+1} / ${photoSeq.length}...`);
-      await ghPutSmart(`media/${slug}/${target}`, await blobToB64(big), `foto ${target} — ${slug}`);
-      await ghPutSmart(`media/${slug}/thumbs/${target}`, await blobToB64(small), `miniatura ${target} — ${slug}`);
-    } else if(item.name !== target){
-      log(`movendo ${item.name} → ${target}...`);
-      const content = existingContent.get(item.name);
-      if(content && content.big) await ghPutSmart(`media/${slug}/${target}`, content.big, `reordena foto — ${slug}`);
-      if(content && content.thumb) await ghPutSmart(`media/${slug}/thumbs/${target}`, content.thumb, `reordena miniatura — ${slug}`);
-    }
-    /* item.name === target: já está no lugar certo, não faz nada */
-  }
-
-  /* apaga o que sobrou sem dono (foto removida da ordem, ou nome
-     antigo que ninguém mais ocupa depois da reorganização) */
-  const usedNames = new Set(targets);
-  const staleNames = [...existingContent.keys()].filter(n => !usedNames.has(n));
-  for(const name of staleNames){
-    try{
-      log(`removendo ${name} (não faz mais parte da ordem)...`);
-      const bigMeta = await ghGetFile(`media/${slug}/${name}`);
-      if(bigMeta) await ghDeleteFile(`media/${slug}/${name}`, bigMeta.sha, `remove foto — ${slug}`);
-      const thumbMeta = await ghGetFile(`media/${slug}/thumbs/${name}`);
-      if(thumbMeta) await ghDeleteFile(`media/${slug}/thumbs/${name}`, thumbMeta.sha, `remove miniatura — ${slug}`);
-    }catch(e){
-      log(`não consegui remover ${name}: ${e.message}`, 'err');
-    }
-  }
-}
-
 /* --- monta os dados do post a partir do formulário ---
    usado tanto pelo botão "gerar bloco" quanto por "publicar" */
 let currentSlug = '';
@@ -2246,68 +570,37 @@ function buildPost(){
   const location = document.getElementById('fLocation').value.trim();
   const tags = document.getElementById('fTags').value.split(',').map(s => s.trim()).filter(Boolean);
   const page = document.getElementById('fPage').checked;
-
-  const photoSeq = photoEntries();
-  const videoSeq = videoEntries();
+  const mdText = document.getElementById('fMd').value;
 
   if(!title || !date){ alert('preencha pelo menos título e data.'); return null; }
-  if(!photoSeq.length && !videoSeq.length){ alert('adicione pelo menos uma foto ou um vídeo.'); return null; }
+  if(type === 'photo' && !files.length){ alert('adicione pelo menos uma foto.'); return null; }
+  if(type === 'video' && !document.getElementById('fVideo').value.trim()){ alert('cole o link do vídeo.'); return null; }
 
-  const slug = editingSlug || slugify(title);
+  const slug = slugify(title);
   currentSlug = slug;
   const tagsStr = tags.length ? `[${tags.map(t => `"${t}"`).join(', ')}]` : '[]';
 
   let block = `{\n    slug: "${slug}",\n    title: "${title.toUpperCase()}",\n    date: "${date}",\n    location: "${location}",\n    tags: ${tagsStr},\n`;
-  if(photoSeq.length){
-    block += `    photos: ${photoSeq.length},\n`;
-  }
-  if(videoSeq.length){
-    const videosStr = `[${videoSeq.map(v => JSON.stringify(v.url)).join(', ')}]`;
-    block += `    videos: ${videosStr},\n    ratio: "${ratio}",\n`;
-
-    /* ordem completa — a mesma sequência que está na tela agora,
-       fotos e vídeos publicados ou novos misturados do jeito que
-       foi arrastado */
-    const videoIndexOf = new Map(videoSeq.map((v, i) => [v, i]));
-    const tokens = order.map(item => item.kind === 'photo' ? 'photo' : `video:${videoIndexOf.get(item)}`);
-    block += `    order: [${tokens.map(t => JSON.stringify(t)).join(', ')}],\n`;
-
-    /* thumb customizada de cada vídeo (opcional) — o caminho é
-       previsível a partir do próprio link do vídeo, então dá pra
-       escrever aqui sem precisar subir a imagem antes */
-    if(videoSeq.some(v => v.coverFile || v.existingCoverPath)){
-      const coversStr = videoSeq
-        .map(v => (v.coverFile || v.existingCoverPath) ? `media/${slug}/video-thumbs/${videoThumbName(v.url)}.jpg` : '')
-        .map(c => JSON.stringify(c));
-      block += `    videoCovers: [${coversStr.join(', ')}],\n`;
-    }
-  }
-  if(customCoverFile || existingCustomCoverPath){
-    const coverPath = customCoverFile ? `media/${slug}/cover.jpg` : existingCustomCoverPath;
-    block += `    cover: ${JSON.stringify(coverPath)},\n`;
-  } else if(coverItem){
-    const coverPath = coverItem.kind === 'photo'
-      ? `${String(photoSeq.indexOf(coverItem) + 1).padStart(2,'0')}.jpg`
-      : (coverItem.coverFile || coverItem.existingCoverPath
-          ? `media/${slug}/video-thumbs/${videoThumbName(coverItem.url)}.jpg`
-          : youtubeCover(parseVideo(coverItem.url)));
-    if(coverPath) block += `    cover: ${JSON.stringify(coverPath)},\n`;
+  if(type === 'photo'){
+    block += `    photos: ${files.length},\n`;
+  } else {
+    block += `    video: "${document.getElementById('fVideo').value.trim()}",\n    ratio: "${ratio}",\n`;
   }
   if(page) block += `    page: true,\n`;
   block += `  },`;
 
-  return { slug, block, page, title, date, location, tags, photoSeq, videoSeq };
+  return { slug, block, page, mdText, title, date, location, tags };
 }
 
 document.getElementById('btnGenerate').addEventListener('click', () => {
   const built = buildPost();
   if(!built) return;
-  const { slug, block, page, photoSeq } = built;
+  const { slug, block, page } = built;
 
   document.getElementById('codeBlock').textContent = '  ' + block;
   document.getElementById('output').classList.add('show');
 
-  document.getElementById('photoDownloadSection').style.display = photoSeq.some(p => p.new) ? '' : 'none';
+  document.getElementById('photoDownloadSection').style.display = type === 'photo' ? '' : 'none';
   document.getElementById('mdDownloadSection').style.display = page ? '' : 'none';
   document.getElementById('mdFileName').textContent = `posts/${slug}.md`;
 });
@@ -2319,11 +612,7 @@ document.getElementById('btnCopyCode').addEventListener('click', () => {
   setTimeout(() => btn.textContent = old, 1400);
 });
 
-/* --- gerar o zip com as fotos novas já redimensionadas ---
-   só as novas: as que já estavam publicadas não têm o arquivo
-   original aqui na memória do navegador pra reprocessar, e mesmo
-   que tivessem, reordenar as antigas só funciona mesmo publicando
-   direto pelo github (é isso que renomeia os arquivos lá). */
+/* --- gerar o zip com as fotos já redimensionadas --- */
 document.getElementById('btnZip').addEventListener('click', async () => {
   const status = document.getElementById('status');
   const btn = document.getElementById('btnZip');
@@ -2332,12 +621,11 @@ document.getElementById('btnZip').addEventListener('click', async () => {
   const folder = zip.folder(`media/${currentSlug}`);
   const thumbs = folder.folder('thumbs');
 
-  const seq = photoEntries().filter(p => p.new);
-  for(let i = 0; i < seq.length; i++){
-    status.textContent = `processando ${i+1} / ${seq.length}...`;
+  for(let i = 0; i < files.length; i++){
+    status.textContent = `processando ${i+1} / ${files.length}...`;
     const name = `${String(i+1).padStart(2,'0')}.jpg`;
-    const big = await resizeImage(seq[i].file, 2000, 0.88);
-    const small = await resizeImage(seq[i].file, 600, 0.85);
+    const big = await resizeImage(files[i].file, 2000, 0.88);
+    const small = await resizeImage(files[i].file, 600, 0.85);
     folder.file(name, big);
     thumbs.file(name, small);
   }
@@ -2348,7 +636,7 @@ document.getElementById('btnZip').addEventListener('click', async () => {
   a.href = URL.createObjectURL(blob);
   a.download = `${currentSlug}.zip`;
   a.click();
-  status.textContent = `pronto. ${seq.length} foto(s) exportada(s).`;
+  status.textContent = `pronto. ${files.length} foto(s) exportada(s).`;
   btn.disabled = false;
 });
 
@@ -2375,10 +663,6 @@ Outro parágrafo, com *itálico*, **negrito** e [link](https://exemplo.com).
   a.download = `${currentSlug}.md`;
   a.click();
 });
-
-/* se a conexão já está salva de uma vez anterior, carrega as
-   tags sugeridas sozinho, sem precisar clicar em nada */
-if(GH.owner && GH.repo && GH.token){ loadTagSuggestions(); }
 </script>
 </body>
 </html>

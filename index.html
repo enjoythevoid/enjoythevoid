@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
 <meta name="theme-color" content="#0a0908">
 <title>enjoythevoid — archive</title>
 <meta name="description" content="Arquivo de fotografia, curtas e motion — enjoythevoid.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
-<script>document.write('<link rel="stylesheet" href="assets/style.css?v=' + Date.now() + '">')</script>
+<link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
@@ -25,32 +24,8 @@
     <a role="button" tabindex="0" id="navAbout">about</a>
     <a role="button" tabindex="0" data-filter="articles">articles</a>
     <div class="tags-menu">
-      <a role="button" tabindex="0" id="tagsToggle">tags</a>
+      <a role="button" tabindex="0" id="tagsToggle">#</a>
       <div class="tags-dropdown" id="tagsDropdown"></div>
-    </div>
-    <div class="social-links" id="socialLinks">
-      <a href="https://instagram.com/enjoythevoid" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">
-        <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4">
-          <rect x="2" y="2" width="16" height="16" rx="4"/>
-          <circle cx="10" cy="10" r="4"/>
-          <circle cx="14.3" cy="5.7" r="0.9" fill="currentColor" stroke="none"/>
-        </svg>
-      </a>
-      <a href="https://linkedin.com/in/enjoythevoid" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">
-        <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.4">
-          <rect x="2" y="2" width="16" height="16" rx="2"/>
-          <circle cx="6.4" cy="6.4" r="0.9" fill="currentColor" stroke="none"/>
-          <line x1="6.4" y1="9" x2="6.4" y2="14.5"/>
-          <path d="M9.5 14.5V10.6c0-1.5 1.1-2.2 2.2-2.2 1.3 0 2 .8 2 2.4v3.7"/>
-        </svg>
-      </a>
-      <a href="https://letterboxd.com/enjoythevoid" target="_blank" rel="noopener" title="Letterboxd" aria-label="Letterboxd">
-        <svg viewBox="0 0 20 20" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.3">
-          <circle cx="6" cy="10" r="4.1"/>
-          <circle cx="10" cy="10" r="4.1"/>
-          <circle cx="14" cy="10" r="4.1"/>
-        </svg>
-      </a>
     </div>
   </div>
   <div class="seg">
@@ -66,7 +41,9 @@
 <!-- ===================== VISOR ===================== -->
 <div id="photoView" aria-hidden="true">
   <div class="photo-stage">
+    <button class="photo-nav prev" id="prevBtn" aria-label="Anterior">←</button>
     <div class="frame" id="photoFrame"><span class="ph">imagem</span></div>
+    <button class="photo-nav next" id="nextBtn" aria-label="Próxima">→</button>
   </div>
   <div class="filmstrip-row" id="filmstripRow">
     <button class="fs-arrow fs-prev" id="fsPrev" hidden aria-label="Anterior">&lt;</button>
@@ -87,10 +64,6 @@
     </div>
     <div class="pos" id="capPos">01 / 12</div>
   </div>
-  <div class="post-nav-row">
-    <button class="post-nav-btn" id="prevBtn">‹ previous post</button>
-    <button class="post-nav-btn" id="nextBtn">next post ›</button>
-  </div>
 </div>
 
 <!-- ===================== ABOUT ===================== -->
@@ -108,8 +81,10 @@
   </div>
 </div>
 
+<p class="keyhint" id="keyHint">← → navegar &nbsp;·&nbsp; esc voltar</p>
+
 <script src="posts.js"></script>
-<script>document.write('<script src="assets/core.js?v=' + Date.now() + '"><\/script>')</script>
-<script>document.write('<script src="assets/app.js?v=' + Date.now() + '"><\/script>')</script>
+<script src="assets/core.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>
