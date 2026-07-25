@@ -64,18 +64,27 @@ const ARCHIVE = POSTS
   .slice()
   .sort((a,b) => new Date(a.date) - new Date(b.date))
   .map((p,i) => {
-    const video  = parseVideo(p.video);
+    /* um post pode ter vários vídeos: "videos" é a lista (nova),
+       "video" continua funcionando sozinho pra posts antigos */
+    const rawVideos = Array.isArray(p.videos) ? p.videos : (p.video ? [p.video] : []);
+    const videos = rawVideos.map(parseVideo).filter(Boolean);
+    const video  = videos[0] || null; // compatibilidade com código que ainda lê post.video
     const photos = photoList(p);
-    const cover  = p.cover ? resolvePath(p, p.cover) : (photos[0] || videoCover(video));
+    const videoThumb0 = (p.videoCovers && p.videoCovers[0]) || videoCover(video);
+    const cover  = p.cover ? resolvePath(p, p.cover) : (photos[0] || videoThumb0);
     return {
       ...p,
       id: i+1,
       catalogNo: String(i+1).padStart(3,'0'),
       year: Number(p.date.slice(0,4)),
-      /* basta o campo "video" existir pro post ser tratado como vídeo,
+      /* basta ter vídeo(s) pro post ser tratado como vídeo,
          mesmo que o link ainda esteja vazio */
-      type: p.type || ('video' in p ? 'video' : 'photo'),
-      video, photos, cover,
+      type: p.type || (rawVideos.length ? 'video' : 'photo'),
+      /* um post pode ter foto(s) E vídeo(s) ao mesmo tempo, misturados
+         na ordem que quiser (ver mediaItems() logo abaixo) */
+      hasVideo: videos.length > 0,
+      hasPhotos: photos.length > 0,
+      video, videos, photos, cover,
       ratio: p.ratio || '16/9',
       tags: p.tags || [],
       href: p.page ? `post.html?p=${p.slug}` : ''
@@ -105,4 +114,67 @@ function bindTheme(btn){
     root.setAttribute('data-theme', next);
     try{ localStorage.setItem('etv-theme', next); }catch(e){}
   });
+}
+
+/* --- mídias de um post, na ordem em que aparecem no visor ---
+   se o post tem vídeo E fotos, o vídeo entra primeiro e as fotos
+   vêm em seguida, tudo na mesma tira de miniaturas. --- */
+function mediaItems(p){
+  const items = [];
+  /* thumb customizada de um vídeo (escolhida no admin), com fallback
+     pro frame automático do YouTube/Vimeo */
+  const thumbFor = (v, idx) => (p.videoCovers && p.videoCovers[idx]) || videoCover(v);
+
+  /* posts novos: "order" descreve a sequência exata, misturando
+     quantas fotos e vídeos quiser em qualquer ordem —
+     "photo" consome a próxima foto da lista; "video:N" usa o vídeo
+     de índice N dentro de p.videos. */
+  if(Array.isArray(p.order) && p.order.length){
+    let pi = 0;
+    p.order.forEach(tok => {
+      if(tok === 'photo'){
+        const src = p.photos[pi++];
+        if(src) items.push({ kind:'photo', src, thumb: src });
+      } else if(typeof tok === 'string' && tok.startsWith('video')){
+        const idx = tok.includes(':') ? Number(tok.split(':')[1]) : 0;
+        const v = p.videos[idx];
+        if(v) items.push({ kind:'video', video:v, thumb: thumbFor(v, idx) });
+      }
+    });
+    /* sobra alguma foto fora do "order" (não deveria acontecer se o
+       admin gerou o bloco certinho) — adiciona no final mesmo assim,
+       pra nunca sumir uma foto por causa disso */
+    while(pi < p.photos.length){ items.push({ kind:'photo', src: p.photos[pi], thumb: p.photos[pi] }); pi++; }
+    return items;
+  }
+
+  /* posts antigos: só um vídeo, posição fixa por "videoAt"
+     (0 = vídeo primeiro, era o único comportamento antes) */
+  const v0 = p.videos[0];
+  const at = v0 ? Math.max(0, Math.min(p.photos.length, Number(p.videoAt) || 0)) : -1;
+  p.photos.forEach((src,i) => {
+    if(v0 && i === at) items.push({ kind:'video', video:v0, thumb: thumbFor(v0, 0) });
+    items.push({ kind:'photo', src, thumb: src });
+  });
+  if(v0 && at >= p.photos.length) items.push({ kind:'video', video:v0, thumb: thumbFor(v0, 0) });
+  return items;
+}
+
+/* --- tamanho de mídia dentro do texto -------------------
+   aceita os presets antigos (sm/md/lg/xl) e também número
+   puro em porcentagem ("65" = 65% da largura). --- */
+const LEGACY_W = { sm:35, md:60, lg:75, xl:100 };
+function sizeToPercent(val){
+  if(val == null || val === '') return null;
+  if(LEGACY_W[val] != null) return LEGACY_W[val];
+  const n = parseFloat(val);
+  return isFinite(n) ? Math.min(100, Math.max(5, n)) : null;
+}
+/* fonte: presets antigos viram em, número vira porcentagem */
+const LEGACY_F = { sm:'0.8em', md:'1em', lg:'1.35em', xl:'1.8em' };
+function sizeToFont(val){
+  if(val == null || val === '') return null;
+  if(LEGACY_F[val]) return LEGACY_F[val];
+  const n = parseFloat(val);
+  return isFinite(n) ? `${Math.min(400, Math.max(30, n))}%` : null;
 }

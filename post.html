@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
 <meta name="theme-color" content="#0a0908">
 <title>enjoythevoid</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&family=Archivo:wght@400;500&family=Newsreader:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
+<script>document.write('<link rel="stylesheet" href="assets/style.css?v=' + Date.now() + '">')</script>
 </head>
 <body>
 
@@ -17,7 +18,7 @@
     <a class="word" href="index.html">enjoythevoid</a>
   </div>
   <div class="seg nav-main">
-    <a href="index.html">← arquivo</a>
+    <a href="index.html">← back</a>
   </div>
   <div class="seg">
     <button id="themeToggle">light / dark</button>
@@ -30,8 +31,15 @@
   <footer class="post-foot" id="postFoot"></footer>
 </main>
 
+<div id="gridLightbox" aria-hidden="true">
+  <button class="glb-nav prev" id="glbPrev" aria-label="Previous">‹</button>
+  <div class="glb-frame"><img id="glbImg" src="" alt=""></div>
+  <button class="glb-nav next" id="glbNext" aria-label="Next">›</button>
+  <div class="glb-pos" id="glbPos"></div>
+</div>
+
 <script src="posts.js"></script>
-<script src="assets/core.js"></script>
-<script src="assets/post.js"></script>
+<script>document.write('<script src="assets/core.js?v=' + Date.now() + '"><\/script>')</script>
+<script>document.write('<script src="assets/post.js?v=' + Date.now() + '"><\/script>')</script>
 </body>
 </html>

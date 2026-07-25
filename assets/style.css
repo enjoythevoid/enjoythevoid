@@ -6,6 +6,7 @@
   --thumb:#111;
   --accent:#8a1414;
   --s1:6px;--s2:12px;--s3:20px;--s4:34px;--s5:56px;--s6:90px;
+  --topbar-h:52px;
 }
 html[data-theme="light"]{
   --bg:#f5f4f2;
@@ -23,7 +24,7 @@ body{
   font-family:'Space Mono',monospace;
   -webkit-font-smoothing:antialiased;
   transition:background .4s ease,color .4s ease;
-  overflow-x:hidden;
+  overflow-x:clip;
 }
 a{color:inherit;text-decoration:none}
 ::selection{background:var(--ink-dim);color:var(--bg)}
@@ -73,16 +74,27 @@ a{color:inherit;text-decoration:none}
 .tags-dropdown a:hover{color:var(--ink);background:rgba(255,255,255,.04)}
 .tags-dropdown a.is-active{color:var(--ink)}
 
+.social-links{display:flex;align-items:center;gap:12px;margin-left:14px}
+.social-links a{display:flex;color:var(--ink-dim);transition:color .2s}
+.social-links a:hover{color:var(--ink)}
+.social-links svg{display:block}
+
 /* ---------- ÍNDICE ---------- */
 #indexView{padding:calc(var(--s4) + var(--s1)) 0 var(--s6)}
 .year-section{margin-bottom:var(--s5)}
 .year-head{
   position:sticky;top:34px;
-  display:flex;align-items:baseline;justify-content:space-between;
-  padding:14px var(--s4);
   background:transparent;
   z-index:20;
   pointer-events:none;
+}
+/* o padding e o layout ficam aqui dentro, não no elemento sticky —
+   ter padding direto num position:sticky com fundo transparente é
+   a causa mais comum de um bug do Safari/WebKit onde aparece uma
+   linha pontilhada/serrilhada bem na borda dele. */
+.year-head-inner{
+  display:flex;align-items:baseline;justify-content:space-between;
+  padding:14px var(--s4);
 }
 .year-head *{pointer-events:auto}
 .year-num{
@@ -166,6 +178,7 @@ a{color:inherit;text-decoration:none}
   max-height:min(70vh,700px);
   display:flex;align-items:center;justify-content:center;
   position:relative;
+  touch-action:none; /* o zoom por pinça é feito na mão, em JS — isso evita o navegador tentar fazer o dele por cima */
 }
 .photo-stage .frame img{
   max-width:min(84vw,980px);
@@ -173,31 +186,46 @@ a{color:inherit;text-decoration:none}
   width:auto;height:auto;
   object-fit:contain;display:block;
   background:var(--thumb);
+  transform-origin:center center;
+  will-change:transform;
 }
+/* sobe a tira de miniaturas e as setas um pouco, só isso — nada
+   mais foi mexido aqui. vale pra desktop e mobile; tablet trava o
+   valor antigo (0) mais abaixo, no bloco @media do tablet. */
+.filmstrip-row{ margin-top:-70px; }
 .photo-stage .frame.is-video,
 .photo-stage .frame.is-empty{
-  height:min(70vh,700px);
-  width:auto;
+  /* largura/altura reais em px são calculadas em JS (fitFrameBox em
+     app.js) pra bater com o espaço disponível sem cortar o vídeo.
+     isso aqui é só um valor de fallback antes do JS rodar. */
   aspect-ratio:var(--vr,16/9);
   background:var(--thumb);
 }
 .photo-stage .frame .ph{font-size:11px;letter-spacing:.1em;color:var(--ink-dim)}
 .frame iframe{width:100%;height:100%;border:none;display:block}
+.swipe-edge{position:absolute;top:0;bottom:0;width:28%;z-index:2;touch-action:pan-y}
+.swipe-edge-left{left:0}
+.swipe-edge-right{right:0}
 
-.photo-nav{
-  position:absolute;top:50%;transform:translateY(-50%);
-  background:none;border:none;color:var(--ink);
-  font-size:22px;cursor:pointer;opacity:.45;transition:opacity .25s;
-  padding:var(--s3);
+.post-nav-row{
+  flex:0 0 auto;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:var(--s2) var(--s4) var(--s3);
+  border-top:1px solid var(--line);
+  opacity:0;transition:opacity .4s;
 }
-.photo-nav:hover{opacity:1}
-.photo-nav.prev{left:var(--s2)}
-.photo-nav.next{right:var(--s2)}
+.post-nav-row.show{opacity:1}
+.post-nav-btn{
+  background:none;border:none;color:var(--ink-dim);
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.04em;
+  cursor:pointer;padding:6px 4px;transition:color .2s;
+}
+.post-nav-btn:hover{color:var(--ink)}
 
 .filmstrip-row{
   height:48px;flex:0 0 auto;
   display:flex;align-items:center;justify-content:center;
-  gap:8px;padding:0 var(--s4);
+  gap:22px;padding:0 var(--s4);
   opacity:0;pointer-events:none;transition:opacity .15s;
 }
 .filmstrip-row.has-gallery{opacity:1;pointer-events:auto}
@@ -215,7 +243,7 @@ a{color:inherit;text-decoration:none}
 .filmstrip .fs-thumb:hover{opacity:1}
 .fs-arrow{
   flex:0 0 auto;background:none;border:none;color:var(--ink-dim);
-  cursor:pointer;font-size:14px;padding:4px;transition:color .2s;
+  cursor:pointer;font-size:24px;padding:8px;transition:color .2s;
 }
 .fs-arrow:hover{color:var(--ink)}
 .fs-arrow[hidden]{display:none}
@@ -261,13 +289,6 @@ a{color:inherit;text-decoration:none}
 .about-content .sign{margin-top:var(--s4);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-dim)}
 .about-content .sign a{color:var(--ink-dim);border-bottom:1px solid var(--ink-dim)}
 
-.keyhint{
-  position:fixed;bottom:var(--s3);left:50%;transform:translateX(-50%);
-  z-index:601;font-size:10px;letter-spacing:.1em;color:var(--ink-dim);
-  opacity:0;transition:opacity .4s;pointer-events:none;
-}
-.keyhint.show{opacity:.7}
-
 /* ===================================================
    PÁGINA DE POST (post.html)
    =================================================== */
@@ -293,9 +314,23 @@ a{color:inherit;text-decoration:none}
   letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);
   margin:var(--s5) 0 var(--s3);
 }
+.post-body h3{
+  font-family:'Space Mono',monospace;font-size:11px;font-weight:400;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim);
+  margin:var(--s4) 0 var(--s2);
+}
 .post-body a{color:var(--accent);border-bottom:1px solid rgba(138,20,20,.4)}
 .post-body em{font-style:italic}
 .post-body strong{font-weight:500}
+.post-body u{text-decoration:underline;text-underline-offset:3px}
+.post-body s{text-decoration:line-through;color:var(--ink-dim)}
+.post-body ul,.post-body ol{margin:0 0 var(--s3) var(--s4)}
+.post-body ul li,.post-body ol li{margin-bottom:6px}
+.post-body [data-color="dim"]{color:var(--ink-dim)}
+.post-body [data-color="accent"]{color:var(--accent)}
+.post-body [data-size="sm"]{font-size:.8em}
+.post-body [data-size="lg"]{font-size:1.35em}
+.post-body [data-size="xl"]{font-size:1.8em}
 .post-body blockquote{
   font-style:italic;color:var(--ink-dim);
   border-left:1px solid var(--line);
@@ -309,13 +344,24 @@ a{color:inherit;text-decoration:none}
   color:var(--ink-dim);margin-top:8px;
 }
 .post-body .md-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;margin:var(--s4) 0}
-.post-body .md-grid img{width:100%;height:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--thumb)}
+.post-body .md-grid img{width:100%;height:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--thumb);cursor:pointer;transition:opacity .2s}
+.post-body .md-grid img:hover{opacity:.85}
+.post-body .md-grid[data-size="sm"]{max-width:40%}
+.post-body .md-grid[data-size="lg"]{max-width:75%}
+.post-body .md-grid[data-size="xl"]{max-width:100%}
 .post-body .md-video{
   position:relative;width:100%;aspect-ratio:16/9;
   background:var(--thumb);margin:var(--s4) 0;
 }
 .post-body .md-video.vertical{aspect-ratio:9/16;max-width:420px;margin-inline:auto}
+.post-body .md-video[data-size="sm"]{max-width:35%}
+.post-body .md-video[data-size="lg"]{max-width:75%}
+.post-body .md-video[data-size="xl"]{max-width:100%}
 .post-body .md-video iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+.post-body figure[data-size="sm"]{max-width:35%}
+.post-body figure[data-size="lg"]{max-width:75%}
+.post-body figure[data-size="xl"]{max-width:100%}
+.post-body figure[data-size] img{cursor:default}
 
 .post-foot{
   margin-top:var(--s6);padding-top:var(--s3);
@@ -325,30 +371,73 @@ a{color:inherit;text-decoration:none}
 }
 .post-foot a:hover{color:var(--ink)}
 
+/* ---------- lightbox das fotos dentro de grades no texto ---------- */
+#gridLightbox{
+  position:fixed;inset:0;z-index:700;background:var(--bg);
+  opacity:0;pointer-events:none;transition:opacity .3s ease;
+  display:flex;align-items:center;justify-content:center;
+}
+#gridLightbox.open{opacity:1;pointer-events:auto}
+.glb-frame{max-width:88vw;max-height:82vh}
+.glb-frame img{max-width:88vw;max-height:82vh;width:auto;height:auto;display:block;object-fit:contain}
+.glb-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--ink);
+  font-size:26px;opacity:.5;transition:opacity .2s;cursor:pointer;padding:var(--s3);
+}
+.glb-nav:hover{opacity:1}
+.glb-nav.prev{left:var(--s2)}
+.glb-nav.next{right:var(--s2)}
+.glb-pos{
+  position:absolute;bottom:var(--s3);left:50%;transform:translateX(-50%);
+  font-family:'Space Mono',monospace;font-size:11px;color:var(--ink-dim);
+}
+@media(max-width:640px){
+  .glb-nav{padding:var(--s2);font-size:20px}
+}
+
 /* ---------- RESPONSIVO ---------- */
 @media(max-width:900px) and (min-width:641px){
   .entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  /* tablet fica do jeito que estava antes dos ajustes de seta/tira
+     de miniaturas feitos pro desktop e mobile */
+  .photo-stage{align-items:center;padding:48px var(--s5) 0}
+  .photo-stage .frame,.photo-stage .frame img{max-width:min(84vw,980px);max-height:min(70vh,700px)}
+  .filmstrip-row{gap:8px;margin-top:0}
+  .fs-arrow{font-size:14px;padding:4px}
 }
 @media(max-width:640px){
-  .topbar{flex-wrap:wrap;gap:6px 0;padding:var(--s2) var(--s3)}
+  .topbar{flex-wrap:wrap;gap:4px 0;padding:20px var(--s3) var(--s1)}
   .topbar .seg{flex:0 0 auto;font-size:10px;gap:12px}
   .topbar .seg:first-child{margin-right:auto}
-  .topbar .seg.nav-main{order:5;flex:1 0 100%;margin-top:6px;flex-wrap:wrap;row-gap:6px}
+  .topbar .seg.nav-main{order:5;flex:1 0 100%;margin-top:4px;flex-wrap:wrap;row-gap:6px;justify-content:space-between}
   .topbar button,.topbar a{font-size:10px}
 
-  #indexView{padding:calc(var(--s5) + var(--s4)) 0 var(--s5)}
-  .year-head{padding:10px var(--s3);top:37px}
-  .year-num{font-size:clamp(40px,16vw,64px)}
-  .entry-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2) 6px;padding:0 var(--s3)}
+  .social-links{margin-left:auto;margin-right:-6px;gap:2px}
+  .social-links a{padding:6px}
+  .social-links svg{width:13px;height:13px}
+
+  /* a grade de fotos estava começando bem baixo na tela — comprimi
+     a barra de topo (acima) e o cabeçalho do ano (abaixo) pra ela
+     subir bastante */
+  #indexView{padding:calc(var(--topbar-h, 74px) + 7px) 0 var(--s5)}
+  .year-section{margin-bottom:30px}
+  .year-head{top:var(--topbar-h, 74px)}
+  .year-head-inner{padding:4px var(--s3)}
+  .year-num{font-size:clamp(32px,13vw,52px)}
+  .entry-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2) 6px;padding:0 var(--s3);margin-top:4px}
   .entry .cap{font-size:11px}
 
-  .photo-stage{padding:calc(var(--s5) + var(--s3)) var(--s3) var(--s3)}
+  .photo-stage{
+    padding:calc(var(--s5) + var(--s3)) var(--s3) var(--s3);
+    touch-action:pan-y;
+  }
   .photo-stage .frame,.photo-stage .frame img{max-width:100%;max-height:56vh}
-  .photo-stage .frame.is-video,.photo-stage .frame.is-empty{height:auto;width:100%;max-height:56vh}
-  .photo-nav{padding:var(--s2);font-size:18px}
+  .photo-stage .frame.is-video,.photo-stage .frame.is-empty{max-height:56vh}
   .photo-cap{padding:0 var(--s3) var(--s3);flex-direction:column;align-items:flex-start;gap:var(--s2)}
   .photo-cap .meta .ti{font-size:14px}
   .post-link{margin-top:10px}
+  .post-nav-row{padding:var(--s2) var(--s3) var(--s3)}
 
   .about-content{padding:calc(var(--s5) + var(--s3)) var(--s3) var(--s4)}
   .about-content p{font-size:16px}
@@ -358,4 +447,24 @@ a{color:inherit;text-decoration:none}
 }
 @media (prefers-reduced-motion: reduce){
   *{transition:none !important;animation:none !important}
+}
+
+
+/* ===== miniatura de vídeo dentro da tira (post com foto + vídeo) ===== */
+.fs-thumb.is-video-thumb{position:relative}
+.fs-thumb .fs-play{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.35);pointer-events:none;
+}
+.entry .thumb .badge svg + span{margin-left:5px}
+
+/* ===== mídia no corpo do post: largura livre em % ===== */
+.post-body figure[data-w] img{cursor:zoom-in}
+.post-body figure img{cursor:zoom-in}
+.post-body .md-grid[data-cols]{grid-template-columns:repeat(var(--cols,3),1fr)}
+.post-body .md-grid img{cursor:zoom-in}
+@media(max-width:640px){
+  .post-body figure[style*="width"],
+  .post-body .md-video[style*="width"],
+  .post-body .md-grid[style*="width"]{width:100% !important}
 }
