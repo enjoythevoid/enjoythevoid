@@ -76,4 +76,17 @@ const POSTS = [
     videoCovers: ["media/imback/video-thumbs/yt-XIn1jCvmO1k.jpg"],
   },
 
+  {
+    slug: "apocalipse-21-2",
+    title: "APOCALIPSE 21:2",
+    date: "2024-11-23",
+    location: "São Paulo",
+    tags: ["T5I", "RAW", "Color grading"],
+    photos: 4,
+    videos: ["https://www.youtube.com/watch?v=XTi-1XT46RQ&embeds_referring_euri=https%3A%2F%2Fenjoythevoid.myportfolio.com%2F"],
+    ratio: "16/9",
+    order: ["video:0", "photo", "photo", "photo", "photo"],
+    videoCovers: ["media/apocalipse-21-2/video-thumbs/yt-XTi-1XT46RQ.jpg"],
+  },
+
 ];
