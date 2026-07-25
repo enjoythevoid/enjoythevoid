@@ -388,7 +388,11 @@ function fitFrameBox(){
 
   const isMobile = window.innerWidth <= 640;
   const maxW = isMobile ? window.innerWidth * 0.92 : Math.min(window.innerWidth * 0.84, 980);
-  const maxH = isMobile ? window.innerHeight * 0.56 : Math.min(window.innerHeight * 0.70, 700);
+  // usa a altura real que sobra dentro do .photo-stage (o pai do frame)
+  // em vez de uma fração de innerHeight chutada — senão o vídeo pode
+  // estourar o espaço disponível do mesmo jeito que a foto estourava.
+  const stage = photoFrame.parentElement;
+  const maxH = stage ? stage.clientHeight : (isMobile ? window.innerHeight * 0.56 : Math.min(window.innerHeight * 0.70, 700));
 
   let w = maxW, h = w / ar;
   if(h > maxH){ h = maxH; w = h * ar; }
