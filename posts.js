@@ -89,4 +89,13 @@ const POSTS = [
     videoCovers: ["media/apocalipse-21-2/video-thumbs/yt-XTi-1XT46RQ.jpg"],
   },
 
+  {
+    slug: "bamboo-brasil",
+    title: "BAMBOO BRASIL",
+    date: "2017-09-08",
+    location: "São Paulo - Pico do Jaraguá",
+    tags: ["T5I"],
+    photos: 1,
+  },
+
 ];
