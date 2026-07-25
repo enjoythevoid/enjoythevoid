@@ -168,8 +168,8 @@ a{color:inherit;text-decoration:none}
 .photo-stage{
   flex:1;
   max-height:75vh;
-  display:flex;align-items:center;justify-content:center;
-  padding:48px var(--s5) 0;
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:48px var(--s5) 16px;
   position:relative;
 }
 /* foto: o tamanho vem da própria imagem, dentro de um limite.
