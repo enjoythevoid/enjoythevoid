@@ -227,7 +227,7 @@ a{color:inherit;text-decoration:none}
   display:flex;align-items:center;justify-content:center;
   gap:22px;padding:0 var(--s4);
   opacity:0;pointer-events:none;transition:opacity .15s;
-  margin-top:-150px;
+  margin-top:-350px;
 }
 .filmstrip-row.has-gallery{opacity:1;pointer-events:auto}
 .filmstrip{display:flex;gap:6px;max-width:min(60vw,420px);overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth}
