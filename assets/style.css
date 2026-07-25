@@ -167,8 +167,9 @@ a{color:inherit;text-decoration:none}
 
 .photo-stage{
   flex:1;
+  max-height:75vh;
   display:flex;align-items:center;justify-content:center;
-  padding:48px var(--s5) 180px;
+  padding:48px var(--s5) 0;
   position:relative;
 }
 /* foto: o tamanho vem da própria imagem, dentro de um limite.
@@ -401,7 +402,7 @@ a{color:inherit;text-decoration:none}
   .entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   /* tablet fica do jeito que estava antes dos ajustes de seta/tira
      de miniaturas feitos pro desktop e mobile */
-  .photo-stage{align-items:center;padding:48px var(--s5) 0}
+  .photo-stage{align-items:center;padding:48px var(--s5) 0;max-height:none}
   .photo-stage .frame,.photo-stage .frame img{max-width:min(84vw,980px);max-height:min(70vh,700px)}
   .filmstrip-row{gap:8px;margin-top:0}
   .fs-arrow{font-size:14px;padding:4px}
