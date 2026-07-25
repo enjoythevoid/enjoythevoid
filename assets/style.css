@@ -192,8 +192,7 @@ a{color:inherit;text-decoration:none}
 /* sobe a tira de miniaturas e as setas um pouco, só isso — nada
    mais foi mexido aqui. vale pra desktop e mobile; tablet trava o
    valor antigo (0) mais abaixo, no bloco @media do tablet. */
-.filmstrip-row{ margin-top:0; }
-#photoView > .photo-stage{ flex:0 0 auto; padding-top:5vh; padding-bottom:12px; }
+.filmstrip-row{ margin-top:-70px; }
 .photo-stage .frame.is-video,
 .photo-stage .frame.is-empty{
   /* largura/altura reais em px são calculadas em JS (fitFrameBox em
@@ -402,8 +401,7 @@ a{color:inherit;text-decoration:none}
   .entry-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
   /* tablet fica do jeito que estava antes dos ajustes de seta/tira
      de miniaturas feitos pro desktop e mobile */
-  #photoView > .photo-stage{flex:1;padding:48px var(--s5) 0}
-  .photo-stage{align-items:center}
+  .photo-stage{align-items:center;padding:48px var(--s5) 0}
   .photo-stage .frame,.photo-stage .frame img{max-width:min(84vw,980px);max-height:min(70vh,700px)}
   .filmstrip-row{gap:8px;margin-top:0}
   .fs-arrow{font-size:14px;padding:4px}
