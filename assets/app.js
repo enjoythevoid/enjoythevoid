@@ -387,8 +387,9 @@ function fitFrameBox(){
   const ar = (parts[0] && parts[1]) ? parts[0] / parts[1] : 16/9;
 
   const isMobile = window.innerWidth <= 640;
-  const maxW = isMobile ? window.innerWidth * 0.92  : Math.min(window.innerWidth * 0.84, 980);
-  const maxH = isMobile ? window.innerHeight * 0.56 : Math.min(window.innerHeight * 0.70, 700);
+  const isTablet = window.innerWidth > 640 && window.innerWidth <= 900;
+  const maxW = isMobile ? window.innerWidth * 0.92 : isTablet ? Math.min(window.innerWidth * 0.84, 980) : Math.min(window.innerWidth * 0.88, 1040);
+  const maxH = isMobile ? window.innerHeight * 0.62 : isTablet ? Math.min(window.innerHeight * 0.70, 700) : Math.min(window.innerHeight * 0.78, 820);
 
   let w = maxW, h = w / ar;
   if(h > maxH){ h = maxH; w = h * ar; }

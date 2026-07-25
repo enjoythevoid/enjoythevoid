@@ -167,22 +167,22 @@ a{color:inherit;text-decoration:none}
 
 .photo-stage{
   flex:1;
-  display:flex;align-items:flex-end;justify-content:center;
+  display:flex;align-items:center;justify-content:center;
   padding:48px var(--s5) var(--s3);
   position:relative;
 }
 /* foto: o tamanho vem da própria imagem, dentro de um limite.
    vídeo: a proporção vem do campo ratio do post (--vr). */
 .photo-stage .frame{
-  max-width:min(84vw,980px);
-  max-height:min(70vh,700px);
+  max-width:min(88vw,1040px);
+  max-height:min(78vh,820px);
   display:flex;align-items:center;justify-content:center;
   position:relative;
   touch-action:none; /* o zoom por pinça é feito na mão, em JS — isso evita o navegador tentar fazer o dele por cima */
 }
 .photo-stage .frame img{
-  max-width:min(84vw,980px);
-  max-height:min(70vh,700px);
+  max-width:min(88vw,1040px);
+  max-height:min(78vh,820px);
   width:auto;height:auto;
   object-fit:contain;display:block;
   background:var(--thumb);
@@ -398,6 +398,7 @@ a{color:inherit;text-decoration:none}
   /* tablet fica do jeito que estava antes dos ajustes de seta/tira
      de miniaturas feitos pro desktop e mobile */
   .photo-stage{align-items:center;padding:48px var(--s5) 0}
+  .photo-stage .frame,.photo-stage .frame img{max-width:min(84vw,980px);max-height:min(70vh,700px)}
   .filmstrip-row{gap:8px}
   .fs-arrow{font-size:14px;padding:4px}
 }
@@ -427,8 +428,8 @@ a{color:inherit;text-decoration:none}
     padding:calc(var(--s5) + var(--s3)) var(--s3) var(--s3);
     touch-action:pan-y;
   }
-  .photo-stage .frame,.photo-stage .frame img{max-width:100%;max-height:56vh}
-  .photo-stage .frame.is-video,.photo-stage .frame.is-empty{max-height:56vh}
+  .photo-stage .frame,.photo-stage .frame img{max-width:100%;max-height:62vh}
+  .photo-stage .frame.is-video,.photo-stage .frame.is-empty{max-height:62vh}
   .photo-cap{padding:0 var(--s3) var(--s3);flex-direction:column;align-items:flex-start;gap:var(--s2)}
   .photo-cap .meta .ti{font-size:14px}
   .post-link{margin-top:10px}
