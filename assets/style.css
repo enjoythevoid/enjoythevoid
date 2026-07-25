@@ -442,7 +442,7 @@ a{color:inherit;text-decoration:none}
   .photo-stage .frame{max-width:100%;max-height:100%}
   .photo-stage .frame img{max-width:100%;max-height:100%}
   .photo-stage .frame.is-video,.photo-stage .frame.is-empty{max-height:100%}
-  .filmstrip-row{margin-top:-14px}
+  .filmstrip-row{margin-top:0;margin-bottom:16px}
   .photo-cap{padding:0 var(--s3) var(--s3);flex-direction:column;align-items:flex-start;gap:var(--s2)}
   .photo-cap .meta .ti{font-size:14px}
   .post-link{margin-top:10px}
