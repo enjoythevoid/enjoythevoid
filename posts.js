@@ -88,7 +88,6 @@ const POSTS = [
     order: ["video:0", "photo", "photo", "photo", "photo"],
     videoCovers: ["media/apocalipse-21-2/video-thumbs/yt-XTi-1XT46RQ.jpg"],
     cover: "media/apocalipse-21-2/cover.jpg",
-    page: true,
   },
 
   {
