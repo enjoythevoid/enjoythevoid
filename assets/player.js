@@ -7,9 +7,21 @@
    · ao dar play, o vídeo roda com controls=0: nenhum ícone,
      título, logo ou "vídeos relacionados" do YouTube aparece.
    · por cima entra uma barra mínima nossa (play/pause, tempo,
-     tela cheia) + uma linha de progresso bem fina colada embaixo.
+     som, tela cheia) + uma linha de progresso bem fina colada
+     embaixo.
    · enquanto o vídeo toca, a barra some sozinha pra não atrapalhar;
      volta ao mexer o mouse / tocar na tela.
+   · o <iframe> já nasce com autoplay=1 (COM SOM) direto na URL, no
+     mesmo instante do clique — isso é o sinal mais forte que existe
+     pro navegador aceitar autoplay com som (o mesmo truque que
+     embeds "lite" do YouTube usam). Dar o play por JavaScript
+     DEPOIS que o iframe já carregou é um sinal mais fraco e é
+     bloqueado com mais frequência; quando isso acontece o vídeo
+     trava "não iniciado" — que é bem a tela de marca do YouTube
+     (avatar, título, compartilhar) que não sai, porque ela mora
+     dentro do iframe deles. Só a IFrame API (que dá o play/pause/som
+     pela nossa barra) entra depois, se conectando nesse MESMO iframe
+     sem recriá-lo — o vídeo não reinicia.
 
    Obs. sobre QUALIDADE: o YouTube removeu o controle manual de
    qualidade dos players embutidos — setPlaybackQuality virou no-op
@@ -40,6 +52,8 @@
   const SVG_PLAY  = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>`;
   const SVG_PAUSE = `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M7 5h3v14H7zM14 5h3v14h-3z" fill="currentColor"/></svg>`;
   const SVG_FS    = `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>`;
+  const SVG_MUTE  = `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16 8l5 8M21 8l-5 8" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>`;
+  const SVG_SOUND = `<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 9a4 4 0 0 1 0 6M19 6.5a7.5 7.5 0 0 1 0 11" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>`;
 
   function fmt(t){
     t = Math.max(0, Math.floor(t || 0));
@@ -82,15 +96,23 @@
 
   /* =============== YOUTUBE (player próprio completo) =============== */
   function mountYouTube(box, id){
-    /* a IFrame API SUBSTITUI o elemento passado por um <iframe> e a
-       classe se perde no caminho — por isso usamos um contêiner
-       .etv-frame (esse fica) com um filho vazio que a API troca pelo
-       iframe de verdade. o dimensionamento vive no contêiner. */
-    const frame = document.createElement('div');
-    frame.className = 'etv-frame';
-    const host = document.createElement('div');
-    frame.appendChild(host);
-    box.appendChild(frame);
+    /* o iframe de verdade nasce AQUI, síncrono, com autoplay=1 já na
+       URL — é o pedido de autoplay com som mais forte que existe.
+       depois a IFrame API se conecta a ESTE MESMO iframe (passando
+       o id dele) em vez de recriar um novo — assim o vídeo que já
+       começou a tocar não reinicia nem pisca. */
+    const uid = 'etv-yt-' + Math.random().toString(36).slice(2, 9);
+    const origin = encodeURIComponent(location.origin);
+    const iframe = document.createElement('iframe');
+    iframe.id = uid;
+    iframe.className = 'etv-frame';
+    iframe.title = '';
+    iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+    iframe.setAttribute('allowfullscreen','');
+    iframe.src = `https://www.youtube.com/embed/${id}`
+      + `?autoplay=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3`
+      + `&playsinline=1&fs=0&disablekb=1&enablejsapi=1&origin=${origin}`;
+    box.appendChild(iframe);
 
     const hit = document.createElement('div');     // camada de clique (play/pause)
     hit.className = 'etv-hit';
@@ -99,14 +121,17 @@
     const ui = buildUI(box);                        // barra + progresso
 
     YT_READY.then(YT => {
-      const player = new YT.Player(host, {
-        videoId: id,
-        playerVars: {
-          autoplay: 1, controls: 0, rel: 0, modestbranding: 1,
-          iv_load_policy: 3, playsinline: 1, fs: 0, disablekb: 1
-        },
+      const player = new YT.Player(uid, {
         events: {
-          onReady: e => { e.target.playVideo(); wire(box, player, ui, hit); },
+          onReady: () => {
+            wire(box, player, ui, hit);
+            /* rede de segurança: se por algum motivo (buffer lento,
+               navegador que ainda assim bloqueou) o vídeo não emplacou,
+               tenta o play mais uma vez — sem forçar mudo */
+            setTimeout(() => {
+              if(player.getPlayerState && player.getPlayerState() !== 1) player.playVideo();
+            }, 1200);
+          },
           onStateChange: e => onState(box, ui, e.data)
         }
       });
@@ -125,6 +150,7 @@
       `<button class="etv-btn etv-toggle" type="button" aria-label="pausar">${SVG_PAUSE}</button>`
       + `<span class="etv-time">0:00 / 0:00</span>`
       + `<span class="etv-spacer"></span>`
+      + `<button class="etv-btn etv-mute" type="button" aria-label="ativar som">${SVG_MUTE}</button>`
       + `<button class="etv-btn etv-fs" type="button" aria-label="tela cheia">${SVG_FS}</button>`;
 
     box.appendChild(bar);
@@ -136,6 +162,7 @@
       knob:   prog.querySelector('.etv-knob'),
       toggle: bar.querySelector('.etv-toggle'),
       time:   bar.querySelector('.etv-time'),
+      mute:   bar.querySelector('.etv-mute'),
       fs:     bar.querySelector('.etv-fs')
     };
   }
@@ -170,6 +197,26 @@
       else if(box.requestFullscreen) box.requestFullscreen();
       else if(box.webkitRequestFullscreen) box.webkitRequestFullscreen();
     });
+
+    ui.mute.addEventListener('click', () => {
+      const isMuted = player.isMuted();
+      if(isMuted){ player.unMute(); player.setVolume(100); }
+      else player.mute();
+      ui.mute.innerHTML = isMuted ? SVG_SOUND : SVG_MUTE;
+      ui.mute.setAttribute('aria-label', isMuted ? 'silenciar' : 'ativar som');
+      showBar();
+    });
+
+    /* reflete o estado real de som assim que a API conecta — o vídeo
+       pediu autoplay com som na própria URL, mas se o navegador ainda
+       assim tiver silenciado por conta própria, o ícone mostra isso
+       certinho em vez de assumir que deu certo */
+    const syncMuteIcon = () => {
+      const m = player.isMuted();
+      ui.mute.innerHTML = m ? SVG_MUTE : SVG_SOUND;
+      ui.mute.setAttribute('aria-label', m ? 'ativar som' : 'silenciar');
+    };
+    syncMuteIcon();
 
     /* barra de progresso: clicar/arrastar pra buscar */
     const seekTo = clientX => {

@@ -69,7 +69,7 @@ function renderMarkdown(src){
       if(v) out.push(
         `<div class="md-video${vertical ? ' vertical' : ''}"${w.raw ? ` data-w="${w.raw}"` : ''}` +
         `${w.pct ? ` style="width:${w.pct}%;max-width:100%;margin-inline:auto"` : ''}>
-           <iframe src="${embedURL(v)}" allow="fullscreen; picture-in-picture" allowfullscreen></iframe>
+           ${etvVideoHTML(v)}
          </div>`);
       return;
     }
@@ -88,7 +88,7 @@ function renderMarkdown(src){
         files.map((f,i) => {
           const full = mpath(f);
           const t = thumbPath(full);
-          return `<img src="${t}" data-full="${full}" alt="" loading="lazy" data-grid-id="${gridId}" data-grid-i="${i}"
+          return `<img src="${t}" data-full="${full}" alt="" data-fade loading="lazy" data-grid-id="${gridId}" data-grid-i="${i}"
             onerror="this.onerror=null;this.src=this.dataset.full">`;
         }).join('') + `</div>`);
       return;
@@ -103,7 +103,7 @@ function renderMarkdown(src){
       out.push(
         `<figure${raw ? ` data-w="${raw}"` : ''}` +
         `${pct ? ` style="width:${pct}%;max-width:100%;margin-inline:auto"` : ''}>` +
-        `<img src="${full}" data-full="${full}" alt="${img[1]}" loading="lazy">` +
+        `<img src="${full}" data-full="${full}" alt="${img[1]}" data-fade loading="lazy">` +
         (img[1] ? `<figcaption>${inline(img[1])}</figcaption>` : '') + `</figure>`);
       return;
     }
@@ -149,14 +149,14 @@ if(!post){
       ${tags}
     </div>`;
 
-  /* o vídeo/capa do post entra automaticamente no topo do corpo */
+  /* o post profundo começa limpo: o vídeo NÃO entra mais sozinho.
+     se quiser o vídeo (ou qualquer outro) dentro do texto, é só
+     adicionar no corpo com "::video LINK". a capa segue entrando
+     sozinha só nos posts de foto (nunca havia vídeo aqui de qualquer
+     forma). */
   let top = '';
-  if(post.type === 'video' && post.video){
-    top = `<div class="md-video${post.ratio === '9/16' ? ' vertical' : ''}">
-             <iframe src="${embedURL(post.video)}" allow="fullscreen; picture-in-picture" allowfullscreen></iframe>
-           </div>`;
-  } else if(post.cover){
-    top = `<figure><img src="${post.cover}" alt="${post.title}"></figure>`;
+  if(post.type !== 'video' && post.cover){
+    top = `<figure><img src="${post.cover}" data-fade alt="${post.title}"></figure>`;
   }
 
   const idx = ARCHIVE.slice().sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -169,11 +169,16 @@ if(!post){
 
   fetch(`posts/${post.slug}.md`)
     .then(r => r.ok ? r.text() : Promise.reject())
-    .then(md => { elBody.innerHTML = top + renderMarkdown(md); })
+    .then(md => { elBody.innerHTML = top + renderMarkdown(md); afterBody(); })
     .catch(() => {
       elBody.innerHTML = top +
         `<p><em>Texto ainda não escrito.</em> Crie o arquivo <code>posts/${post.slug}.md</code>.</p>`;
+      afterBody();
     });
+}
+function afterBody(){
+  if(typeof etvUpgradeVideos === 'function') etvUpgradeVideos(elBody);
+  if(typeof etvSweepImages   === 'function') etvSweepImages(elBody);
 }
 
 bindTheme(document.getElementById('themeToggle'));
