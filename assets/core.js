@@ -55,8 +55,28 @@ function thumbPath(full){
 function imgWithFallback(full, alt, cls){
   const t = thumbPath(full);
   const safe = String(alt || '').replace(/"/g,'&quot;');
-  return `<img src="${t}" data-full="${full}" alt="${safe}" ${cls?`class="${cls}"`:''} loading="lazy"
+  /* data-fade: começa invisível e aparece com um leve fade quando
+     a imagem realmente carrega — assim nunca pisca o ícone de
+     "imagem quebrada" enquanto ainda está baixando ou trocando
+     pra versão cheia (ver o listener global lá embaixo). */
+  return `<img src="${t}" data-full="${full}" alt="${safe}" data-fade ${cls?`class="${cls}"`:''} loading="lazy"
     onerror="this.onerror=null;this.src=this.dataset.full">`;
+}
+
+/* qualquer imagem com data-fade que terminar de carregar ganha
+   .is-loaded e faz o fade. o evento 'load' não borbulha, por isso
+   escutamos na fase de captura (true) — pega imagens do grid, da
+   tira de miniaturas, do corpo do post, tudo de uma vez, inclusive
+   as que caíram no fallback ou vieram do cache. */
+document.addEventListener('load', e => {
+  const el = e.target;
+  if(el && el.tagName === 'IMG' && el.hasAttribute('data-fade')) el.classList.add('is-loaded');
+}, true);
+/* rede de segurança pra imagens já completas quando o listener sobe */
+function etvSweepImages(root){
+  (root || document).querySelectorAll('img[data-fade]').forEach(im => {
+    if(im.complete && im.naturalWidth > 0) im.classList.add('is-loaded');
+  });
 }
 
 /* --- normalização --------------------------------------- */

@@ -78,6 +78,7 @@ function renderIndex(){
     section.appendChild(row);
     indexGroups.appendChild(section);
   });
+  if(typeof etvSweepImages === 'function') etvSweepImages(indexGroups);
 }
 
 /* ---------- FILTROS ---------- */
@@ -189,19 +190,21 @@ function renderPhoto(id, keepIndex){
        página. essas duas faixas nas bordas ficam por cima do
        iframe só ali, capturando o arrasto pra trocar de foto;
        o centro do vídeo (onde fica o play) continua livre. */
-    photoFrame.innerHTML = `<iframe src="${embedURL(item.video)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${p.title}"></iframe>` +
+    photoFrame.innerHTML = etvVideoHTML(item, {swipe:true, thumb:item.thumb}) +
       `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`;
   } else {
-    photoFrame.innerHTML = `<img src="${item.src}" alt="${p.title}">`;
+    photoFrame.innerHTML = `<img src="${item.src}" data-fade alt="${p.title}">`;
   }
   fitFrameBox();
+  if(typeof etvUpgradeVideos === 'function') etvUpgradeVideos(photoFrame);
+  if(typeof etvSweepImages   === 'function') etvSweepImages(photoFrame);
 
   const hasGallery = items.length > 1;
   if(hasGallery){
     filmstrip.innerHTML = items.map((it,i) =>
       `<div class="fs-thumb ${it.kind === 'video' ? 'is-video-thumb' : ''} ${i===galleryIndex?'is-active':''}" data-i="${i}">` +
       (it.kind === 'video'
-        ? `<img src="${it.thumb}" alt="vídeo"><span class="fs-play">${ICON_PLAY}</span>`
+        ? `<img src="${it.thumb}" data-fade alt="vídeo"><span class="fs-play">${ICON_PLAY}</span>`
         : imgWithFallback(it.src, '')) +
       `</div>`).join('');
     filmstrip.querySelectorAll('.fs-thumb').forEach(fs => {
