@@ -297,9 +297,18 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
   function activeImg(){
     return photoFrame.classList.contains('is-video') ? null : photoFrame.querySelector('img');
   }
+  /* quando dá zoom (scale>1), a legenda/miniaturas/navegação somem e
+     a foto passa a ocupar a tela inteira, de ponta a ponta — sem
+     isso, a foto ampliada ficava presa dentro da moldurinha pequena
+     de sempre, cortada pelo overflow:hidden do .photo-stage, com a
+     legenda e a barra de navegação ainda visíveis do lado. */
+  function syncZoomChrome(){
+    photoView.classList.toggle('is-zoomed', scale > 1.02);
+  }
   function applyTransform(){
     const img = activeImg();
     if(img) img.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+    syncZoomChrome();
   }
   /* chamada de fora (renderPhoto) sempre que troca de mídia, pra
      não carregar o zoom de uma foto pra outra */
@@ -307,6 +316,7 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
     scale = 1; panX = 0; panY = 0;
     const img = activeImg();
     if(img) img.style.transform = '';
+    syncZoomChrome();
   }
   window.resetPhotoZoom = resetZoom;
 
@@ -343,7 +353,7 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
     if(pinching && pointers.size === 2){
       const pts = [...pointers.values()];
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      scale = Math.min(4, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
+      scale = Math.min(8, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
       applyTransform();
       return;
     }
