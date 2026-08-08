@@ -566,17 +566,23 @@ a{color:inherit;text-decoration:none}
 .etv-video:fullscreen{background:#000}
 .etv-video:fullscreen .etv-frame{width:100vw;height:100vh}
 
-/* Adobe (Portfolio/Behance CCV) — força o iframe a preencher o
-   container inteiro. o player nativo do Adobe às vezes tenta se
-   dimensionar sozinho e fica pequeno, empurrado pra cima. o !important
-   sobrescreve qualquer estilo que o próprio Adobe possa tentar
-   aplicar de dentro do iframe. */
-.etv-video-adobe{display:block}
+/* Adobe (Portfolio/Behance CCV) — em vez de posicionar o iframe
+   absoluto (que no mobile fica empurrado pra cima em alguns
+   navegadores), transforma o container em flex e centraliza o
+   iframe. mesmo se o player interno do Adobe tentar se dimensionar
+   pequeno, ele fica centralizado no espaço disponível. */
+.etv-video-adobe{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 .etv-video-adobe > iframe.etv-frame{
-  position:absolute;inset:0;
-  width:100% !important;height:100% !important;
-  min-width:100%;min-height:100%;
-  border:none;display:block;
+  position:relative;
+  width:100%;
+  height:100%;
+  min-height:100%;
+  border:none;
+  display:block;
 }
 
 /* =========================================================
