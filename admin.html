@@ -340,12 +340,15 @@
   <!-- ===== VÍDEO ===== -->
   <div id="panelVideo" style="display:none">
     <div class="field">
-      <label>adicionar vídeo (YouTube ou Vimeo)</label>
+      <label>adicionar vídeo (YouTube, Vimeo ou Adobe Portfolio)</label>
       <div style="display:flex;gap:8px">
-        <input type="text" id="fVideoInput" placeholder="https://youtu.be/XXXXXXXXXXX" style="flex:1">
+        <input type="text" id="fVideoInput" placeholder="https://youtu.be/XXXX ou https://www-ccv.adobe.io/v1/player/ccv/XXXX/embed" style="flex:1">
         <button type="button" class="btn ghost" id="btnAddVideo" style="white-space:nowrap">+ adicionar</button>
       </div>
       <p class="hint">cole o link e clique em adicionar. pode adicionar quantos vídeos quiser — cada um vira um item na lista de ordem, junto com as fotos.</p>
+      <p class="hint" style="margin-top:6px">
+        <strong>Adobe Portfolio:</strong> abra sua página do vídeo no myportfolio, aperte F12, procure o &lt;iframe&gt; do player e copie a URL do <code>src</code> — algo tipo <code>https://www-ccv.adobe.io/v1/player/ccv/XXXXXXXXX/embed?...</code>. Cola aqui inteira (com ou sem os parâmetros depois do <code>?</code>, tanto faz).
+      </p>
     </div>
     <div class="field">
       <label>formato</label>
@@ -541,12 +544,19 @@ function parseVideo(url){
   if(yt) return {kind:'youtube', id:yt[1]};
   const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   if(vm) return {kind:'vimeo', id:vm[1]};
+  /* Adobe Creative Cloud Video — player usado pelo Adobe Portfolio
+     e Behance. URL típica: https://www-ccv.adobe.io/v1/player/ccv/{ID}/embed */
+  const ad = url.match(/adobe\.io\/v1\/player\/ccv\/([\w-]+)/);
+  if(ad) return {kind:'adobe', id:ad[1]};
   return null;
 }
 function embedURL(v){
   if(!v) return '';
   if(v.kind === 'youtube'){
     return `https://www.youtube.com/embed/${v.id}?enablejsapi=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3`;
+  }
+  if(v.kind === 'adobe'){
+    return `https://www-ccv.adobe.io/v1/player/ccv/${v.id}/embed?bgcolor=%23000000&lazyLoading=true&api_key=BehancePro2View`;
   }
   return `https://player.vimeo.com/video/${v.id}?title=0&byline=0&portrait=0`;
 }
@@ -559,7 +569,8 @@ function youtubeCover(v){
 function videoThumbName(url){
   const v = parseVideo(url);
   if(!v) return 'video';
-  return `${v.kind === 'youtube' ? 'yt' : 'vm'}-${v.id}`;
+  const prefix = v.kind === 'youtube' ? 'yt' : (v.kind === 'adobe' ? 'ad' : 'vm');
+  return `${prefix}-${v.id}`;
 }
 
 /* ===========================================================
@@ -1528,7 +1539,7 @@ editorToolbar.addEventListener('click', e => {
     return;
   }
   if(cmd === 'video'){
-    const url = prompt('cole o link do YouTube ou Vimeo:');
+    const url = prompt('cole o link do YouTube, Vimeo ou Adobe Portfolio (URL do embed adobe.io/v1/player/ccv/...):');
     if(url) insertVideo(url);
     return;
   }
@@ -2040,7 +2051,7 @@ function videoEntries(){ return order.filter(x => x.kind === 'video'); }
 function addVideoFromInput(){
   const url = fVideoInput.value.trim();
   if(!url) return;
-  if(!parseVideo(url)){ alert('link não reconhecido. cole um link do YouTube ou Vimeo.'); return; }
+  if(!parseVideo(url)){ alert('link não reconhecido. cole um link do YouTube, Vimeo ou Adobe Portfolio (URL do embed adobe.io/v1/player/ccv/...).'); return; }
   order.push({ kind:'video', new:true, url });
   fVideoInput.value = '';
   renderPhotoList();

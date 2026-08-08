@@ -68,6 +68,16 @@
     opts = opts || {};
     const v = (item && item.video) ? item.video : item;
     if(!v || !v.kind) return '';
+    /* Adobe (Portfolio/Behance CCV) já traz um player nativo pronto
+       com play/pause/replay/tela cheia. adicionar nossa capa + barra
+       por cima só duplica os controles e atrapalha o replay. então
+       pra Adobe entregamos direto o iframe deles, sem nada nosso. */
+    if(v.kind === 'adobe'){
+      return `<div class="etv-video etv-video-adobe" data-kind="adobe" data-id="${v.id}" data-ready="1">`
+        + `<iframe class="etv-frame" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen `
+        + `src="https://www-ccv.adobe.io/v1/player/ccv/${v.id}/embed?bgcolor=%23000000&lazyLoading=true&api_key=BehancePro2View"></iframe>`
+        + `</div>`;
+    }
     const thumb = opts.thumb ||
       (v.kind === 'youtube' ? `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` : '');
     const bg = thumb ? ` style="background-image:url('${thumb.replace(/'/g,"%27")}')"` : '';
