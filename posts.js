@@ -70,7 +70,7 @@ const POSTS = [
     date: "2026-07-02",
     location: "São Paulo",
     tags: ["AI"],
-    videos: ["https://www.youtube.com/watch?v=XIn1jCvmO1k"],
+    videos: ["https://www-ccv.adobe.io/v1/player/ccv/7EaTqkP6_6u/embed"],
     ratio: "16/9",
     order: ["video:0"],
     videoCovers: ["media/imback/video-thumbs/yt-XIn1jCvmO1k.jpg"],
