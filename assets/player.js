@@ -22,17 +22,6 @@
      dentro do iframe deles. Só a IFrame API (que dá o play/pause/som
      pela nossa barra) entra depois, se conectando nesse MESMO iframe
      sem recriá-lo — o vídeo não reinicia.
-   · o YouTube ainda cospe o card de marca deles (avatar do canal +
-     título + botão de compartilhar) nos primeiros segundos e sempre
-     que o vídeo é pausado, mais o logo do YouTube em baixo à direita.
-     Não é possível remover esse conteúdo por dentro do iframe (é
-     origem cruzada, o navegador impede por segurança). A saída é
-     encobrir POR CIMA: dois retângulos pretos (.etv-mask-tl e
-     .etv-mask-br) posicionados nos cantos onde a marca aparece,
-     invisíveis durante o playback (aí você vê o vídeo inteiro) e
-     visíveis só quando o vídeo está pausado/parado — nos primeiros
-     ~5s do primeiro play as máscaras ficam forçadas mesmo tocando,
-     pra cobrir o card de título inicial do YouTube.
 
    Obs. sobre QUALIDADE: o YouTube removeu o controle manual de
    qualidade dos players embutidos — setPlaybackQuality virou no-op
@@ -125,18 +114,6 @@
       + `&playsinline=1&fs=0&disablekb=1&enablejsapi=1&origin=${origin}`;
     box.appendChild(iframe);
 
-    /* máscaras próprias, POR CIMA do iframe (não dentro dele — isso
-       o navegador impede por segurança de origem cruzada). cobrem os
-       dois cantos onde o YouTube injeta a marca deles:
-       · canto superior esquerdo: avatar do canal + título + share
-       · canto inferior direito: logo do YouTube (marca d'água)
-       ficam invisíveis durante o playback tranquilo (aí você vê o
-       vídeo inteiro) e aparecem só quando o próprio YouTube mostraria
-       a marca — pausa, hover, buffer, fim. controladas pelo mesmo
-       .show-bar da barra. */
-    const maskTL = document.createElement('div'); maskTL.className = 'etv-mask etv-mask-tl'; box.appendChild(maskTL);
-    const maskBR = document.createElement('div'); maskBR.className = 'etv-mask etv-mask-br'; box.appendChild(maskBR);
-
     const hit = document.createElement('div');     // camada de clique (play/pause)
     hit.className = 'etv-hit';
     box.appendChild(hit);
@@ -191,23 +168,12 @@
   }
 
   function wire(box, player, ui, hit){
-    let hideT = null, tick = null, seeking = false, firstPlay = true;
+    let hideT = null, tick = null, seeking = false;
 
     const showBar = () => {
       box.classList.add('show-bar');
       clearTimeout(hideT);
       if(isPlaying()) hideT = setTimeout(() => box.classList.remove('show-bar'), 2600);
-    };
-    /* na primeira vez que o vídeo começa a tocar, força as máscaras
-       de canto por 5s pra encobrir o card de título/marca que o
-       YouTube costuma mostrar logo nos primeiros segundos, mesmo
-       durante o playback. depois disso as máscaras seguem só o
-       estado natural (pausa/buffer/fim). */
-    box._firstPlayForceMasks = () => {
-      if(!firstPlay) return;
-      firstPlay = false;
-      box.classList.add('mask-force');
-      setTimeout(() => box.classList.remove('mask-force'), 5000);
     };
     const isPlaying = () => box.classList.contains('is-playing');
 
@@ -295,11 +261,7 @@
       ui.toggle.innerHTML = SVG_PAUSE;
       ui.toggle.setAttribute('aria-label','pausar');
       box._startTick && box._startTick();
-      box._showBar && box._showBar();
-      /* proteção só do primeiro play — força as máscaras por 5s pra
-         encobrir o card de título/marca que o YouTube costuma mostrar
-         nos primeiros segundos */
-      box._firstPlayForceMasks && box._firstPlayForceMasks();
+      box._showBar && box._showBar();           // mostra e agenda o auto-hide
     } else {
       box.classList.remove('is-playing');
       ui.toggle.innerHTML = SVG_PLAY;
