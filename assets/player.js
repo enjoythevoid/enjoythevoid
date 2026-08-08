@@ -89,9 +89,26 @@
 
   function mount(box){
     const poster = box.querySelector('.etv-poster');
-    if(poster){ poster.classList.add('is-hidden'); setTimeout(() => poster.remove(), 400); }
+    /* o iframe é criado agora (áudio já começa a tocar por trás),
+       mas a capa fica cobrindo o vídeo por ~3s antes de fazer o fade.
+       nesse tempo o YouTube exibe e esconde a marca deles atrás da
+       capa, sem o visitante ver — o vídeo aparece limpo quando a
+       capa some. o custo é perder os primeiros ~3s do vídeo
+       visualmente (o som toca normal). */
     if(box.dataset.kind === 'youtube') mountYouTube(box, box.dataset.id);
+    else if(box.dataset.kind === 'adobe') mountAdobe(box, box.dataset.id);
     else mountVimeo(box, box.dataset.id);
+    if(poster){
+      /* esconde o botão de play grande na hora — o vídeo já está
+         tocando por trás, então o ícone não faz mais sentido; só a
+         imagem da capa fica cobrindo até o fade */
+      const bigplay = poster.querySelector('.etv-bigplay');
+      if(bigplay) bigplay.style.opacity = '0';
+      setTimeout(() => {
+        poster.classList.add('is-hidden');
+        setTimeout(() => poster.remove(), 900);
+      }, 3000);
+    }
   }
 
   /* =============== YOUTUBE (player próprio completo) =============== */
@@ -276,6 +293,21 @@
     const iframe = document.createElement('iframe');
     iframe.className = 'etv-frame';
     iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&title=0&byline=0&portrait=0&dnt=1`;
+    iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+    iframe.setAttribute('allowfullscreen','');
+    box.appendChild(iframe);
+  }
+
+  /* =============== ADOBE CCV (Adobe Portfolio / Behance) ===============
+     player nativo do Adobe — bem mais discreto que o do YouTube.
+     não expõe IFrame API tipo a do YouTube, então não dá pra plugar
+     nossa barra custom aqui; usamos o player deles direto, que já é
+     razoavelmente limpo por natureza. */
+  function mountAdobe(box, id){
+    const iframe = document.createElement('iframe');
+    iframe.className = 'etv-frame';
+    iframe.src = `https://www-ccv.adobe.io/v1/player/ccv/${id}/embed`
+      + `?bgcolor=%23000000&lazyLoading=true&api_key=BehancePro2View&autoplay=1`;
     iframe.allow = 'autoplay; fullscreen; picture-in-picture';
     iframe.setAttribute('allowfullscreen','');
     box.appendChild(iframe);

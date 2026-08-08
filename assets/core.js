@@ -6,13 +6,19 @@
 
 const MESES = ["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
 
-/* --- vídeo: reconhece YouTube e Vimeo em qualquer formato de link --- */
+/* --- vídeo: reconhece YouTube, Vimeo e Adobe (Portfolio/Behance) --- */
 function parseVideo(url){
   if(!url) return null;
   const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
   if(yt) return {kind:'youtube', id:yt[1]};
   const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   if(vm) return {kind:'vimeo', id:vm[1]};
+  /* Adobe Creative Cloud Video — é o player que o Adobe Portfolio e
+     o Behance usam. URL típica:
+     https://www-ccv.adobe.io/v1/player/ccv/{ID}/embed?...
+     interface bem mais discreta que a do YouTube. */
+  const ad = url.match(/adobe\.io\/v1\/player\/ccv\/([\w-]+)/);
+  if(ad) return {kind:'adobe', id:ad[1]};
   return null;
 }
 function embedURL(v){
@@ -21,9 +27,14 @@ function embedURL(v){
     return `https://www.youtube.com/embed/${v.id}`
       + `?enablejsapi=1&playsinline=1&rel=0&modestbranding=1&iv_load_policy=3`;
   }
+  if(v.kind === 'adobe'){
+    return `https://www-ccv.adobe.io/v1/player/ccv/${v.id}/embed`
+      + `?bgcolor=%23000000&lazyLoading=true&api_key=BehancePro2View`;
+  }
   return `https://player.vimeo.com/video/${v.id}?title=0&byline=0&portrait=0`;
 }
-/* capa automática de vídeo do YouTube */
+/* capa automática — só o YouTube fornece uma URL de thumb pública;
+   pra Adobe/Vimeo a capa precisa ser dada manualmente em videoCovers */
 function videoCover(v){
   return v && v.kind === 'youtube' ? `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` : '';
 }
