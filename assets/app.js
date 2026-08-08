@@ -189,9 +189,14 @@ function renderPhoto(id, keepIndex){
        nunca chega a virar um pointermove/pointerup no resto da
        página. essas duas faixas nas bordas ficam por cima do
        iframe só ali, capturando o arrasto pra trocar de foto;
-       o centro do vídeo (onde fica o play) continua livre. */
-    photoFrame.innerHTML = etvVideoHTML(item, {swipe:true, thumb:item.thumb}) +
-      `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`;
+       o centro do vídeo (onde fica o play) continua livre.
+       exceção: vídeos do Adobe usam o player NATIVO deles (com
+       controles próprios de play/pause/tempo/tela cheia nos cantos),
+       então nada de swipe-edge — os controles do Adobe ficam
+       livres pra receber clique. */
+    const isAdobe = item.video && item.video.kind === 'adobe';
+    photoFrame.innerHTML = etvVideoHTML(item, {swipe: !isAdobe, thumb:item.thumb}) +
+      (isAdobe ? '' : `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`);
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" data-fade alt="${p.title}">`;
   }
