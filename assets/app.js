@@ -184,20 +184,22 @@ function renderPhoto(id, keepIndex){
   } else if(item.kind === 'video'){
     photoFrame.classList.add('is-video');
     photoFrame.style.setProperty('--vr', p.ratio.replace('/',' / '));
-    /* o toque em cima do <iframe> do YouTube/Vimeo fica "preso" lá
-       dentro — ele é uma janela separada, então o gesto de arrastar
-       nunca chega a virar um pointermove/pointerup no resto da
-       página. essas duas faixas nas bordas ficam por cima do
-       iframe só ali, capturando o arrasto pra trocar de foto;
-       o centro do vídeo (onde fica o play) continua livre.
-       exceção: vídeos do YouTube e do Adobe usam o player NATIVO
-       deles (com controles próprios de play/pause/tempo/tela cheia
-       nos cantos), então nada de swipe-edge — os controles ficam
-       livres pra receber clique. */
+    /* o toque em cima do <iframe> do YouTube/Vimeo/Adobe fica "preso"
+       lá dentro — ele é uma janela separada, então o gesto de
+       arrastar nunca chega a virar um pointermove/pointerup no resto
+       da página. essas faixas nas bordas ficam por cima do iframe só
+       ali, capturando o arrasto pra trocar de foto.
+       vídeos com player NATIVO (YouTube/Adobe, que têm controles
+       próprios de play/pause/tempo/tela cheia nos cantos) usam uma
+       faixa mais curta — só a parte de CIMA do vídeo — deixando a
+       faixa de baixo (onde ficam os controles) livre pra clicar.
+       Vimeo (que usa nossa capa própria, sem controles nativos por
+       cima) continua com a faixa inteira, de cima a baixo. */
     const kind = item.video && item.video.kind;
     const nativePlayer = kind === 'adobe' || kind === 'youtube';
+    const edgeCls = nativePlayer ? 'swipe-edge swipe-edge-short' : 'swipe-edge';
     photoFrame.innerHTML = etvVideoHTML(item, {swipe: !nativePlayer, thumb:item.thumb}) +
-      (nativePlayer ? '' : `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`);
+      `<div class="${edgeCls} swipe-edge-left"></div><div class="${edgeCls} swipe-edge-right"></div>`;
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" data-fade alt="${p.title}">`;
   }

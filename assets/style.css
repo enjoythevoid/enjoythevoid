@@ -212,6 +212,10 @@ a{color:inherit;text-decoration:none}
 .swipe-edge{position:absolute;top:0;bottom:0;width:28%;z-index:2;touch-action:pan-y}
 .swipe-edge-left{left:0}
 .swipe-edge-right{right:0}
+/* versão curta: só cobre a parte de CIMA do vídeo, deixando os
+   ~56px de baixo (onde o YouTube/Adobe desenham a barra de controles
+   nativa deles — play/pause/tempo/tela cheia) livres pra clicar */
+.swipe-edge-short{bottom:56px}
 
 .post-nav-row{
   flex:0 0 auto;
