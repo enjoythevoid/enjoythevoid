@@ -184,22 +184,27 @@ function renderPhoto(id, keepIndex){
   } else if(item.kind === 'video'){
     photoFrame.classList.add('is-video');
     photoFrame.style.setProperty('--vr', p.ratio.replace('/',' / '));
-    /* o toque em cima do <iframe> do YouTube/Vimeo/Adobe fica "preso"
-       lá dentro — ele é uma janela separada, então o gesto de
-       arrastar nunca chega a virar um pointermove/pointerup no resto
-       da página. essas faixas nas bordas ficam por cima do iframe só
-       ali, capturando o arrasto pra trocar de foto.
-       vídeos com player NATIVO (YouTube/Adobe, que têm controles
-       próprios de play/pause/tempo/tela cheia nos cantos) usam uma
-       faixa mais curta — só a parte de CIMA do vídeo — deixando a
-       faixa de baixo (onde ficam os controles) livre pra clicar.
-       Vimeo (que usa nossa capa própria, sem controles nativos por
-       cima) continua com a faixa inteira, de cima a baixo. */
+    /* o toque em cima do <iframe> fica "preso" lá dentro — ele é uma
+       janela separada, então o gesto de arrastar nunca chega a virar
+       um pointermove/pointerup no resto da página, a menos que a
+       gente cubra aquela área com algo nosso.
+       · YouTube: o próprio etvVideoHTML já inclui uma camada
+         (.etv-hit) cobrindo o vídeo inteiro, ligada à IFrame API —
+         arrastar em qualquer parte troca de foto, tocar sem arrastar
+         dá play/pause. Não precisa de nada extra aqui.
+       · Adobe: sem API pública pra controlar o play por fora, então
+         usa faixas curtas nas bordas (só a parte de CIMA), deixando
+         a barra de controles nativa deles (embaixo) livre pra clicar.
+       · Vimeo: usa nossa capa própria (sem controles nativos por
+         cima antes do play), então usa a faixa inteira normal. */
     const kind = item.video && item.video.kind;
-    const nativePlayer = kind === 'adobe' || kind === 'youtube';
-    const edgeCls = nativePlayer ? 'swipe-edge swipe-edge-short' : 'swipe-edge';
-    photoFrame.innerHTML = etvVideoHTML(item, {swipe: !nativePlayer, thumb:item.thumb}) +
-      `<div class="${edgeCls} swipe-edge-left"></div><div class="${edgeCls} swipe-edge-right"></div>`;
+    let extraEdges = '';
+    if(kind === 'adobe'){
+      extraEdges = `<div class="swipe-edge swipe-edge-short swipe-edge-left"></div><div class="swipe-edge swipe-edge-short swipe-edge-right"></div>`;
+    } else if(kind !== 'youtube'){
+      extraEdges = `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`;
+    }
+    photoFrame.innerHTML = etvVideoHTML(item, {swipe: kind !== 'youtube' && kind !== 'adobe', thumb:item.thumb}) + extraEdges;
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" data-fade alt="${p.title}">`;
   }

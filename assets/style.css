@@ -514,6 +514,12 @@ a{color:inherit;text-decoration:none}
 .post-body .md-video{position:relative}
 .etv-frame{position:absolute;inset:0;width:100%;height:100%;border:none;display:block}
 
+/* camada transparente sobre o vídeo do YouTube — cobre tudo, mas
+   não bloqueia o gesto de arrastar (ele sobe naturalmente pro
+   código que troca de foto). um toque simples (sem arrastar) alterna
+   play/pause via API (ver wireYouTubeHit no player.js). */
+.etv-hit{position:absolute;inset:0;z-index:3;cursor:pointer;touch-action:pan-y}
+
 /* capa (facade) antes do play — só usada pelo Vimeo */
 .etv-poster{
   position:absolute;inset:0;cursor:pointer;
