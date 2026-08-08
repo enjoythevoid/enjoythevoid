@@ -201,7 +201,6 @@ function renderPhoto(id, keepIndex){
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" data-fade alt="${p.title}">`;
   }
-  fitFrameBox();
   if(typeof etvUpgradeVideos === 'function') etvUpgradeVideos(photoFrame);
   if(typeof etvSweepImages   === 'function') etvSweepImages(photoFrame);
 
@@ -234,6 +233,11 @@ function renderPhoto(id, keepIndex){
   capPos.textContent = `${String(idx+1).padStart(2,'0')} / ${NAV_ORDER.length}`;
 
   history.replaceState(null, '', '#' + p.slug);
+  /* só agora, com filmstrip/legenda já no lugar final, é que a
+     altura disponível pro .frame está definitiva — medir antes
+     disso (como acontecia antes) podia pegar um número que ainda
+     ia mudar quando a tira de miniaturas aparecesse/sumisse. */
+  fitFrameBoxSettled();
 }
 
 function openPhoto(id){
@@ -381,14 +385,20 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
    proporção errada — o vídeo aparecia cortado/espremido dentro do
    player.
 
-   a primeira correção lia o max-width/max-height de volta do CSS
-   (getComputedStyle) pra calcular o tamanho certo em pixels — mas
-   isso dependia do navegador resolver corretamente unidades de
-   viewport (vw/vh) dentro de min(), e no mobile isso não vinha
-   confiável, resultando num vídeo minúsculo. agora os limites vêm
-   direto de window.innerWidth/innerHeight, sem ler nada do CSS de
-   volta — os mesmos números que o CSS usa (84vw/980px no desktop,
-   ~94vw/56vh no mobile), só que calculados aqui, garantidos. */
+   tentei depois trocar tudo pra CSS puro (aspect-ratio, igual já
+   funcionava pras fotos) — mas o <div> do vídeo é posicionado
+   absoluto (position:absolute) e por isso NÃO empurra tamanho
+   nenhum pro .frame pai, diferente da <img> que tem tamanho
+   intrínseco próprio. Sem JS medindo, o .frame colapsava pra 0×0.
+   voltou pro cálculo em JS, mas corrigindo a causa real do
+   descentramento no mobile: window.innerHeight é uma FOTO fixa do
+   momento em que roda, e no celular a altura real da tela MUDA
+   (a barra de endereço do navegador aparece/some, mudando quanto
+   espaço existe) — se o cálculo já rodou antes disso, ele fica
+   desatualizado e o vídeo aparece fora do centro. window.visualViewport
+   é a API que acompanha essa mudança em tempo real; usamos ela
+   quando disponível, e recalculamos de novo com um pequeno atraso
+   depois de abrir o visor pra pegar o estado já assentado da tela. */
 function fitFrameBox(){
   const isVideoOrEmpty = photoFrame.classList.contains('is-video') || photoFrame.classList.contains('is-empty');
   if(!isVideoOrEmpty){ photoFrame.style.width = ''; photoFrame.style.height = ''; return; }
@@ -396,13 +406,17 @@ function fitFrameBox(){
   const parts = vr.split('/').map(n => parseFloat(n));
   const ar = (parts[0] && parts[1]) ? parts[0] / parts[1] : 16/9;
 
-  const isMobile = window.innerWidth <= 640;
-  const maxW = isMobile ? window.innerWidth * 0.92 : Math.min(window.innerWidth * 0.84, 980);
+  const vv = window.visualViewport;
+  const viewportW = vv ? vv.width  : window.innerWidth;
+  const viewportH = vv ? vv.height : window.innerHeight;
+
+  const isMobile = viewportW <= 640;
+  const maxW = isMobile ? viewportW * 0.92 : Math.min(viewportW * 0.84, 980);
   // usa a altura real que sobra dentro do .photo-stage (o pai do frame)
-  // em vez de uma fração de innerHeight chutada — senão o vídeo pode
+  // em vez de uma fração de altura chutada — senão o vídeo pode
   // estourar o espaço disponível do mesmo jeito que a foto estourava.
   const stage = photoFrame.parentElement;
-  const maxH = stage ? stage.clientHeight : (isMobile ? window.innerHeight * 0.56 : Math.min(window.innerHeight * 0.70, 700));
+  const maxH = stage ? stage.clientHeight : (isMobile ? viewportH * 0.56 : Math.min(viewportH * 0.70, 700));
 
   let w = maxW, h = w / ar;
   if(h > maxH){ h = maxH; w = h * ar; }
@@ -410,6 +424,18 @@ function fitFrameBox(){
   photoFrame.style.height = `${Math.round(h)}px`;
 }
 window.addEventListener('resize', fitFrameBox);
+/* acompanha a barra de endereço do mobile mudando de tamanho ao
+   vivo (rolagem, teclado abrindo/fechando) — window.resize sozinho
+   não cobre isso em todos os navegadores */
+if(window.visualViewport) window.visualViewport.addEventListener('resize', fitFrameBox);
+/* o valor de stage.clientHeight logo após abrir o visor pode ainda
+   não estar 100% assentado (transições, barra de endereço mobile
+   recolhendo) — um recálculo curto depois garante o número final */
+function fitFrameBoxSettled(){
+  fitFrameBox();
+  requestAnimationFrame(() => requestAnimationFrame(fitFrameBox));
+  setTimeout(fitFrameBox, 250);
+}
 window.addEventListener('orientationchange', fitFrameBox);
 
 /* mede a altura real do topbar (varia conforme ele quebra linha

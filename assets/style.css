@@ -450,11 +450,16 @@ a{color:inherit;text-decoration:none}
   .entry .cap{font-size:11px}
 
   .photo-stage{
-    /* padding-top grande no mobile pra empurrar o vídeo pra baixo,
-       compensando o espaço que a legenda, tira de miniaturas e
-       barra de navegação ocupam abaixo do vídeo — assim o vídeo
-       fica visualmente centralizado na tela, não empurrado pro topo */
-    padding:22vh var(--s3) var(--s3);
+    /* .photo-stage já é flex:1 1 auto dentro da coluna do #photoView —
+       ele só recebe o espaço que realmente sobra depois que a tira de
+       miniaturas, a legenda e a barra de navegação (irmãos dele) já
+       tomaram o que precisam. Por isso não precisa de nenhum padding
+       grande "chutado" pra compensar nada — um respiro pequeno e
+       simétrico já deixa o vídeo/foto centralizado de verdade no
+       espaço disponível. (Um padding-top de 22vh ficava aqui antes,
+       bem maior que o padding-bottom — isso empurrava o conteúdo pra
+       baixo do centro real da caixa, ficando descentralizado.) */
+    padding:var(--s2) var(--s3);
     touch-action:pan-y;
   }
   .photo-close{display:flex}
