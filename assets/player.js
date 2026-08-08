@@ -48,9 +48,18 @@
     if(!v || !v.kind) return '';
 
     if(v.kind === 'adobe'){
+      /* autoplay=1: sem isso, sem controle de play por API (a Adobe
+         não tem uma API pública tipo a do YouTube), o replay ficava
+         emperrado precisando clicar várias vezes. o .etv-hit cobre o
+         vídeo inteiro só pra liberar o arrasto em qualquer parte —
+         sem toque pra play/pause aqui, porque não existe API da
+         Adobe pra controlar isso por fora (o vídeo já autoplay, então
+         não falta uma forma de iniciar; só pausar/repetir manualmente
+         fica sem controle enquanto o arrasto estiver ativo). */
       return `<div class="etv-video etv-video-adobe" data-kind="adobe" data-id="${v.id}" data-ready="1">`
         + `<iframe class="etv-frame" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen `
-        + `src="https://www-ccv.adobe.io/v1/player/ccv/${v.id}/embed?bgcolor=%23000000&lazyLoading=true&api_key=BehancePro2View"></iframe>`
+        + `src="https://www-ccv.adobe.io/v1/player/ccv/${v.id}/embed?bgcolor=%23000000&lazyLoading=true&api_key=BehancePro2View&autoplay=1"></iframe>`
+        + `<div class="etv-hit"></div>`
         + `</div>`;
     }
     if(v.kind === 'youtube'){
@@ -76,7 +85,7 @@
     (root || document).querySelectorAll('.etv-video:not([data-ready])').forEach(box => {
       box.setAttribute('data-ready','1');
       const hit = box.querySelector('.etv-hit');
-      if(hit){ wireYouTubeHit(box, hit); return; }
+      if(hit){ wireHit(box, hit); return; }
       const poster = box.querySelector('.etv-poster');
       if(!poster) return;
       const start = () => { poster.removeEventListener('click', start); mount(box); };
@@ -84,12 +93,18 @@
     });
   };
 
-  /* conecta a camada transparente de um vídeo do YouTube: toque
-     simples (sem arrastar) alterna play/pause via API; arrastar
-     não é interceptado aqui — sobe naturalmente pro mesmo código
-     que já troca de foto quando você arrasta em cima de uma foto. */
-  function wireYouTubeHit(box, hit){
+  /* conecta a camada transparente sobre o vídeo. em qualquer caso,
+     arrastar não é interceptado aqui — sobe naturalmente (bubbling)
+     pro mesmo código que já troca de foto quando você arrasta em
+     cima de uma foto, então o gesto funciona em qualquer parte do
+     vídeo.
+     se a camada tiver data-yt-id (só o YouTube tem), também liga um
+     toque simples (sem arrastar) ao play/pause via IFrame API. a
+     Adobe não tem uma API equivalente, então a camada dela só cuida
+     do arrasto — sem toggle por toque. */
+  function wireHit(box, hit){
     const ytId = hit.dataset.ytId;
+    if(!ytId) return; // Adobe: só arrasto, sem API pra ligar
     let player = null;
     YT_READY.then(YT => {
       player = new YT.Player(ytId, {

@@ -188,23 +188,22 @@ function renderPhoto(id, keepIndex){
        janela separada, então o gesto de arrastar nunca chega a virar
        um pointermove/pointerup no resto da página, a menos que a
        gente cubra aquela área com algo nosso.
-       · YouTube: o próprio etvVideoHTML já inclui uma camada
-         (.etv-hit) cobrindo o vídeo inteiro, ligada à IFrame API —
-         arrastar em qualquer parte troca de foto, tocar sem arrastar
-         dá play/pause. Não precisa de nada extra aqui.
-       · Adobe: sem API pública pra controlar o play por fora, então
-         usa faixas curtas nas bordas (só a parte de CIMA), deixando
-         a barra de controles nativa deles (embaixo) livre pra clicar.
+       · YouTube e Adobe: o próprio etvVideoHTML já inclui uma camada
+         (.etv-hit) cobrindo o vídeo inteiro — arrastar em qualquer
+         parte troca de foto. No YouTube um toque simples (sem
+         arrastar) também dá play/pause via API; na Adobe não (sem
+         API pública equivalente), mas como o vídeo já autoplay isso
+         não impede o uso normal. Nenhum dos dois precisa de nada
+         extra aqui.
        · Vimeo: usa nossa capa própria (sem controles nativos por
-         cima antes do play), então usa a faixa inteira normal. */
+         cima antes do play), então usa a faixa inteira normal, só
+         nas bordas. */
     const kind = item.video && item.video.kind;
-    let extraEdges = '';
-    if(kind === 'adobe'){
-      extraEdges = `<div class="swipe-edge swipe-edge-short swipe-edge-left"></div><div class="swipe-edge swipe-edge-short swipe-edge-right"></div>`;
-    } else if(kind !== 'youtube'){
-      extraEdges = `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`;
-    }
-    photoFrame.innerHTML = etvVideoHTML(item, {swipe: kind !== 'youtube' && kind !== 'adobe', thumb:item.thumb}) + extraEdges;
+    const needsEdges = kind !== 'youtube' && kind !== 'adobe';
+    const extraEdges = needsEdges
+      ? `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`
+      : '';
+    photoFrame.innerHTML = etvVideoHTML(item, {swipe: needsEdges, thumb:item.thumb}) + extraEdges;
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" data-fade alt="${p.title}">`;
   }
