@@ -450,16 +450,15 @@ a{color:inherit;text-decoration:none}
   .entry .cap{font-size:11px}
 
   .photo-stage{
-    /* .photo-stage já é flex:1 1 auto dentro da coluna do #photoView —
-       ele só recebe o espaço que realmente sobra depois que a tira de
-       miniaturas, a legenda e a barra de navegação (irmãos dele) já
-       tomaram o que precisam. Por isso não precisa de nenhum padding
-       grande "chutado" pra compensar nada — um respiro pequeno e
-       simétrico já deixa o vídeo/foto centralizado de verdade no
-       espaço disponível. (Um padding-top de 22vh ficava aqui antes,
-       bem maior que o padding-bottom — isso empurrava o conteúdo pra
-       baixo do centro real da caixa, ficando descentralizado.) */
-    padding:var(--s2) var(--s3);
+    /* no mobile o .photo-stage ia de y=0 até a tira de miniaturas —
+       ou seja, o topo dele ficava ESCONDIDO atrás da barra do
+       navegador (relógio/URL) e do botão X de fechar. como o vídeo é
+       centralizado dentro desse espaço, ele subia demais (parte do
+       "centro" caía atrás da barra). o padding-top abaixa o início da
+       área útil pra logo abaixo do X, então o vídeo centraliza no que
+       de fato aparece na tela. usa safe-area (notch do iPhone) + espaço
+       pro botão X. */
+    padding:calc(env(safe-area-inset-top, 0px) + 64px) var(--s3) var(--s2);
     touch-action:pan-y;
   }
   .photo-close{display:flex}
