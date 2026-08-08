@@ -109,7 +109,7 @@
     iframe.title = '';
     iframe.allow = 'autoplay; fullscreen; picture-in-picture';
     iframe.setAttribute('allowfullscreen','');
-    iframe.src = `https://www.youtube.com/embed/${id}`
+    iframe.src = `https://www.youtube-nocookie.com/embed/${id}`
       + `?autoplay=1&controls=0&rel=0&modestbranding=1&iv_load_policy=3`
       + `&playsinline=1&fs=0&disablekb=1&enablejsapi=1&origin=${origin}`;
     box.appendChild(iframe);
