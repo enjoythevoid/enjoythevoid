@@ -565,6 +565,28 @@ a{color:inherit;text-decoration:none}
 .etv-video:fullscreen{background:#000}
 .etv-video:fullscreen .etv-frame{width:100vw;height:100vh}
 
+/* máscaras de canto que encobrem a marca do YouTube (avatar+título
+   em cima à esquerda, logo em baixo à direita). ficam ocultas
+   durante o playback e aparecem quando a barra aparece — que é
+   exatamente quando o próprio YouTube mostraria a marca (pausado,
+   hover, buffer, fim). tamanho generoso o bastante pra cobrir os
+   overlays em qualquer proporção de tela sem passar tanto do canto. */
+.etv-mask{position:absolute;background:#000;z-index:5;opacity:0;pointer-events:none;transition:opacity .25s ease}
+/* superior esquerda: cobre avatar + título + botão de compartilhar */
+.etv-mask-tl{top:0;left:0;width:55%;height:28%}
+/* inferior direita: cobre a marca do YouTube + qualquer ícone que
+   sobre da interface deles (mute, tela cheia) */
+.etv-mask-br{bottom:0;right:0;width:30%;height:22%}
+/* as máscaras aparecem só quando o vídeo NÃO está tocando (pausa,
+   buffer, começo, fim) — que é exatamente quando o YouTube mostra
+   a marca. durante o playback ativo elas somem e o vídeo aparece
+   inteiro, sem piscar toda vez que o mouse passa por cima.
+   .mask-force é usada nos primeiros ~5s do primeiro play pra
+   encobrir o card de título que o YouTube costuma mostrar logo no
+   começo. */
+.etv-video:not(.is-playing) .etv-mask,
+.etv-video.mask-force .etv-mask{opacity:1}
+
 /* =========================================================
    CARREGAMENTO ORGÂNICO DAS IMAGENS (fade-in, sem "quebrada")
    ========================================================= */
