@@ -78,8 +78,17 @@
         + `src="https://www-ccv.adobe.io/v1/player/ccv/${v.id}/embed?bgcolor=%23000000&lazyLoading=true&api_key=BehancePro2View"></iframe>`
         + `</div>`;
     }
-    const thumb = opts.thumb ||
-      (v.kind === 'youtube' ? `https://img.youtube.com/vi/${v.id}/hqdefault.jpg` : '');
+    /* YouTube: iframe padrão com autoplay, interface nativa do YouTube.
+       igual ao Adobe agora — sem capa, sem barra custom, sem nada
+       nosso por cima. os controles do YouTube (play/pause/tempo/tela
+       cheia) funcionam direto. */
+    if(v.kind === 'youtube'){
+      return `<div class="etv-video etv-video-youtube" data-kind="youtube" data-id="${v.id}" data-ready="1">`
+        + `<iframe class="etv-frame" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen `
+        + `src="https://www.youtube.com/embed/${v.id}?autoplay=1&rel=0&modestbranding=1&playsinline=1"></iframe>`
+        + `</div>`;
+    }
+    const thumb = opts.thumb || '';
     const bg = thumb ? ` style="background-image:url('${thumb.replace(/'/g,"%27")}')"` : '';
     return `<div class="etv-video" data-kind="${v.kind}" data-id="${v.id}"${opts.swipe ? ' data-swipe="1"' : ''}>`
       + `<div class="etv-poster"${bg}><button class="etv-bigplay" type="button" aria-label="reproduzir">${SVG_BIG}</button></div>`

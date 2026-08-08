@@ -190,13 +190,14 @@ function renderPhoto(id, keepIndex){
        página. essas duas faixas nas bordas ficam por cima do
        iframe só ali, capturando o arrasto pra trocar de foto;
        o centro do vídeo (onde fica o play) continua livre.
-       exceção: vídeos do Adobe usam o player NATIVO deles (com
-       controles próprios de play/pause/tempo/tela cheia nos cantos),
-       então nada de swipe-edge — os controles do Adobe ficam
+       exceção: vídeos do YouTube e do Adobe usam o player NATIVO
+       deles (com controles próprios de play/pause/tempo/tela cheia
+       nos cantos), então nada de swipe-edge — os controles ficam
        livres pra receber clique. */
-    const isAdobe = item.video && item.video.kind === 'adobe';
-    photoFrame.innerHTML = etvVideoHTML(item, {swipe: !isAdobe, thumb:item.thumb}) +
-      (isAdobe ? '' : `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`);
+    const kind = item.video && item.video.kind;
+    const nativePlayer = kind === 'adobe' || kind === 'youtube';
+    photoFrame.innerHTML = etvVideoHTML(item, {swipe: !nativePlayer, thumb:item.thumb}) +
+      (nativePlayer ? '' : `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`);
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" data-fade alt="${p.title}">`;
   }
