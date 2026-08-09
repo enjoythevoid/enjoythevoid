@@ -140,6 +140,7 @@ const capPos       = document.getElementById('capPos');
 const postLink     = document.getElementById('postLink');
 const filmstrip    = document.getElementById('filmstrip');
 const filmstripRow = document.getElementById('filmstripRow');
+const swipeHint = document.getElementById('swipeHint');
 const fsPrev       = document.getElementById('fsPrev');
 const fsNext       = document.getElementById('fsNext');
 const postNavRow  = document.querySelector('.post-nav-row');
@@ -258,6 +259,21 @@ function openPhoto(id){
   renderPhoto(id);
   lockScroll();
   postNavRow.classList.add('show');
+  showSwipeHint();
+}
+let swipeHintTimer = null;
+let swipeHintShown = false;
+/* dica "arraste para o lado" — aparece com fade só no mobile (o CSS
+   já esconde no desktop), só na PRIMEIRA vez que o visor abre nessa
+   visita ao site (pra não ficar repetitivo toda vez que abre uma
+   foto). só volta a aparecer se a pessoa atualizar a página, porque
+   essa marcação é só uma variável em memória, não fica salva. */
+function showSwipeHint(){
+  if(!swipeHint || swipeHintShown) return;
+  swipeHintShown = true;
+  clearTimeout(swipeHintTimer);
+  swipeHint.classList.add('show');
+  swipeHintTimer = setTimeout(() => swipeHint.classList.remove('show'), 2200);
 }
 function closePhoto(){
   if(!photoView.classList.contains('open')) return;
@@ -393,6 +409,14 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
       const dx = (e.clientX ?? startX) - startX;
       if(Math.abs(dx) >= 50){
         justSwiped = true;
+        /* depois de um arrasto de verdade o navegador normalmente
+           NÃO dispara um clique — então essa trava nunca era
+           "consumida" e ficava presa ligada, engolindo o próximo
+           toque de fechar (bem depois, sem relação nenhuma com esse
+           arrasto), exigindo um segundo toque pra fechar. Ela se
+           desliga sozinha logo em seguida em vez de ficar esperando
+           um clique que talvez nunca aconteça. */
+        setTimeout(() => { justSwiped = false; }, 400);
         stepPhoto(dx < 0 ? 1 : -1);
       }
     }

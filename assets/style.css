@@ -172,7 +172,8 @@ a{color:inherit;text-decoration:none}
    photo-close (o X) continua visível pra sempre dar pra fechar. */
 #photoView.is-zoomed .filmstrip-row,
 #photoView.is-zoomed .photo-cap,
-#photoView.is-zoomed .post-nav-row{display:none}
+#photoView.is-zoomed .post-nav-row,
+#photoView.is-zoomed .swipe-hint{display:none}
 #photoView.is-zoomed .photo-stage{padding:0}
 
 .photo-stage{
@@ -186,6 +187,21 @@ a{color:inherit;text-decoration:none}
   padding:48px var(--s5) 0;
   position:relative;
 }
+
+/* dica "arraste para o lado" — só no mobile, aparece com fade quando
+   o visor abre e some sozinha depois de alguns segundos (ver JS em
+   app.js). fica encostada no rodapé do .photo-stage, logo acima da
+   tira de miniaturas. */
+.swipe-hint{
+  position:absolute;left:50%;bottom:10px;transform:translateX(-50%);
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:rgba(255,255,255,.4);
+  white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .6s ease;
+  display:none;
+}
+.swipe-hint.show{opacity:1}
+@media(max-width:640px){ .swipe-hint{display:block} }
 /* foto: o tamanho vem da própria imagem, dentro de um limite.
    vídeo: a proporção vem do campo ratio do post (--vr).
    o limite agora é o espaço REAL que sobra no flex (100% do
