@@ -2,19 +2,23 @@
    PLAYER — monta o vídeo no visor / no post profundo.
 
    Como funciona hoje:
-   · YouTube → iframe nativo (interface completa do YouTube, com a
-     marca deles — não dá pra remover, é conteúdo de outro domínio).
-     Por cima entra uma camada TRANSPARENTE cobrindo o vídeo inteiro:
-     um toque simples nela chama play/pause via IFrame API (porque
-     um clique direto no botão nativo, coberto por essa camada, não
-     chegaria até ele); um arraste nela NÃO é interceptado — sobe
-     (bubbling) pro mesmo código que já troca de foto quando você
-     arrasta em cima de uma foto normal, então dá pra arrastar em
-     qualquer parte do vídeo, não só nas bordas.
-   · Adobe Portfolio/Behance (CCV) → iframe direto, player nativo
-     deles. Sem API pública disponível pra controlar o play por
-     fora, então usamos faixas curtas nas bordas (só a parte de cima)
-     pro arrasto, deixando a barra de controles nativa deles livre.
+   · YouTube → iframe nativo. Por cima entra uma camada TRANSPARENTE
+     cobrindo o vídeo inteiro: um toque simples nela chama play/pause
+     via IFrame API; arraste sobe (bubbling) pro código que troca de
+     foto, então funciona em qualquer parte do vídeo. Se a pessoa
+     tocar ANTES da API do YouTube terminar de carregar (comum em
+     conexão de celular mais lenta), o toque fica "pendente" e é
+     aplicado assim que a API ficar pronta — antes, um toque nesse
+     intervalo não fazia nada, parecendo que o vídeo não dava play.
+   · Adobe Portfolio/Behance (CCV) → iframe direto com autoplay=1.
+     SEM API pública disponível pra controlar o play por fora — então
+     NÃO cobrimos o vídeo inteiro (diferente do YouTube): se o
+     autoplay falhar (comum em celular, que bloqueia autoplay com som
+     com bastante frequência), a pessoa precisa poder tocar no botão
+     de play NATIVO da Adobe pra iniciar manualmente. Por isso usamos
+     só faixas curtas nas bordas (a parte de cima) pro arrasto,
+     deixando o resto do vídeo — incluindo os controles nativos —
+     livre pra receber toque direto.
    · Vimeo → capa própria (clique pra carregar) + parâmetros que
      escondem título/autor, porque o Vimeo aceita isso via URL.
    =========================================================== */
@@ -41,25 +45,16 @@
 
   /* ---- HTML do vídeo. item pode ser {kind,id} ou {video:{...}} ----
      opts: { thumb, swipe }  swipe=true deixa as bordas livres pro
-     gesto de trocar de foto no visor (só usado pelo Vimeo). --- */
+     gesto de trocar de foto no visor (Vimeo e Adobe usam). --- */
   window.etvVideoHTML = function(item, opts){
     opts = opts || {};
     const v = (item && item.video) ? item.video : item;
     if(!v || !v.kind) return '';
 
     if(v.kind === 'adobe'){
-      /* autoplay=1: sem isso, sem controle de play por API (a Adobe
-         não tem uma API pública tipo a do YouTube), o replay ficava
-         emperrado precisando clicar várias vezes. o .etv-hit cobre o
-         vídeo inteiro só pra liberar o arrasto em qualquer parte —
-         sem toque pra play/pause aqui, porque não existe API da
-         Adobe pra controlar isso por fora (o vídeo já autoplay, então
-         não falta uma forma de iniciar; só pausar/repetir manualmente
-         fica sem controle enquanto o arrasto estiver ativo). */
       return `<div class="etv-video etv-video-adobe" data-kind="adobe" data-id="${v.id}" data-ready="1">`
         + `<iframe class="etv-frame" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen `
         + `src="https://www-ccv.adobe.io/v1/player/ccv/${v.id}/embed?bgcolor=%23000000&lazyLoading=true&api_key=BehancePro2View&autoplay=1"></iframe>`
-        + `<div class="etv-hit"></div>`
         + `</div>`;
     }
     if(v.kind === 'youtube'){
@@ -85,7 +80,7 @@
     (root || document).querySelectorAll('.etv-video:not([data-ready])').forEach(box => {
       box.setAttribute('data-ready','1');
       const hit = box.querySelector('.etv-hit');
-      if(hit){ wireHit(box, hit); return; }
+      if(hit){ wireYouTubeHit(box, hit); return; }
       const poster = box.querySelector('.etv-poster');
       if(!poster) return;
       const start = () => { poster.removeEventListener('click', start); mount(box); };
@@ -93,33 +88,31 @@
     });
   };
 
-  /* conecta a camada transparente sobre o vídeo. em qualquer caso,
-     arrastar não é interceptado aqui — sobe naturalmente (bubbling)
-     pro mesmo código que já troca de foto quando você arrasta em
-     cima de uma foto, então o gesto funciona em qualquer parte do
-     vídeo.
-     se a camada tiver data-yt-id (só o YouTube tem), também liga um
-     toque simples (sem arrastar) ao play/pause via IFrame API. a
-     Adobe não tem uma API equivalente, então a camada dela só cuida
-     do arrasto — sem toggle por toque. */
-  function wireHit(box, hit){
+  /* conecta a camada transparente de um vídeo do YouTube: toque
+     simples (sem arrastar) alterna play/pause via API; arrastar não
+     é interceptado aqui — sobe naturalmente pro código que já troca
+     de foto quando você arrasta em cima de uma foto.
+     se a pessoa tocar antes da API terminar de carregar, o toque
+     fica pendente (pendingToggle) e é aplicado assim que der — sem
+     isso, um toque nesse intervalo curto não fazia nada. */
+  function wireYouTubeHit(box, hit){
     const ytId = hit.dataset.ytId;
-    if(!ytId) return; // Adobe: só arrasto, sem API pra ligar
-    let player = null;
+    let player = null, pendingToggle = false;
+    const doToggle = () => {
+      if(!player || !player.getPlayerState) { pendingToggle = true; return; }
+      const state = player.getPlayerState();
+      if(state === 1) player.pauseVideo();
+      else player.playVideo();
+    };
     YT_READY.then(YT => {
       player = new YT.Player(ytId, {
         events: {
-          onReady: () => {},
+          onReady: () => { if(pendingToggle){ pendingToggle = false; doToggle(); } },
           onStateChange: () => {}
         }
       });
     });
-    hit.addEventListener('click', () => {
-      if(!player || !player.getPlayerState) return;
-      const state = player.getPlayerState();
-      if(state === 1) player.pauseVideo();
-      else player.playVideo();
-    });
+    hit.addEventListener('click', doToggle);
   }
 
   function mount(box){

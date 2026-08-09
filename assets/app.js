@@ -188,22 +188,26 @@ function renderPhoto(id, keepIndex){
        janela separada, então o gesto de arrastar nunca chega a virar
        um pointermove/pointerup no resto da página, a menos que a
        gente cubra aquela área com algo nosso.
-       · YouTube e Adobe: o próprio etvVideoHTML já inclui uma camada
-         (.etv-hit) cobrindo o vídeo inteiro — arrastar em qualquer
-         parte troca de foto. No YouTube um toque simples (sem
-         arrastar) também dá play/pause via API; na Adobe não (sem
-         API pública equivalente), mas como o vídeo já autoplay isso
-         não impede o uso normal. Nenhum dos dois precisa de nada
-         extra aqui.
+       · YouTube: o próprio etvVideoHTML já inclui uma camada
+         (.etv-hit) cobrindo o vídeo inteiro, ligada à IFrame API —
+         arrastar em qualquer parte troca de foto, tocar sem arrastar
+         dá play/pause. Não precisa de nada extra aqui.
+       · Adobe: SEM API pública pra controlar o play por fora. Se o
+         autoplay falhar (comum no celular), a pessoa precisa poder
+         tocar direto no play nativo da Adobe — por isso NÃO cobrimos
+         o vídeo inteiro aqui; só faixas curtas nas bordas (a parte de
+         cima) pro arrasto, deixando o resto (controles nativos)
+         livre pra receber toque direto.
        · Vimeo: usa nossa capa própria (sem controles nativos por
-         cima antes do play), então usa a faixa inteira normal, só
-         nas bordas. */
+         cima antes do play), então usa a faixa inteira normal. */
     const kind = item.video && item.video.kind;
-    const needsEdges = kind !== 'youtube' && kind !== 'adobe';
-    const extraEdges = needsEdges
-      ? `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`
-      : '';
-    photoFrame.innerHTML = etvVideoHTML(item, {swipe: needsEdges, thumb:item.thumb}) + extraEdges;
+    let extraEdges = '';
+    if(kind === 'adobe'){
+      extraEdges = `<div class="swipe-edge swipe-edge-short swipe-edge-left"></div><div class="swipe-edge swipe-edge-short swipe-edge-right"></div>`;
+    } else if(kind !== 'youtube'){
+      extraEdges = `<div class="swipe-edge swipe-edge-left"></div><div class="swipe-edge swipe-edge-right"></div>`;
+    }
+    photoFrame.innerHTML = etvVideoHTML(item, {swipe: kind !== 'youtube' && kind !== 'adobe', thumb:item.thumb}) + extraEdges;
   } else {
     photoFrame.innerHTML = `<img src="${item.src}" data-fade alt="${p.title}">`;
   }
@@ -278,6 +282,12 @@ document.querySelector('.photo-stage').addEventListener('click', e => {
   if(e.target.closest('.frame')) return;
   closePhoto();
 });
+/* área segura: a tira de miniaturas (setas < >, cada foto pequena, e
+   os espaços em branco entre elas) nunca fecha o visor, mesmo que a
+   pessoa erre o dedo tentando tocar numa miniatura específica —
+   nesse caso o toque simplesmente não faz nada, em vez de sair da
+   pré-visualização sem querer. */
+filmstripRow.addEventListener('click', e => e.stopPropagation());
 document.getElementById('prevBtn').addEventListener('click', () => stepPhoto(-1));
 document.getElementById('nextBtn').addEventListener('click', () => stepPhoto(1));
 document.getElementById('photoClose').addEventListener('click', closePhoto);
