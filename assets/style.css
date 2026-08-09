@@ -188,12 +188,12 @@ a{color:inherit;text-decoration:none}
   position:relative;
 }
 
-/* dica "arraste para o lado" — só no mobile, aparece com fade quando
-   o visor abre e some sozinha depois de alguns segundos (ver JS em
-   app.js). fica encostada no rodapé do .photo-stage, logo acima da
-   tira de miniaturas. */
+/* dica "swipe to browse" — só no mobile, aparece com fade quando o
+   visor abre e some sozinha depois de alguns segundos (ver JS em
+   app.js). fica no meio do espaço vazio abaixo da foto/vídeo, não
+   colada no rodapé perto da tira de miniaturas. */
 .swipe-hint{
-  position:absolute;left:50%;bottom:10px;transform:translateX(-50%);
+  position:absolute;left:50%;bottom:22%;transform:translateX(-50%);
   font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;
   text-transform:uppercase;color:rgba(255,255,255,.4);
   white-space:nowrap;pointer-events:none;
