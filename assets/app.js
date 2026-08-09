@@ -389,13 +389,17 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
       startX = e.clientX; startY = e.clientY;
       panStartX = panX; panStartY = panY;
 
+      /* não conta como duplo-toque-pra-zoom se o toque foi num botão
+         ou link (previous/next post, fechar, etc) — senão tocar duas
+         vezes rápido nesses controles disparava zoom sem querer */
+      const onControl = e.target.closest('button, a, .post-nav-row, .filmstrip-row');
       const now = Date.now();
-      if(now - lastTapTime < 300 && activeImg()){
+      if(!onControl && now - lastTapTime < 300 && activeImg()){
         scale = scale > 1 ? 1 : 2.5;
         panX = 0; panY = 0;
         applyTransform();
       }
-      lastTapTime = now;
+      lastTapTime = onControl ? 0 : now;
     }
   });
 
