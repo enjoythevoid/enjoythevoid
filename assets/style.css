@@ -471,7 +471,7 @@ a{color:inherit;text-decoration:none}
      bem compacto pra caber sem precisar disso. */
   .topbar{
     flex-wrap:nowrap;
-    padding:16px var(--s3);
+    padding:7px var(--s3);
     gap:8px;
   }
   .topbar .seg{flex:0 0 auto;font-size:9px;gap:8px}
@@ -489,20 +489,22 @@ a{color:inherit;text-decoration:none}
      (ver .social-links-mobile mais abaixo) */
   .topbar .social-links{display:none}
 
-  /* redes sociais fora da barra fixa: aparecem logo abaixo dela
-     (margin-top do tamanho real da topbar, medido em JS) e rolam
-     JUNTO com o conteúdo da página — diferente da topbar, que fica
-     fixa. quando a pessoa desce a página, essa linha sai voando pra
-     cima e é coberta pela topbar (que tem fundo sólido), porque a
-     topbar continua no mesmo lugar da tela enquanto isso rola por
-     baixo dela. */
+  /* redes sociais fora da barra fixa: um grupinho pequeno colado no
+     canto superior direito, quase encostado na barra (não uma faixa
+     inteira separada) — lê como parte do mesmo canto, não como uma
+     segunda barra. rola JUNTO com o conteúdo da página — diferente
+     da topbar, que fica fixa. quando a pessoa desce a página, esse
+     grupinho sai voando pra cima e é coberto pela topbar (que tem
+     fundo sólido), porque a topbar continua no mesmo lugar da tela
+     enquanto isso rola por baixo dela. */
   .social-links-mobile{
-    display:flex;justify-content:center;
-    margin-top:var(--topbar-h, 74px);
-    padding:10px 0;
-    gap:20px;
+    display:flex;justify-content:flex-end;
+    margin-top:calc(var(--topbar-h, 60px) + 2px);
+    padding:0 var(--s3) 14px;
+    gap:9px;
   }
-  .social-links-mobile svg{width:15px;height:15px}
+  .social-links-mobile svg{width:10px;height:10px}
+  .social-links-mobile a{opacity:.55}
 
   /* a grade de fotos estava começando bem baixo na tela — comprimi
      a barra de topo (acima) e o cabeçalho do ano (abaixo) pra ela
