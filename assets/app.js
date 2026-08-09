@@ -549,6 +549,22 @@ document.getElementById('navAbout').addEventListener('click', openAbout);
 document.getElementById('backFromAbout').addEventListener('click', e => { e.preventDefault(); closeAbout(); });
 aboutPanel.addEventListener('click', e => { if(e.target === aboutPanel) closeAbout(); });
 
+/* alterna o idioma do about (EN <-> PT) a cada clique no botão.
+   troca qual bloco fica visível e atualiza o rótulo do botão pra
+   mostrar o idioma que a pessoa vai ver SE clicar de novo. */
+(function(){
+  const langBtn = document.getElementById('aboutLang');
+  if(!langBtn) return;
+  let lang = 'en';
+  langBtn.addEventListener('click', () => {
+    lang = (lang === 'en') ? 'pt' : 'en';
+    aboutPanel.querySelectorAll('.about-lang-block').forEach(block => {
+      block.hidden = (block.dataset.lang !== lang);
+    });
+    langBtn.textContent = (lang === 'en') ? 'EN / PT' : 'PT / EN';
+  });
+})();
+
 /* arrastar pra direita fecha o about */
 (function(){
   let dragging = false, startX = 0, startY = 0, horizontal = null;

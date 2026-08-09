@@ -330,6 +330,15 @@ a{color:inherit;text-decoration:none}
   height:100vh;height:100dvh;overflow-y:auto;
 }
 .about-content .eyebrow{font-size:11px;letter-spacing:.15em;color:var(--ink-dim);margin-bottom:var(--s3)}
+.about-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:var(--s3)}
+.about-head .eyebrow{margin-bottom:0}
+.about-lang{
+  background:none;border:none;cursor:pointer;
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.12em;
+  color:var(--ink-dim);transition:color .2s;padding:0;
+}
+.about-lang:hover{color:var(--ink)}
+.about-lang-block[hidden]{display:none}
 .about-content p{font-family:'Newsreader',serif;font-size:18px;line-height:1.75;color:var(--ink);margin-bottom:var(--s3)}
 .about-content .sign{margin-top:var(--s4);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.06em;color:var(--ink-dim)}
 .about-content .sign a{color:var(--ink-dim);border-bottom:1px solid var(--ink-dim)}
@@ -480,9 +489,9 @@ a{color:inherit;text-decoration:none}
   .topbar button,.topbar a{font-size:9px;white-space:nowrap}
 
   /* nada mais entre a topbar e o conteúdo (as redes sociais saíram
-     da home, foram pro "about") — só o respiro pra limpar a barra
-     fixa, bem enxuto */
-  #indexView{padding:calc(var(--topbar-h, 42px) + 4px) 0 var(--s5)}
+     da home, foram pro "about") — um respiro pra limpar a barra fixa
+     e dar um ar entre o menu e o primeiro ano (2026) */
+  #indexView{padding:calc(var(--topbar-h, 42px) + 20px) 0 var(--s5)}
   .year-section{margin-bottom:18px}
   .year-head{top:var(--topbar-h, 42px)}
   .year-head-inner{padding:2px var(--s3)}
