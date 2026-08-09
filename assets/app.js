@@ -263,18 +263,45 @@ function openPhoto(id){
 }
 let swipeHintTimer = null;
 let swipeHintShown = false;
-/* dica "arraste para o lado" — aparece com fade só no mobile (o CSS
-   já esconde no desktop), só na PRIMEIRA vez que o visor abre nessa
-   visita ao site (pra não ficar repetitivo toda vez que abre uma
-   foto). só volta a aparecer se a pessoa atualizar a página, porque
-   essa marcação é só uma variável em memória, não fica salva. */
+/* dica "swipe to browse" — só no mobile, aparece com fade só na
+   primeira vez que o visor abre nessa visita ao site, e some sozinha
+   depois de alguns segundos. só volta a aparecer se a pessoa
+   atualizar a página.
+
+   a posição É CALCULADA a partir do retângulo real da moldura
+   (.frame) — não um percentual fixo do espaço do visor. isso importa
+   porque foto e vídeo têm proporções bem diferentes (uma foto vertical
+   ocupa quase toda a altura disponível; um vídeo 16:9 ocupa bem menos,
+   sobrando muito mais espaço vazio ao redor) — um percentual fixo do
+   espaço TOTAL colocava a dica em lugares bem diferentes dependendo
+   da mídia. Medindo a moldura de verdade, a dica sempre fica a uma
+   distância fixa (24px) abaixo da foto/vídeo, não importa o formato. */
+function positionSwipeHint(){
+  if(!swipeHint) return;
+  const stage = photoFrame.parentElement; // .photo-stage — mesmo elemento que serve de referência (position:relative) pro position:absolute da dica
+  if(!stage) return;
+  const frameRect = photoFrame.getBoundingClientRect();
+  const stageRect = stage.getBoundingClientRect();
+  swipeHint.style.top = `${Math.round(frameRect.bottom - stageRect.top + 24)}px`;
+}
 function showSwipeHint(){
   if(!swipeHint || swipeHintShown) return;
   swipeHintShown = true;
   clearTimeout(swipeHintTimer);
+  positionSwipeHint();
+  /* a moldura pode ainda não estar 100% assentada no instante em que
+     abrimos. pra vídeo (dimensionado em JS) um par de frames já
+     resolve. pra foto, o tamanho real só é conhecido depois que a
+     imagem termina de carregar (a intrínseca é o que define o
+     max-width/max-height em CSS) — sem esperar o 'load' dela, media
+     antes da hora e a dica saía do lugar. */
+  requestAnimationFrame(() => requestAnimationFrame(positionSwipeHint));
+  const img = photoFrame.querySelector('img');
+  if(img && !img.complete) img.addEventListener('load', positionSwipeHint, {once:true});
   swipeHint.classList.add('show');
   swipeHintTimer = setTimeout(() => swipeHint.classList.remove('show'), 2200);
 }
+window.addEventListener('resize', positionSwipeHint);
 function closePhoto(){
   if(!photoView.classList.contains('open')) return;
   photoView.classList.add('closing');
