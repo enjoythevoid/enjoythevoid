@@ -491,7 +491,7 @@ a{color:inherit;text-decoration:none}
   /* nada mais entre a topbar e o conteúdo (as redes sociais saíram
      da home, foram pro "about") — um respiro pra limpar a barra fixa
      e dar um ar entre o menu e o primeiro ano (2026) */
-  #indexView{padding:calc(var(--topbar-h, 42px) + 20px) 0 var(--s5)}
+  #indexView{padding:calc(var(--topbar-h, 42px) + 12px) 0 var(--s5)}
   .year-section{margin-bottom:18px}
   .year-head{top:var(--topbar-h, 42px)}
   .year-head-inner{padding:2px var(--s3)}
