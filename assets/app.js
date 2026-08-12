@@ -320,9 +320,18 @@ function stepPhoto(dir){
 }
 
 let justSwiped = false;
+let justZoomReset = false;
 document.querySelector('.photo-stage').addEventListener('click', e => {
   if(justSwiped){ justSwiped = false; return; }
   if(e.target.closest('.frame')) return;
+  if(justZoomReset){ justZoomReset = false; return; }
+  /* clicar fora da foto enquanto ela tá com zoom só tira o zoom —
+     não fecha o visor. fechar de vez continua exigindo um clique
+     fora DEPOIS que o zoom já tiver saído. */
+  if(photoView.classList.contains('is-zoomed')){
+    if(typeof window.resetPhotoZoom === 'function') window.resetPhotoZoom();
+    return;
+  }
   closePhoto();
 });
 /* área segura: a tira de miniaturas (setas < >, cada foto pequena, e
@@ -395,9 +404,17 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
       const onControl = e.target.closest('button, a, .post-nav-row, .filmstrip-row');
       const now = Date.now();
       if(!onControl && now - lastTapTime < 300 && activeImg()){
+        const wasZoomed = scale > 1;
         scale = scale > 1 ? 1 : 2.5;
         panX = 0; panY = 0;
         applyTransform();
+        /* duplo toque saindo do zoom gera um "click" logo em seguida —
+           essa trava impede que esse click seja lido como "clicar fora
+           pra fechar a foto" (ver handler de click do .photo-stage). */
+        if(wasZoomed){
+          justZoomReset = true;
+          setTimeout(() => { justZoomReset = false; }, 400);
+        }
       }
       lastTapTime = onControl ? 0 : now;
     }
@@ -452,7 +469,14 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
       }
     }
     dragging = false; horizontal = null;
-    if(scale <= 1.02) resetZoom();
+    if(scale <= 1.02){
+      const wasZoomed = photoView.classList.contains('is-zoomed');
+      resetZoom();
+      if(wasZoomed){
+        justZoomReset = true;
+        setTimeout(() => { justZoomReset = false; }, 400);
+      }
+    }
   }
   stage.addEventListener('pointerup', endDrag);
   stage.addEventListener('pointercancel', endDrag);
