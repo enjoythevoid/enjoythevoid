@@ -166,16 +166,19 @@ a{color:inherit;text-decoration:none}
 #photoView.open.closing{opacity:0;pointer-events:auto}
 #photoView.is-zoomed{background:#000}
 
-/* zoom ativo (pinça ou duplo toque numa foto): legenda, tira de
-   miniaturas e navegação somem, e o .photo-stage — que é o único
-   irmão restante no layout flex — cresce sozinho pra ocupar o
-   espaço inteiro que sobrou, de ponta a ponta, sem padding.
+/* zoom ativo (clique/toque na foto): legenda, tira de miniaturas e
+   navegação somem, e o .photo-stage — que é o único irmão restante
+   no layout flex — cresce sozinho pra ocupar o espaço que sobrou.
+   fica com uma margem proporcional ao redor (padding em vh/vw), não
+   de ponta a ponta — a foto cresce mas continua contida, como uma
+   moldura maior, não "estourando" a tela.
    photo-close (o X) continua visível pra sempre dar pra fechar. */
 #photoView.is-zoomed .filmstrip-row,
 #photoView.is-zoomed .photo-cap,
 #photoView.is-zoomed .post-nav-row,
 #photoView.is-zoomed .swipe-hint{display:none}
-#photoView.is-zoomed .photo-stage{padding:0}
+#photoView.is-zoomed .photo-stage{padding:6vh 6vw}
+#photoView.is-zoomed .photo-stage .frame{max-width:100%}
 #photoView.is-zoomed .photo-close{display:flex}
 
 .photo-stage{

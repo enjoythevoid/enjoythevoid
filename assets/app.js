@@ -323,7 +323,10 @@ let justSwiped = false;
 let justZoomReset = false;
 document.querySelector('.photo-stage').addEventListener('click', e => {
   if(justSwiped){ justSwiped = false; return; }
-  if(e.target.closest('.frame')) return;
+  if(e.target.closest('.frame')){
+    if(typeof window.toggleZoom === 'function') window.toggleZoom();
+    return;
+  }
   if(justZoomReset){ justZoomReset = false; return; }
   /* clicar fora da foto enquanto ela tá com zoom só tira o zoom —
      não fecha o visor. fechar de vez continua exigindo um clique
@@ -347,14 +350,14 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
 /* arrastar o dedo pra esquerda/direita também troca de foto — útil
    no mobile além dos botões pequenos embaixo. junto com isso: dar
    zoom com pinça numa foto, arrastar com zoom dá pan (move a
-   imagem em vez de trocar), e duplo toque alterna zoom rápido. */
+   imagem em vez de trocar), e um clique/toque na foto liga/desliga
+   o zoom (ver toggleZoom mais abaixo). */
 (function(){
   const stage = document.querySelector('.photo-stage');
   const pointers = new Map(); // pointerId -> {x,y}
   let dragging = false, startX = 0, startY = 0, horizontal = null;
   let pinching = false, pinchStartDist = 1, pinchStartScale = 1;
   let scale = 1, panX = 0, panY = 0, panStartX = 0, panStartY = 0;
-  let lastTapTime = 0;
 
   function activeImg(){
     return photoFrame.classList.contains('is-video') ? null : photoFrame.querySelector('img');
@@ -382,6 +385,20 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
   }
   window.resetPhotoZoom = resetZoom;
 
+  /* um clique/toque na própria foto liga ou desliga o zoom — antes
+     exigia dois toques rápidos (duplo toque), o que às vezes não
+     registrava certo. o "tamanho grande" do zoom vem quase todo do
+     CSS (moldura sem o teto de 84vw/980px + menos padding, ver
+     is-zoomed no style.css), não desse scale — por isso um valor
+     baixo (1.05) já basta pra ligar o estado, sem estourar a tela. */
+  function toggleZoom(){
+    if(!activeImg()) return;
+    scale = scale > 1.02 ? 1 : 1.05;
+    panX = 0; panY = 0;
+    applyTransform();
+  }
+  window.toggleZoom = toggleZoom;
+
   stage.addEventListener('pointerdown', e => {
     pointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
 
@@ -397,26 +414,6 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
       dragging = true; horizontal = null;
       startX = e.clientX; startY = e.clientY;
       panStartX = panX; panStartY = panY;
-
-      /* não conta como duplo-toque-pra-zoom se o toque foi num botão
-         ou link (previous/next post, fechar, etc) — senão tocar duas
-         vezes rápido nesses controles disparava zoom sem querer */
-      const onControl = e.target.closest('button, a, .post-nav-row, .filmstrip-row');
-      const now = Date.now();
-      if(!onControl && now - lastTapTime < 300 && activeImg()){
-        const wasZoomed = scale > 1;
-        scale = scale > 1 ? 1 : 2.5;
-        panX = 0; panY = 0;
-        applyTransform();
-        /* duplo toque saindo do zoom gera um "click" logo em seguida —
-           essa trava impede que esse click seja lido como "clicar fora
-           pra fechar a foto" (ver handler de click do .photo-stage). */
-        if(wasZoomed){
-          justZoomReset = true;
-          setTimeout(() => { justZoomReset = false; }, 400);
-        }
-      }
-      lastTapTime = onControl ? 0 : now;
     }
   });
 
@@ -427,7 +424,7 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
     if(pinching && pointers.size === 2){
       const pts = [...pointers.values()];
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      scale = Math.min(8, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
+      scale = Math.min(4, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
       applyTransform();
       return;
     }
@@ -489,7 +486,7 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
   stage.addEventListener('wheel', e => {
     if(!activeImg()) return; /* zoom só em foto, vídeo não */
     e.preventDefault();
-    const next = Math.min(8, Math.max(1, scale - e.deltaY * 0.0015));
+    const next = Math.min(4, Math.max(1, scale - e.deltaY * 0.0015));
     if(next <= 1.02){
       resetZoom();
     } else {
