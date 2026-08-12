@@ -99,4 +99,13 @@ const POSTS = [
     photos: 1,
   },
 
+  {
+    slug: "litost",
+    title: "LITOST",
+    date: "2026-08-10",
+    location: "São Paulo - Jaraguá",
+    tags: ["EOS M"],
+    photos: 2,
+  },
+
 ];
