@@ -74,7 +74,7 @@ a{color:inherit;text-decoration:none}
 .tags-dropdown a:hover{color:var(--ink);background:rgba(255,255,255,.04)}
 .tags-dropdown a.is-active{color:var(--ink)}
 
-.nav-social{display:flex;align-items:center;gap:12px;margin-left:14px}
+.nav-social{display:flex;align-items:center;gap:12px}
 .nav-social a{display:flex;color:var(--ink-dim);transition:color .2s}
 .nav-social a:hover{color:var(--ink)}
 .nav-social svg{display:block}
@@ -164,6 +164,7 @@ a{color:inherit;text-decoration:none}
 }
 #photoView.open{opacity:1;pointer-events:auto}
 #photoView.open.closing{opacity:0;pointer-events:auto}
+#photoView.is-zoomed{background:#000}
 
 /* zoom ativo (pinça ou duplo toque numa foto): legenda, tira de
    miniaturas e navegação somem, e o .photo-stage — que é o único

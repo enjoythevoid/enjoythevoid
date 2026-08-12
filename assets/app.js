@@ -480,6 +480,23 @@ document.getElementById('photoClose').addEventListener('click', closePhoto);
   }
   stage.addEventListener('pointerup', endDrag);
   stage.addEventListener('pointercancel', endDrag);
+
+  /* zoom no desktop: trackpad (gesto de pinça vira wheel com/sem
+     ctrlKey, dependendo do navegador) e scroll do mouse — os dois
+     chegam como evento "wheel", então tratamos igual. preventDefault
+     evita rolar a página (mesmo com o scroll já travado, isso barra
+     o "bounce" nativo do gesto em alguns navegadores). */
+  stage.addEventListener('wheel', e => {
+    if(!activeImg()) return; /* zoom só em foto, vídeo não */
+    e.preventDefault();
+    const next = Math.min(8, Math.max(1, scale - e.deltaY * 0.0015));
+    if(next <= 1.02){
+      resetZoom();
+    } else {
+      scale = next;
+      applyTransform();
+    }
+  }, { passive:false });
 })();
 
 /* ---------- TAMANHO DO VÍDEO/EMPTY NO VISOR ----------
@@ -629,8 +646,11 @@ document.getElementById('wordmark').addEventListener('click', () => { closePhoto
 /* ---------- TECLADO ---------- */
 document.addEventListener('keydown', e => {
   if(photoView.classList.contains('open')){
-    if(e.key === 'ArrowRight') stepPhoto(1);
-    if(e.key === 'ArrowLeft')  stepPhoto(-1);
+    /* setas do teclado navegam dentro da galeria da foto/post atual
+       (igual às setas < > da tira de miniaturas) — não pulam pra
+       outro post. */
+    if(e.key === 'ArrowRight') stepGallery(1);
+    if(e.key === 'ArrowLeft')  stepGallery(-1);
     if(e.key === 'Escape')     closePhoto();
   }
   if(aboutPanel.classList.contains('open') && e.key === 'Escape') closeAbout();
